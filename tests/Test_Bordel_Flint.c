@@ -112,8 +112,7 @@ void naive_mod_poly_test() {
 
   flint_printf("poly3 :\n");
   flint_printf("%{fmpz_mod_poly} (%{fmpz_mod_ctx})\n", poly3, n);
-  flint_printf("equal = 1, 0 sinon :%d\n",
-               fmpz_mod_poly_equal(poly1, poly3, n));
+  flint_printf("equal = 1, 0 sinon :%d\n", fmpz_mod_poly_equal(poly1, poly3, n));
 
   fmpz_mod_poly_zero(poly1, n);
   flint_printf("1 si vraie, 0 sinon :%d\n", fmpz_mod_poly_is_zero(poly1, n));
@@ -214,7 +213,7 @@ void gr_mat_test() {
   gr_mat_init_set(mat3, mat1, ctx);
   gr_mat_init(mat2, 5, 2, ctx);
 
-  abubu = gr_mat_entry_ptr(mat1, 3, 8, ctx); 
+  abubu = gr_mat_entry_ptr(mat1, 3, 8, ctx);
   gr_set_si(abubu, -12, ctx);
   abubu = gr_mat_entry_ptr(mat1, 9, 6, ctx);
   gr_set_ui(abubu, 67, ctx);

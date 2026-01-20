@@ -29,8 +29,8 @@ Build instructions here
 >    CC=clang \
 >    CFLAGS="-Wall -O3 -march=native"
 >
-> make -j8          # I only have 4 cores that run 2 threads
-> make -j 8 check   # Verify hardware <-> functions (8 threads)
+> make -j9          # I only have 4 cores that run 2 threads (+1)
+> make -j 9 check   # Verify hardware <-> functions (8 threads +1)
 > make install
 > ```
 > 
