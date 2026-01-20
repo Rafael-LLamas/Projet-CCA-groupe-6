@@ -206,7 +206,7 @@ void naive_gr_poly_test() {
 void gr_mat_test() {
   gr_mat_t mat1, mat2, mat3;
   gr_ctx_t ctx;
-  gr_ptr abubu;
+  gr_ptr abubu; // labubu
 
   gr_ctx_init_fmpz(ctx);
   GR_TMP_INIT(abubu, ctx);
@@ -214,7 +214,7 @@ void gr_mat_test() {
   gr_mat_init_set(mat3, mat1, ctx);
   gr_mat_init(mat2, 5, 2, ctx);
 
-  abubu = gr_mat_entry_ptr(mat1, 3, 8, ctx);
+  abubu = gr_mat_entry_ptr(mat1, 3, 8, ctx); 
   gr_set_si(abubu, -12, ctx);
   abubu = gr_mat_entry_ptr(mat1, 9, 6, ctx);
   gr_set_ui(abubu, 67, ctx);
