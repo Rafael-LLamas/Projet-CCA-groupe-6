@@ -211,7 +211,7 @@ void gr_mat_test() {
   GR_TMP_INIT(abubu, ctx);
   gr_mat_init(mat1, 10, 10, ctx);
   gr_mat_init_set(mat3, mat1, ctx);
-  gr_mat_init(mat2, 5, 2, ctx);
+  gr_mat_init(mat2, 10, 10, ctx);
 
   abubu = gr_mat_entry_ptr(mat1, 3, 8, ctx);
   gr_set_si(abubu, -12, ctx);
@@ -238,7 +238,7 @@ void gr_mat_test() {
   flint_printf("mat3 = ");
   gr_mat_print(mat3, ctx);
   flint_printf("\n\n\nmat1 = ");
-  gr_mat_print(mat3, ctx);
+  gr_mat_print(mat1, ctx);
   flint_printf("\nSont egaux = ");
   // pk c'est faux ????? a voir avec les profs
   truth_println(gr_mat_equal(mat1, mat3, ctx));
@@ -282,11 +282,11 @@ void fmpz_mod_mat_test() {
   fmpz_set_ui(zebi, 8);
   fmpz_mod_mat_set_entry(mat1, 1, 0, zebi, ctx);
   fmpz_set_ui(zebi, 1);
-  fmpz_mod_mat_set_entry(mat1, 0, 0, zebi, ctx);
+  fmpz_mod_mat_set_entry(mat2, 0, 0, zebi, ctx);
   fmpz_set_ui(zebi, 299);
-  fmpz_mod_mat_set_entry(mat1, 0, 1, zebi, ctx);
+  fmpz_mod_mat_set_entry(mat2, 0, 1, zebi, ctx);
   fmpz_set_ui(zebi, 893);
-  fmpz_mod_mat_set_entry(mat1, 1, 1, zebi, ctx);
+  fmpz_mod_mat_set_entry(mat2, 1, 1, zebi, ctx);
 
   flint_printf("mat1 = ");
   fmpz_mod_mat_print_pretty(mat1, ctx);
@@ -317,6 +317,7 @@ void fmpz_mod_mat_test() {
 }
 
 int main() {
+
   flint_printf("Computed with FLINT-%s\n", flint_version);
   flint_printf("ZEBI UN ARBRE\n");
   arbarb();
@@ -326,6 +327,7 @@ int main() {
   naive_mod_poly_test();
   flint_printf("Un que ?? Un polynome GRRRRRRRRR\n");
   naive_gr_poly_test();
+
   flint_printf("ENFIN LES MATRICES et je commence avec les gr\n");
   gr_mat_test();
   flint_printf("Pour finir avec les fmpz_mod\n");
