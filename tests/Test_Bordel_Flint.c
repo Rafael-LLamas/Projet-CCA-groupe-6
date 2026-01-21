@@ -270,9 +270,7 @@ void fmpz_mod_mat_test() {
   fmpz_set_ui(zebi, 15);
 
   fmpz_mod_ctx_init(ctx, zebi);
-  flint_printf("ici1\n");
   fmpz_mod_mat_init(mat1, 10, 10, ctx);
-  flint_printf("ici\n");
   fmpz_mod_mat_init_set(mat3, mat1, ctx);
   fmpz_mod_mat_init(mat2, 10, 10, ctx);
   fmpz_set_ui(zebi, 12);
@@ -330,6 +328,6 @@ int main() {
 
   flint_printf("ENFIN LES MATRICES et je commence avec les gr\n");
   gr_mat_test();
-  flint_printf("Pour finir avec les fmpz_mod\n");
+  flint_printf("Pour finir avec les fmpz_mod_mat\n");
   fmpz_mod_mat_test();
 }
