@@ -36,5 +36,5 @@ Build instructions here
 > 
 
 ## Autors
-- Prince Ali
-- Raphael Yamas
+- al Ada Enrut
+- Rafael LLamas

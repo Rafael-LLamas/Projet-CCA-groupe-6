@@ -306,12 +306,55 @@ void fmpz_mod_mat_test() {
   flint_printf("\nmat2 = ");
   fmpz_mod_mat_print_pretty(mat2, ctx);
   flint_printf("\n");
-
+  printf("mat2 devrait etre 1 : %d\n", test_toe(mat2, ctx));
+  printf("mat1 devrait etre -1 : %d\n", test_toe(mat1, ctx));
   fmpz_mod_mat_clear(mat1, ctx);
   fmpz_mod_mat_clear(mat2, ctx);
   fmpz_mod_mat_clear(mat3, ctx);
   fmpz_mod_ctx_clear(ctx);
   fmpz_clear(zebi);
+}
+int mafunc(fmpz_mod_mat_t mat, fmpz_mod_ctx_t ctx, int i, int j) {
+  fmpz_t *cmpt;
+  fmpz_t *temp;
+
+  cmpt = fmpz_mod_mat_entry(mat, i, j);
+  printf("|\-----------------------------------------------------------------------/|\n");
+  flint_printf("cmpt = ");
+  fmpz_print(cmpt);
+  flint_printf("\n");
+  while (i < fmpz_mod_mat_nrows(mat, ctx) - 1 && j < fmpz_mod_mat_ncols(mat, ctx) - 1) {
+    i++;
+    j++;
+    printf("i = %d , j = %d\n", i, j);
+    temp = fmpz_mod_mat_entry(mat, i, j);
+    flint_printf("temp = ");
+    fmpz_print(temp);
+    flint_printf("\n");
+    if (!fmpz_equal(temp, cmpt)) {
+      printf("|\-----------------------------------------------------------------------/|\n");
+      return 1;
+    }
+  }
+  printf("|\-----------------------------------------------------------------------/|\n");
+  return 0;
+}
+int test_toe(fmpz_mod_mat_t mat, fmpz_mod_ctx_t ctx) {
+  /*
+  Bon je vais try de faire un code pour savoir si une matrice est quasi-toeplitz ou pas.
+  Pour le decouvrir il faut:
+  -1 que la matrice ne soit pas vide
+  -2 que chaque diagonal soit la meme valeur a partir d'un certain i et j
+  Je vais pour simplifier les chose partir d'une verification pour toeplitz puis modif le code
+  Je pars du principe que ce sont des matrices modulo n
+  */
+  for (int j = 0; j < fmpz_mod_mat_ncols(mat, ctx) - 1; j++) {
+    if (mafunc(mat, ctx, 0, j)) { return -1; }
+  }
+  for (int i = 1; i < fmpz_mod_mat_nrows(mat, ctx) - 1; i++) {
+    if (mafunc(mat, ctx, i, 0)) { return -1; }
+  }
+  return 1;
 }
 
 int main() {
