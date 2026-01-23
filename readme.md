@@ -36,5 +36,5 @@ Build instructions here
 > 
 
 ## Autors
-- al Ada Enrut
+- al Ada Enroute
 - Rafael LLamas
