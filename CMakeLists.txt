@@ -28,6 +28,9 @@ find_path(FLINT_INCLUDE flint/flint.h HINTS ${FLINT_ROOT}/include)
 add_executable(test_bordel 
     "tests/Test_Bordel_Flint.c"
 )
+add_executable(random_toeplitz 
+    "src/random_toeplitz/random_toeplitz.c"
+)
 
 target_include_directories(test_bordel PRIVATE 
     ${FLINT_INCLUDE} 
@@ -36,6 +39,18 @@ target_include_directories(test_bordel PRIVATE
 )
 
 target_link_libraries(test_bordel PRIVATE 
+    ${FLINT_LIB}
+    ${GMP_LIB}
+    ${MPFR_LIB}
+)
+
+target_include_directories(random_toeplitz PRIVATE 
+    ${FLINT_INCLUDE} 
+    ${GMP_INCLUDE} 
+    ${MPFR_INCLUDE}
+)
+
+target_link_libraries(random_toeplitz PRIVATE 
     ${FLINT_LIB}
     ${GMP_LIB}
     ${MPFR_LIB}
