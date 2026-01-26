@@ -4,7 +4,11 @@ Project Descrption here
 
 ## Build
 
-Build instructions here
+```bash
+mkdir build
+cmake ..
+make
+```
 
 > ### Note to Arda from Arda regarding FLINT
 > Cmake is primarily for Windows users, I use the GNU autotools build. Install prerequisites:
@@ -36,5 +40,5 @@ Build instructions here
 > 
 
 ## Autors
-- al Ada Enroute
-- Rafael LLamas
+- Ali Arda Barut
+- Raphael LLamas

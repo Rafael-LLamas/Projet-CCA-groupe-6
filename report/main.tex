@@ -1,0 +1,40 @@
+\documentclass{article}
+
+% --- PACKAGES ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+
+% --- PAGE SETTINGS ---
+\geometry{margin=2cm}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textbf{Cool Project}}
+\fancyhead[R]{Ali Arda BARUT, Rafael LLamas}
+\fancyfoot[C]{\thepage}
+
+% --- DOCUMENT ---
+\begin{document}
+
+% title page
+\begin{titlepage}
+    \centering
+    \vspace*{5cm}
+    {\Huge \textbf{Cool Project} \par}
+    \vspace*{0.5cm}
+    {\Large We cooked with Toeplit matrices today following Martha Stewart \par}
+    \vfill
+    {\Large Ali Arda BARUT \par}
+    {\Large Rafael LLAMAS \par}
+    \vspace*{1cm}
+    {\large \today \par}
+\end{titlepage}
+\tableofcontents
+\newpage
+
+% introduction
+\input{chapters/ch0.tex}
+
+\end{document}

@@ -74,14 +74,16 @@ build/
 
 
 # Report
+report/main.aux
+report/main.fdb_latexmk
+report/main.fls
+report/main.synctex.gz
+report/main.log
+report/main.toc
+report/indent.log
+report/main.blg
+report/main.bbl
 .DS_Store
-report/main/main.aux
-report/main/main.fdb_latexmk
-report/main/main.fls
-report/main/main.synctex.gz
-report/main/main.log
-report/main/main.toc
-
 
 #Flint 
 flint-3.4.0/
