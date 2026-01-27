@@ -3,6 +3,7 @@
 #include "flint/gr_mat.h"
 #include "flint/gr_poly.h"
 #include <stdlib.h>
+#include <time.h>
 
 #define FLINT_CHECK(x)                                                                                                 \
   do {                                                                                                                 \
@@ -32,7 +33,7 @@ Some vocabulary:
 Later we will focus on non square toeplitz matrices,
 block toeplitz matrices.
 
-Structure:
+Structure for optimized version:
 We know that the displacemenet matrix is an L shaped one.
 
                     L U U U ... U
@@ -58,6 +59,36 @@ than translating two instances of vectors.
 */
 
 /**
+ * @brief This is the safe-book version relying purely on the optimisation of FLINT calculations.
+ * Complexity: O(n^3) with naive, but this is flint so probably less.
+ * @param[out] D Resulting L shaped matrix of xnx
+ * @param[in] A Input square nxn toeplitz matrix
+ */
+int gr_mat_displacement_square(gr_mat_t D, gr_mat_t A, gr_ctx_t ctx) {
+  slong n = gr_mat_nrows(A, ctx);
+  gr_mat_t Z, ZT, Temp1, Temp2;
+  gr_mat_init(Z, n, n, ctx);
+  gr_mat_init(ZT, n, n, ctx);
+  gr_mat_init(Temp1, n, n, ctx);
+  gr_mat_init(Temp2, n, n, ctx);
+  FLINT_CHECK(gr_mat_zero(Z, ctx));
+  gr_ptr val;
+  for (slong i = 1; i < n; i++) { // create Z
+    val = gr_mat_entry_ptr(Z, i, i - 1, ctx);
+    FLINT_CHECK(gr_one(val, ctx));
+  }
+  FLINT_CHECK(gr_mat_transpose(ZT, Z, ctx));     // Z^T
+  FLINT_CHECK(gr_mat_mul(Temp1, A, ZT, ctx));    // Temp1 = A * Z^T
+  FLINT_CHECK(gr_mat_mul(Temp2, Z, Temp1, ctx)); // Temp2 = Z * Temp1  (which is Z * A * Z^T)
+  FLINT_CHECK(gr_mat_sub(D, A, Temp2, ctx));     // D = A - Temp2
+  gr_mat_clear(Z, ctx);
+  gr_mat_clear(ZT, ctx);
+  gr_mat_clear(Temp1, ctx);
+  gr_mat_clear(Temp2, ctx);
+  return GR_SUCCESS;
+}
+
+/**
  * @brief Computes the displacement generators G and H for a nxn Toeplitz matrix A.
  *  * Complexity: O(2n) ->
  * Instead of performing in full arithmetic, we copy the first column
@@ -72,7 +103,7 @@ than translating two instances of vectors.
  * @param[in] ctx The FLINT generic ring context.
  * @return GR_SUCCESS on success, or GR_DOMAIN if dimensions do not match.
  */
-int gr_mat_displacement_square(gr_mat_t G, gr_mat_t H, gr_mat_t A, gr_ctx_t ctx) {
+int gr_mat_displacement_square_opt(gr_mat_t G, gr_mat_t H, gr_mat_t A, gr_ctx_t ctx) {
   slong n = gr_mat_nrows(A, ctx); // nxn of A.
   if (gr_mat_nrows(G, ctx) != n || gr_mat_ncols(G, ctx) != 2 || gr_mat_nrows(H, ctx) != n || gr_mat_ncols(H, ctx) != 2)
     return GR_DOMAIN;               // safety check
@@ -100,21 +131,20 @@ int gr_mat_displacement_square(gr_mat_t G, gr_mat_t H, gr_mat_t A, gr_ctx_t ctx)
   return GR_SUCCESS;
 }
 
-
 // temporary testing
 int main() {
   gr_ctx_t ctx;
-  gr_ctx_init_fmpz(ctx); // Integers
-  slong n = 5;
-
-  gr_mat_t A, G, H, HT, Product;
+  gr_ctx_init_fmpz(ctx);
+  slong n = 500;
+  flint_printf("Matrix Size: %wd x %wd\n", n, n);
+  gr_mat_t A, G, H, HT, Product, D_slow;
   gr_mat_init(A, n, n, ctx);
   gr_mat_init(G, n, 2, ctx);
   gr_mat_init(H, n, 2, ctx);
   gr_mat_init(HT, 2, n, ctx);
   gr_mat_init(Product, n, n, ctx);
-
-  // temporary way to create a toeplitz dont mind this
+  gr_mat_init(D_slow, n, n, ctx);
+  // this is a temporary way to create a toeplitz matrix dont mind this its not random
   void *val = gr_heap_init(ctx);
   gr_ptr entry_ptr;
   for (slong i = 0; i < n; i++) {
@@ -125,30 +155,43 @@ int main() {
     }
   }
   gr_heap_clear(val, ctx);
-  flint_printf("Matrix A:\n");
-  gr_mat_print(A, ctx);
 
-  if (gr_mat_displacement_square(G, H, A, ctx) == GR_SUCCESS) {
-    flint_printf("\n Result G:\n");
-    gr_mat_print(G, ctx);
-    flint_printf("\n Result H:\n");
-    gr_mat_print(H, ctx);
-    FLINT_CHECK(gr_mat_transpose(HT, H, ctx));
-    FLINT_CHECK(gr_mat_mul(Product, G, HT, ctx));
-    flint_printf("\n Product (G * H^T):\n");
-    gr_mat_print(Product, ctx);
-    flint_printf("\n");
-  } else {
-    flint_printf("Error: Calculation failed.\n");
+  // Test 1: Safe Book
+  clock_t start = clock();
+  if (gr_mat_displacement_square(D_slow, A, ctx) != GR_SUCCESS) {
+    flint_printf("Safe book method failed.\n");
+    return EXIT_FAILURE;
   }
+  clock_t end = clock();
+  double time_slow = (double)(end - start) / CLOCKS_PER_SEC;
+  flint_printf("\nArithmetic Method: %.6f seconds\n", time_slow);
 
-  // Cleanup
+  // Test 2: Copying
+  start = clock();
+  if (gr_mat_displacement_square_opt(G, H, A, ctx) != GR_SUCCESS) {
+    flint_printf("Copying method failed.\n");
+    return EXIT_FAILURE;
+  }
+  end = clock();
+  double time_fast = (double)(end - start) / CLOCKS_PER_SEC;
+  flint_printf("Copying Method: %.6f seconds\n", time_fast);
+
+  FLINT_CHECK(gr_mat_transpose(HT, H, ctx));
+  FLINT_CHECK(gr_mat_mul(Product, G, HT, ctx));
+
+  truth_t is_equal = gr_mat_equal(Product, D_slow, ctx);
+  flint_printf("\n------------------ Result: --------------------\n");
+  if (is_equal == T_TRUE)
+    flint_printf("[SUCCESS] The Copying Method result matches the Arithmetic Method exactly so they must be correct!!! (unless.....)\n\n");
+  else
+    flint_printf("[FAILURE] The results are different. Something is wrong D:\n\n");
+
   gr_mat_clear(A, ctx);
   gr_mat_clear(G, ctx);
   gr_mat_clear(H, ctx);
   gr_mat_clear(HT, ctx);
   gr_mat_clear(Product, ctx);
+  gr_mat_clear(D_slow, ctx);
   gr_ctx_clear(ctx);
-
   return EXIT_SUCCESS;
 }
