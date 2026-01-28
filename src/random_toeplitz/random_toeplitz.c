@@ -134,7 +134,7 @@ void random_toeplitz(gr_mat_t A, int n, int m, gr_ctx_t ctx) {
   flint_rand_clear(state);
 }
 
-int main() {
+int test_random_toeplitz() {
   gr_ctx_t ctx;
   gr_ctx_init_nmod(ctx, 1009);
   gr_mat_t ran;
@@ -144,4 +144,5 @@ int main() {
   flint_printf("\n");
   gr_mat_clear(ran, ctx);
   gr_ctx_clear(ctx);
+  return GR_SUCCESS;
 }

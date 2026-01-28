@@ -43,11 +43,15 @@ target_link_libraries(flint_core INTERFACE
 ####
 # EXECUTABLES
 ###
-# add_executable(test_bordel "tests/Test_Bordel_Flint.c")
-# target_link_libraries(test_bordel PRIVATE flint_core)
+set(SOURCES
+    src/main.c
+    src/displacement_matrices/displacement_matrices.c
+    src/random_toeplitz/random_toeplitz.c
+)
 
-add_executable(random_toeplitz "src/random_toeplitz/random_toeplitz.c")
-target_link_libraries(random_toeplitz PRIVATE flint_core)
-
-add_executable(displacement_matrices "src/displacement_matrices/displacement_matrices.c")
-target_link_libraries(displacement_matrices PRIVATE flint_core)
+add_executable(main ${SOURCES})
+target_link_libraries(main PRIVATE flint_core)
+target_include_directories(main PRIVATE # this one helps with include paths
+    src/displacement_matrices
+    src/random_toeplitz
+)

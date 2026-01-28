@@ -1,15 +1,11 @@
+#include "displacement_matrices.h"
 #include "flint/flint.h"
 #include "flint/gr.h"
 #include "flint/gr_mat.h"
 #include "flint/gr_poly.h"
+
 #include <stdlib.h>
 #include <time.h>
-
-#define FLINT_CHECK(x)                                                                                                 \
-  do {                                                                                                                 \
-    int _status = (x);                                                                                                 \
-    if (_status != GR_SUCCESS) return _status;                                                                         \
-  } while (0)
 
 /*
 We are currently focusing on square Toeplitz matrices.
@@ -33,7 +29,7 @@ Some vocabulary:
 Later we will focus on non square toeplitz matrices,
 block toeplitz matrices.
 
-Structure for optimized version:
+Structure for optimized storage:
 We know that the displacemenet matrix is an L shaped one.
 
                     L U U U ... U
@@ -58,12 +54,6 @@ Doing this way allows us to use gr_mat_mul directly rather
 than translating two instances of vectors.
 */
 
-/**
- * @brief This is the safe-book version relying purely on the optimisation of FLINT calculations.
- * Complexity: O(n^3) with naive, but this is flint so probably less.
- * @param[out] D Resulting L shaped matrix of xnx
- * @param[in] A Input square nxn toeplitz matrix
- */
 int gr_mat_displacement_square(gr_mat_t D, gr_mat_t A, gr_ctx_t ctx) {
   slong n = gr_mat_nrows(A, ctx);
   gr_mat_t Z, ZT, Temp1, Temp2;
@@ -88,110 +78,146 @@ int gr_mat_displacement_square(gr_mat_t D, gr_mat_t A, gr_ctx_t ctx) {
   return GR_SUCCESS;
 }
 
-/**
- * @brief Computes the displacement generators G and H for a nxn Toeplitz matrix A.
- *  * Complexity: O(2n) ->
- * Instead of performing in full arithmetic, we copy the first column
- * and first row of A.
- * @param[out] G Output matrix of size nx2.
- * Must be initialized before calling.
- * Will contain the vertical vectors.
- * @param[out] H Output matrix of size nx2.
- * Must be initialized before calling.
- * Will contain the horizontal generator vectors (stored as columns).
- * @param[in] A The input square Toeplitz matrix of size nxn.
- * @param[in] ctx The FLINT generic ring context.
- * @return GR_SUCCESS on success, or GR_DOMAIN if dimensions do not match.
- */
-int gr_mat_displacement_square_opt(gr_mat_t G, gr_mat_t H, gr_mat_t A, gr_ctx_t ctx) {
-  slong n = gr_mat_nrows(A, ctx); // nxn of A.
-  if (gr_mat_nrows(G, ctx) != n || gr_mat_ncols(G, ctx) != 2 || gr_mat_nrows(H, ctx) != n || gr_mat_ncols(H, ctx) != 2)
-    return GR_DOMAIN;               // safety check
-  FLINT_CHECK(gr_mat_zero(G, ctx)); // set G and H to 0 for safety
-  FLINT_CHECK(gr_mat_zero(H, ctx));
+/*
+Keeping this function in mind,
+Let's turn our focus to a more general case.
 
-  gr_ptr src_val, dst_val; // pointers
+For any matrix A of size nxm, we find it's ∇A.
+(rows x cols)
 
-  for (slong i = 0; i < n; i++) { // G gets the first column of A
-    src_val = gr_mat_entry_ptr(A, i, 0, ctx);
-    dst_val = gr_mat_entry_ptr(G, i, 0, ctx);
-    FLINT_CHECK(gr_set(dst_val, src_val, ctx));
+I noticed, doing on paper, its just a substraction
+of diagonal values. We can optimize this operation while
+evading temporary (any Z) matrices.
+Instead of O(n^3), we can just iterate through n * m
+elements (first n-1 * m-1 then n + m), giving us a
+complexity of O(nm). Of matrix A:
+
+                    1 3 5
+                    8 7 8
+                    9 8 7
+                    2 1 1
+
+We can substract the top left diagonal values starting from
+(n,m) to (1,1). Resulting in a correct shift + substract
+operation, giving us ∇A:
+
+                    1 3 5
+                    8 6 5
+                    9 0 0
+                    2 -8 -7
+*/
+
+int gr_mat_displacement(gr_mat_t D, gr_mat_t A, gr_ctx_t ctx) {
+  slong n = gr_mat_nrows(A, ctx);
+  slong m = gr_mat_ncols(A, ctx);
+  if (gr_mat_nrows(D, ctx) != n || gr_mat_ncols(D, ctx) != m) return GR_UNABLE;
+
+  gr_ptr ptr_cur, ptr_prev, ptr_dest;
+  // inner part
+  for (slong i = n - 1; i > 0; i--) {
+    for (slong j = m - 1; j > 0; j--) {
+      ptr_cur = gr_mat_entry_ptr(A, i, j, ctx);
+      ptr_prev = gr_mat_entry_ptr(A, i - 1, j - 1, ctx);
+      ptr_dest = gr_mat_entry_ptr(D, i, j, ctx);
+      FLINT_CHECK(gr_sub(ptr_dest, ptr_cur, ptr_prev, ctx)); // D[i,j] = A[i,j] - A[i-1, j-1]
+    }
   }
-  dst_val = gr_mat_entry_ptr(G, 0, 1, ctx);
-  FLINT_CHECK(gr_one(dst_val, ctx)); // G[0][1] = 1
-
-  for (slong j = 1; j < n; j++) { // H gets the first row of A
-    src_val = gr_mat_entry_ptr(A, 0, j, ctx);
-    dst_val = gr_mat_entry_ptr(H, j, 1, ctx);
-    FLINT_CHECK(gr_set(dst_val, src_val, ctx));
-  }
-  dst_val = gr_mat_entry_ptr(H, 0, 0, ctx);
-  FLINT_CHECK(gr_one(dst_val, ctx)); // H[0][0] = 1
-
+  // the rest
+  for (slong i = 0; i < n; i++)
+    FLINT_CHECK(gr_set(gr_mat_entry_ptr(D, i, 0, ctx), gr_mat_entry_ptr(A, i, 0, ctx), ctx));
+  for (slong j = 1; j < m; j++)
+    FLINT_CHECK(gr_set(gr_mat_entry_ptr(D, 0, j, ctx), gr_mat_entry_ptr(A, 0, j, ctx), ctx));
   return GR_SUCCESS;
 }
 
-// temporary testing
-int main() {
+/*
+Now that we can corectly distinguish where we can optimize.
+
+Any matrix call from gr_mat_displacement is going to return ∇A,
+for the previous example, row 2 (9 0 0) we have 2 zeros. It seems
+small for this matrix in particular but if it was a big matrix,
+we would have gone a lot of 0s.
+
+We can see this as the ones marked form a 2x2 Toeplitz matrix:
+
+                    1 3 5
+                    8 *7 *8
+                    9 *8 *7
+                    2 1 1
+
+
+*/
+
+int test_displacement_matrices() {
+  flint_printf("*----------* Displacement Matrix Test *----------*\n");
   gr_ctx_t ctx;
   gr_ctx_init_fmpz(ctx);
-  slong n = 500;
-  flint_printf("Matrix Size: %wd x %wd\n", n, n);
-  gr_mat_t A, G, H, HT, Product, D_slow;
-  gr_mat_init(A, n, n, ctx);
-  gr_mat_init(G, n, 2, ctx);
-  gr_mat_init(H, n, 2, ctx);
-  gr_mat_init(HT, 2, n, ctx);
-  gr_mat_init(Product, n, n, ctx);
-  gr_mat_init(D_slow, n, n, ctx);
-  // this is a temporary way to create a toeplitz matrix dont mind this its not random
-  void *val = gr_heap_init(ctx);
-  gr_ptr entry_ptr;
-  for (slong i = 0; i < n; i++) {
-    for (slong j = 0; j < n; j++) {
-      (void)gr_set_si(val, i - j, ctx);
-      entry_ptr = gr_mat_entry_ptr(A, i, j, ctx);
-      (void)gr_set(entry_ptr, val, ctx);
-    }
+
+  flint_printf(":-------: Manual nxn Toeplitz Matrix Deplacement Test :-------:\n");
+  {
+    gr_mat_t A, D;
+    gr_mat_init(A, 3, 3, ctx);
+    gr_mat_init(D, 3, 3, ctx);
+    // feast your eyes
+    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 0, 0, ctx), 1, ctx)); // Row 0: 1, 3, 4
+    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 0, 1, ctx), 3, ctx));
+    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 0, 2, ctx), 4, ctx));
+    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 1, 0, ctx), 8, ctx)); // Row 1: 8, 1, 3
+    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 1, 1, ctx), 1, ctx));
+    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 1, 2, ctx), 3, ctx));
+    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 2, 0, ctx), 9, ctx)); // Row 2: 9, 8, 1
+    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 2, 1, ctx), 8, ctx));
+    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 2, 2, ctx), 1, ctx));
+    flint_printf("Input Manual Matrix A:\n");
+    gr_mat_print(A, ctx);
+    flint_printf("\n");
+    gr_mat_displacement(D, A, ctx);
+    flint_printf("Displacement Matrix (∇A):\n");
+    gr_mat_print(D, ctx);
+    flint_printf("\n");
+    gr_mat_clear(A, ctx);
+    gr_mat_clear(D, ctx);
   }
-  gr_heap_clear(val, ctx);
 
-  // Test 1: Safe Book
-  clock_t start = clock();
-  if (gr_mat_displacement_square(D_slow, A, ctx) != GR_SUCCESS) {
-    flint_printf("Safe book method failed.\n");
-    return EXIT_FAILURE;
+  flint_printf(":-------: Manual nxm Matrix Test :-------:\n");
+  {
+    gr_mat_t A, D;
+    gr_mat_init(A, 4, 3, ctx);
+    gr_mat_init(D, 4, 3, ctx);
+    // (i am too tired to do a double triangular loop future me if ur reading this... dew it -palpatine)
+    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 0, 0, ctx), 1, ctx)); // Row 0: 1, 3, 4
+    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 0, 1, ctx), 3, ctx));
+    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 0, 2, ctx), 4, ctx));
+    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 1, 0, ctx), 8, ctx)); // Row 1: 8, 7, 8
+    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 1, 1, ctx), 7, ctx));
+    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 1, 2, ctx), 8, ctx));
+    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 2, 0, ctx), 9, ctx)); // Row 2: 9, 8, 7
+    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 2, 1, ctx), 8, ctx));
+    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 2, 2, ctx), 7, ctx));
+    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 3, 0, ctx), 2, ctx)); // Row 3: 2, 1, 1
+    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 3, 1, ctx), 1, ctx));
+    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 3, 2, ctx), 1, ctx));
+    flint_printf("Input Manual Matrix A:\n");
+    gr_mat_print(A, ctx);
+    flint_printf("\n");
+    gr_mat_displacement(D, A, ctx);
+    flint_printf("Displacement Matrix (∇A):\n");
+    gr_mat_print(D, ctx);
+    flint_printf("\n");
+    slong rank;
+    slong *P = flint_malloc(4 * sizeof(slong));
+    gr_mat_t LU;
+    gr_mat_init(LU, 4, 3, ctx);
+    if (gr_mat_lu(&rank, P, LU, D, 0, ctx) == GR_SUCCESS) {
+      flint_printf("LU Decomposition successful.\n");
+      gr_mat_print(LU, ctx);
+    } else
+      flint_printf("LU Decomposition failed.\n"); // due to maths, 1.5 is not an integer
+    flint_free(P);
+    gr_mat_clear(LU, ctx);
+    gr_mat_clear(A, ctx);
+    gr_mat_clear(D, ctx);
   }
-  clock_t end = clock();
-  double time_slow = (double)(end - start) / CLOCKS_PER_SEC;
-  flint_printf("\nArithmetic Method: %.6f seconds\n", time_slow);
-
-  // Test 2: Copying
-  start = clock();
-  if (gr_mat_displacement_square_opt(G, H, A, ctx) != GR_SUCCESS) {
-    flint_printf("Copying method failed.\n");
-    return EXIT_FAILURE;
-  }
-  end = clock();
-  double time_fast = (double)(end - start) / CLOCKS_PER_SEC;
-  flint_printf("Copying Method: %.6f seconds\n", time_fast);
-
-  FLINT_CHECK(gr_mat_transpose(HT, H, ctx));
-  FLINT_CHECK(gr_mat_mul(Product, G, HT, ctx));
-
-  truth_t is_equal = gr_mat_equal(Product, D_slow, ctx);
-  flint_printf("\n------------------ Result: --------------------\n");
-  if (is_equal == T_TRUE)
-    flint_printf("[SUCCESS] The Copying Method result matches the Arithmetic Method exactly so they must be correct!!! (unless.....)\n\n");
-  else
-    flint_printf("[FAILURE] The results are different. Something is wrong D:\n\n");
-
-  gr_mat_clear(A, ctx);
-  gr_mat_clear(G, ctx);
-  gr_mat_clear(H, ctx);
-  gr_mat_clear(HT, ctx);
-  gr_mat_clear(Product, ctx);
-  gr_mat_clear(D_slow, ctx);
   gr_ctx_clear(ctx);
-  return EXIT_SUCCESS;
+  return GR_SUCCESS;
 }
