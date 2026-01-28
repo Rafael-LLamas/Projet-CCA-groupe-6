@@ -46,8 +46,8 @@ target_link_libraries(flint_core INTERFACE
 # add_executable(test_bordel "tests/Test_Bordel_Flint.c")
 # target_link_libraries(test_bordel PRIVATE flint_core)
 
-# add_executable(random_toeplitz "src/random_toeplitz/random_toeplitz.c")
-# target_link_libraries(random_toeplitz PRIVATE flint_core)
+add_executable(random_toeplitz "src/random_toeplitz/random_toeplitz.c")
+target_link_libraries(random_toeplitz PRIVATE flint_core)
 
 add_executable(displacement_matrices "src/displacement_matrices/displacement_matrices.c")
 target_link_libraries(displacement_matrices PRIVATE flint_core)

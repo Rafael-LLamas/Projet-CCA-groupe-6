@@ -240,7 +240,6 @@ void gr_mat_test() {
   flint_printf("\n\n\nmat1 = ");
   gr_mat_print(mat1, ctx);
   flint_printf("\nSont egaux = ");
-  // pk c'est faux ????? a voir avec les profs
   truth_println(gr_mat_equal(mat1, mat3, ctx));
   gr_mat_zero(mat1, ctx);
   flint_printf("mat1 vaut zero = ");

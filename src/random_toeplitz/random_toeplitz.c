@@ -17,42 +17,129 @@ void random_toeplitz(gr_mat_t A, int n, int m, gr_ctx_t ctx) {
   */
   // Génération d'une matrice random et de Z a zero
   flint_rand_t state;
-  gr_mat_t Z, ZT, LU;
+  gr_mat_t Z, LU;
   slong *rank, *P;
-  gr_mat_init(Z, n, m, ctx);
-  gr_mat_init(LU, n, m, ctx);
-  int error = gr_mat_zero(Z, ctx);
   flint_rand_init(state);
-  gr_mat_init(A, 10, 10, ctx);
-  error = gr_mat_randtest(A, state, ctx);
-
-  if (error) { // erreur ??
+  gr_mat_init(A, n, m, ctx);
+  P = flint_malloc(n * sizeof(slong));
+  rank = flint_malloc(sizeof(slong));
+  int error = gr_mat_randtest(A, state, ctx);
+  flint_printf("----------------------------------------------\nA = ");
+  gr_mat_print(A, ctx);
+  flint_printf("\n");
+  if (error != 0) { // erreur ??
     gr_mat_clear(Z, ctx);
     gr_mat_clear(A, ctx);
     gr_ctx_clear(ctx);
     flint_rand_clear(state);
+    flint_free(P);
+    flint_free(rank);
     exit(error);
   }
+  // init LU et Z
+  error = gr_mat_init_set(LU, A, ctx);
+  gr_mat_init(Z, n, m, ctx);
+  error = gr_mat_zero(Z, ctx);
+
+  int i = 0, j = 0;
+
+  while (i < n && j < m - 1) {
+    error = gr_set_si(gr_mat_entry_ptr(Z, i, j, ctx), 1, ctx);
+    i++;
+    j++;
+  }
+
+  flint_printf("----------------------------------------------\nZ = ");
+  gr_mat_print(Z, ctx);
+  flint_printf("\n");
+
   // Décomposition LU
   error = gr_mat_lu(rank, P, LU, A, 0, ctx);
-  if (error) { // erreur ??
+  flint_printf("----------------------------------------------\nLU = ");
+  gr_mat_print(LU, ctx);
+  flint_printf("\n");
+
+  if (error != 0) { // erreur ??
     gr_mat_clear(Z, ctx);
+    flint_printf("%d\n", error);
     gr_mat_clear(A, ctx);
     gr_ctx_clear(ctx);
     flint_rand_clear(state);
+    flint_free(P);
+    flint_free(rank);
     exit(error);
   }
+  // création de la toeplitz like avec LU-ZLUZ^T
+  error = gr_mat_mul(A, LU, Z, ctx); // A = ZLU
+  if (error != 0) {                  // erreur ??
+    gr_mat_clear(Z, ctx);
+    flint_printf("%d\n", error);
+    gr_mat_clear(A, ctx);
+    gr_ctx_clear(ctx);
+    flint_rand_clear(state);
+    flint_free(P);
+    flint_free(rank);
+    exit(error);
+  }
+  flint_printf("----------------------------------------------\nZLU = ");
+  gr_mat_print(A, ctx);
+  flint_printf("\n");
+  error = gr_mat_transpose(Z, Z, ctx); // Z == Z^T
+  if (error != 0) {                    // erreur ??
+    gr_mat_clear(Z, ctx);
+    flint_printf("%d\n", error);
+    gr_mat_clear(A, ctx);
+    gr_ctx_clear(ctx);
+    flint_rand_clear(state);
+    flint_free(P);
+    flint_free(rank);
+    exit(error);
+  }
+  flint_printf("----------------------------------------------\nZ^T = ");
+  gr_mat_print(Z, ctx);
+  flint_printf("\n");
+  error = gr_mat_mul(A, A, Z, ctx); // A = ZLUZ^T
+  if (error != 0) {                 // erreur ??
+    gr_mat_clear(Z, ctx);
+    flint_printf("%d\n", error);
+    gr_mat_clear(A, ctx);
+    gr_ctx_clear(ctx);
+    flint_rand_clear(state);
+    flint_free(P);
+    flint_free(rank);
+    exit(error);
+  }
+  flint_printf("----------------------------------------------\nZLUZ^T = ");
+  gr_mat_print(A, ctx);
+  flint_printf("\n");
+  error = gr_mat_sub(A, LU, A, ctx); // A = LU-ZLUZ^T
+  if (error != 0) {                  // erreur ??
+
+    gr_mat_clear(Z, ctx);
+    flint_printf("%d\n", error);
+    gr_mat_clear(A, ctx);
+    gr_ctx_clear(ctx);
+    flint_rand_clear(state);
+    flint_free(P);
+    flint_free(rank);
+    exit(error);
+  }
+
   // clear l'inutiliser
-  flint_rand_clear(state);
+
   gr_mat_clear(Z, ctx);
+  gr_mat_clear(LU, ctx);
+  flint_free(P);
+  flint_free(rank);
+  flint_rand_clear(state);
 }
 
 int main() {
   gr_ctx_t ctx;
-  gr_ctx_init_fmpz(ctx);
+  gr_ctx_init_nmod(ctx, 1009);
   gr_mat_t ran;
-  random_toeplitz(ran, 10, 10, ctx);
-  flint_printf("mat1 = ");
+  random_toeplitz(ran, 15, 15, ctx);
+  flint_printf("----------------------------------------------\nResultat = ");
   gr_mat_print(ran, ctx);
   flint_printf("\n");
   gr_mat_clear(ran, ctx);
