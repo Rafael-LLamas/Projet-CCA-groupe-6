@@ -41,7 +41,7 @@ void random_toeplitz(gr_mat_t A, int n, int m, gr_ctx_t ctx) {
   gr_mat_init(Z, n, m, ctx);
   error = gr_mat_zero(Z, ctx);
 
-  int i = 0, j = 0;
+  int i = 1, j = 0;
 
   while (i < n && j < m - 1) {
     error = gr_set_si(gr_mat_entry_ptr(Z, i, j, ctx), 1, ctx);
