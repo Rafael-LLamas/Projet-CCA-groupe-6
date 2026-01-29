@@ -1,10 +1,11 @@
+#include "displacement_matrices.h"
 #include "flint/flint.h"
 #include "flint/gr.h"
 #include "flint/gr_mat.h"
 #include "flint/gr_poly.h"
 #include <stdlib.h>
 
-void random_toeplitz(gr_mat_t A, int n, int m, gr_ctx_t ctx) {
+void random_toeplitz(gr_mat_t A, int n, int m, flint_rand_t state, gr_ctx_t ctx) {
   /*
   Pour generer une matrice toeplitz il me faut :
   1- generer une matrice aléatoire de taille n*m
@@ -15,11 +16,10 @@ void random_toeplitz(gr_mat_t A, int n, int m, gr_ctx_t ctx) {
   6-Vérifier le rank
   Normalement je vais obtenir une matrice quasi-toeplitz (normalement)
   */
-  // Génération d'une matrice random et de Z a zero
-  flint_rand_t state;
+  // Génération d'une matrice random
+
   gr_mat_t Z, LU;
   slong *rank, *P;
-  flint_rand_init(state);
   gr_mat_init(A, n, m, ctx);
   P = flint_malloc(n * sizeof(slong));
   rank = flint_malloc(sizeof(slong));
@@ -54,9 +54,11 @@ void random_toeplitz(gr_mat_t A, int n, int m, gr_ctx_t ctx) {
   flint_printf("\n");
 
   // Décomposition LU
-  error = gr_mat_lu(rank, P, LU, A, 0, ctx);
+  error = gr_mat_displacement(A, A, ctx);
+  error = gr_mat_lu(rank, P, A, A, 0, ctx);
   flint_printf("----------------------------------------------\nLU = ");
   gr_mat_print(LU, ctx);
+  flint_printf("\nrank LU = %{slong}", *rank);
   flint_printf("\n");
 
   if (error != 0) { // erreur ??
@@ -69,61 +71,65 @@ void random_toeplitz(gr_mat_t A, int n, int m, gr_ctx_t ctx) {
     flint_free(rank);
     exit(error);
   }
-  // création de la toeplitz like avec LU-ZLUZ^T
-  error = gr_mat_mul(A, LU, Z, ctx); // A = ZLU
-  if (error != 0) {                  // erreur ??
-    gr_mat_clear(Z, ctx);
-    flint_printf("%d\n", error);
-    gr_mat_clear(A, ctx);
-    gr_ctx_clear(ctx);
-    flint_rand_clear(state);
-    flint_free(P);
-    flint_free(rank);
-    exit(error);
-  }
-  flint_printf("----------------------------------------------\nZLU = ");
-  gr_mat_print(A, ctx);
-  flint_printf("\n");
-  error = gr_mat_transpose(Z, Z, ctx); // Z == Z^T
-  if (error != 0) {                    // erreur ??
-    gr_mat_clear(Z, ctx);
-    flint_printf("%d\n", error);
-    gr_mat_clear(A, ctx);
-    gr_ctx_clear(ctx);
-    flint_rand_clear(state);
-    flint_free(P);
-    flint_free(rank);
-    exit(error);
-  }
-  flint_printf("----------------------------------------------\nZ^T = ");
-  gr_mat_print(Z, ctx);
-  flint_printf("\n");
-  error = gr_mat_mul(A, A, Z, ctx); // A = ZLUZ^T
-  if (error != 0) {                 // erreur ??
-    gr_mat_clear(Z, ctx);
-    flint_printf("%d\n", error);
-    gr_mat_clear(A, ctx);
-    gr_ctx_clear(ctx);
-    flint_rand_clear(state);
-    flint_free(P);
-    flint_free(rank);
-    exit(error);
-  }
-  flint_printf("----------------------------------------------\nZLUZ^T = ");
-  gr_mat_print(A, ctx);
-  flint_printf("\n");
-  error = gr_mat_sub(A, LU, A, ctx); // A = LU-ZLUZ^T
-  if (error != 0) {                  // erreur ??
 
-    gr_mat_clear(Z, ctx);
-    flint_printf("%d\n", error);
-    gr_mat_clear(A, ctx);
-    gr_ctx_clear(ctx);
-    flint_rand_clear(state);
-    flint_free(P);
-    flint_free(rank);
-    exit(error);
-  }
+  // // création de la toeplitz like avec LU-ZLUZ^T
+  // error = gr_mat_mul(A, LU, Z, ctx); // A = ZLU
+  // if (error != 0) {                  // erreur ??
+  //   gr_mat_clear(Z, ctx);
+  //   flint_printf("%d\n", error);
+  //   gr_mat_clear(A, ctx);
+  //   gr_ctx_clear(ctx);
+  //   flint_rand_clear(state);
+  //   flint_free(P);
+  //   flint_free(rank);
+  //   exit(error);
+  // }
+  // flint_printf("----------------------------------------------\nZLU = ");
+  // gr_mat_print(A, ctx);
+  // flint_printf("\n");
+  // error = gr_mat_transpose(Z, Z, ctx); // Z == Z^T
+  // if (error != 0) {                    // erreur ??
+  //   gr_mat_clear(Z, ctx);
+  //   flint_printf("%d\n", error);
+  //   gr_mat_clear(A, ctx);
+  //   gr_ctx_clear(ctx);
+  //   flint_rand_clear(state);
+  //   flint_free(P);
+  //   flint_free(rank);
+  //   exit(error);
+  // }
+  // flint_printf("----------------------------------------------\nZ^T = ");
+  // gr_mat_print(Z, ctx);
+  // flint_printf("\n");
+
+  // error = gr_mat_mul(A, A, Z, ctx); // A = ZLUZ^T
+  // if (error != 0) {                 // erreur ??
+  //   gr_mat_clear(Z, ctx);
+  //   flint_printf("%d\n", error);
+  //   gr_mat_clear(A, ctx);
+  //   gr_ctx_clear(ctx);
+  //   flint_rand_clear(state);
+  //   flint_free(P);
+  //   flint_free(rank);
+  //   exit(error);
+  // }
+  // flint_printf("----------------------------------------------\nZLUZ^T = ");
+  // gr_mat_print(A, ctx);
+  // error = gr_mat_rank(rank, A, ctx);
+  // flint_printf("\nrank ZLUZ^T = %{slong}", *rank);
+  // flint_printf("\n");
+  // error = gr_mat_sub(A, LU, A, ctx); // A = LU-ZLUZ^T
+  // if (error != 0) {                  // erreur ??
+
+  //   gr_mat_clear(Z, ctx);
+  //   flint_printf("%d\n", error);
+  //   gr_mat_clear(A, ctx);
+  //   gr_ctx_clear(ctx);
+  //   flint_rand_clear(state);
+  //   flint_free(P);
+  //   flint_free(rank);
+  //   exit(error);
+  // }
 
   // clear l'inutiliser
 
@@ -138,7 +144,9 @@ int test_random_toeplitz() {
   gr_ctx_t ctx;
   gr_ctx_init_nmod(ctx, 1009);
   gr_mat_t ran;
-  random_toeplitz(ran, 15, 15, ctx);
+  flint_rand_t state;
+  flint_rand_init(state);
+  random_toeplitz(ran, 5, 5, state, ctx);
   flint_printf("----------------------------------------------\nResultat = ");
   gr_mat_print(ran, ctx);
   flint_printf("\n");

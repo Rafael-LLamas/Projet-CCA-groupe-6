@@ -8,6 +8,6 @@
 
 int test_random_toeplitz();
 
-void random_toeplitz(gr_mat_t A, int n, int m, gr_ctx_t ctx);
+void random_toeplitz(gr_mat_t A, int n, int m, flint_rand_t state, gr_ctx_t ctx);
 
 #endif
