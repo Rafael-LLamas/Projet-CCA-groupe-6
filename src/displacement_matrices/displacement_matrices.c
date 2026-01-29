@@ -92,19 +92,19 @@ Instead of O(n^3), we can just iterate through n * m
 elements (first n-1 * m-1 then n + m), giving us a
 complexity of O(nm). Of matrix A:
 
-                    1 3 5
-                    8 7 8
-                    9 8 7
-                    2 1 1
+                    1 2 3
+                    4 1 2
+                    5 4 9
+                    6 5 4
 
 We can substract the top left diagonal values starting from
 (n,m) to (1,1). Resulting in a correct shift + substract
 operation, giving us ∇A:
 
-                    1 3 5
-                    8 6 5
-                    9 0 0
-                    2 -8 -7
+                    1 2 3
+                    4 0 0
+                    5 0 8
+                    6 0 0
 */
 
 int gr_mat_displacement(gr_mat_t D, gr_mat_t A, gr_ctx_t ctx) {
@@ -134,16 +134,12 @@ int gr_mat_displacement(gr_mat_t D, gr_mat_t A, gr_ctx_t ctx) {
 Now that we can corectly distinguish where we can optimize.
 
 Any matrix call from gr_mat_displacement is going to return ∇A,
-for the previous example, row 2 (9 0 0) we have 2 zeros. It seems
-small for this matrix in particular but if it was a big matrix,
-we would have gone a lot of 0s.
+We can see this as the ones marked form a Toeplitz matrix:
 
-We can see this as the ones marked form a 2x2 Toeplitz matrix:
-
-                    1 3 5
-                    8 *7 *8
-                    9 *8 *7
-                    2 1 1
+                    *1 *2 *3
+                    *4 *1 *2
+                    *5 *4  9
+                    *6 *5 *4
 
 
 */
@@ -151,7 +147,7 @@ We can see this as the ones marked form a 2x2 Toeplitz matrix:
 int test_displacement_matrices() {
   flint_printf("*----------* Displacement Matrix Test *----------*\n");
   gr_ctx_t ctx;
-  gr_ctx_init_fmpz(ctx);
+  gr_ctx_init_nmod(ctx, 1009);
 
   flint_printf(":-------: Manual nxn Toeplitz Matrix Deplacement Test :-------:\n");
   {
@@ -185,18 +181,18 @@ int test_displacement_matrices() {
     gr_mat_init(A, 4, 3, ctx);
     gr_mat_init(D, 4, 3, ctx);
     // (i am too tired to do a double triangular loop future me if ur reading this... dew it -palpatine)
-    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 0, 0, ctx), 1, ctx)); // Row 0: 1, 3, 4
-    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 0, 1, ctx), 3, ctx));
-    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 0, 2, ctx), 4, ctx));
-    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 1, 0, ctx), 8, ctx)); // Row 1: 8, 7, 8
-    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 1, 1, ctx), 7, ctx));
-    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 1, 2, ctx), 8, ctx));
-    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 2, 0, ctx), 9, ctx)); // Row 2: 9, 8, 7
-    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 2, 1, ctx), 8, ctx));
-    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 2, 2, ctx), 7, ctx));
-    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 3, 0, ctx), 2, ctx)); // Row 3: 2, 1, 1
-    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 3, 1, ctx), 1, ctx));
-    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 3, 2, ctx), 1, ctx));
+    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 0, 0, ctx), 1, ctx)); // Row 0: 1, 2, 3
+    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 0, 1, ctx), 2, ctx));
+    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 0, 2, ctx), 3, ctx));
+    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 1, 0, ctx), 4, ctx)); // Row 1: 4, 1, 2
+    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 1, 1, ctx), 1, ctx));
+    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 1, 2, ctx), 2, ctx));
+    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 2, 0, ctx), 5, ctx)); // Row 2: 5, 4, 9
+    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 2, 1, ctx), 4, ctx));
+    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 2, 2, ctx), 9, ctx));
+    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 3, 0, ctx), 6, ctx)); // Row 3: 6, 5, 4
+    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 3, 1, ctx), 5, ctx));
+    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 3, 2, ctx), 4, ctx));
     flint_printf("Input Manual Matrix A:\n");
     gr_mat_print(A, ctx);
     flint_printf("\n");
@@ -212,7 +208,7 @@ int test_displacement_matrices() {
       flint_printf("LU Decomposition successful.\n");
       gr_mat_print(LU, ctx);
     } else
-      flint_printf("LU Decomposition failed.\n"); // due to maths, 1.5 is not an integer
+      flint_printf("LU Decomposition failed.\n");
     flint_free(P);
     gr_mat_clear(LU, ctx);
     gr_mat_clear(A, ctx);
