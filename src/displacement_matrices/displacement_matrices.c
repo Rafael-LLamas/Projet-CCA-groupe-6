@@ -122,7 +122,7 @@ int gr_mat_displacement(gr_mat_t D, gr_mat_t A, gr_ctx_t ctx) {
       FLINT_CHECK(gr_sub(ptr_dest, ptr_cur, ptr_prev, ctx)); // D[i,j] = A[i,j] - A[i-1, j-1]
     }
   }
-  // the rest
+  // copy the rest (first row & columns)
   for (slong i = 0; i < n; i++)
     FLINT_CHECK(gr_set(gr_mat_entry_ptr(D, i, 0, ctx), gr_mat_entry_ptr(A, i, 0, ctx), ctx));
   for (slong j = 1; j < m; j++)
@@ -140,14 +140,14 @@ We can see this as the ones marked form a Toeplitz matrix:
                     *4 *1 *2
                     *5 *4  9
                     *6 *5 *4
-
-
 */
 
+// TODO - might integrate with cmake tests later
 int test_displacement_matrices() {
   flint_printf("*----------* Displacement Matrix Test *----------*\n");
   gr_ctx_t ctx;
   gr_ctx_init_nmod(ctx, 1009);
+  int res = GR_SUCCESS;
 
   flint_printf(":-------: Manual nxn Toeplitz Matrix Deplacement Test :-------:\n");
   {
@@ -175,7 +175,7 @@ int test_displacement_matrices() {
     gr_mat_clear(D, ctx);
   }
 
-  flint_printf(":-------: Manual nxm Matrix Test :-------:\n");
+  flint_printf("\n:-------: Manual nxm Matrix Test :-------:\n");
   {
     gr_mat_t A, D;
     gr_mat_init(A, 4, 3, ctx);
@@ -214,6 +214,49 @@ int test_displacement_matrices() {
     gr_mat_clear(A, ctx);
     gr_mat_clear(D, ctx);
   }
+
+  flint_printf("\n\n:-------: Random Large nxn Matrix Execution Time Test :-------:\n");
+  {
+    slong N = 500;
+    flint_printf("Generating %d x %d matrix...\n", N, N);
+    gr_mat_t A, D1, D2;
+    gr_mat_init(A, N, N, ctx);
+    gr_mat_init(D1, N, N, ctx);
+    gr_mat_init(D2, N, N, ctx);
+    flint_rand_t rand_state;
+    flint_rand_init(rand_state);
+    FLINT_CHECK(gr_mat_randtest(A, rand_state, ctx));
+    // flint_printf("Random Matrix A:\n");
+    // gr_mat_print(A, ctx);
+    clock_t start, end;
+    double time_slow, time_fast;
+    flint_printf("\n\nRunning Safe Method (Matrix Mul)...\n"); // matrix multiplication
+    start = clock();
+    gr_mat_displacement_square(D1, A, ctx);
+    // flint_printf("Safe Book result D1:\n");
+    // gr_mat_print(D1, ctx);
+    end = clock();
+    time_slow = ((double)(end - start)) / CLOCKS_PER_SEC;
+    flint_printf("\nUnoptimized Time: %f seconds\n", time_slow);
+    flint_printf("Running Optimized Method (Element-wise)...\n"); // faster one
+    start = clock();
+    gr_mat_displacement(D2, A, ctx);
+    // flint_printf("Safe Book result D2:\n");
+    // gr_mat_print(D2, ctx);
+    end = clock();
+    time_fast = ((double)(end - start)) / CLOCKS_PER_SEC;
+    flint_printf("\nOptimized Time: %f seconds\n", time_fast);
+    if (gr_mat_equal(D1, D2, ctx) == T_TRUE)
+      flint_printf("[SUCCESS] Both results are the same\n");
+    else {
+      flint_printf("[FAILED] Results are different!\n");
+      res = GR_TEST_FAIL;
+    }
+    gr_mat_clear(A, ctx);
+    gr_mat_clear(D1, ctx);
+    gr_mat_clear(D2, ctx);
+  }
+
   gr_ctx_clear(ctx);
-  return GR_SUCCESS;
+  return res;
 }

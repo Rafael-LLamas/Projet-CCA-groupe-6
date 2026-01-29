@@ -10,6 +10,17 @@ cmake ..
 make
 ```
 
+## Execute Tests
+The results are written in `output_[NAME].txt`.
+```bash
+./main
+```
+Can also specifically call tests:
+```
+./main [TEST NAME]
+```
+
+
 > ### Note to Arda from Arda regarding FLINT
 > Cmake is primarily for Windows users, I use the GNU autotools build. Install prerequisites:
 > 
