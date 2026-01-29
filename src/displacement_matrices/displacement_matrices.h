@@ -25,6 +25,12 @@ int test_displacement_matrices();
  */
 int gr_mat_displacement_square(gr_mat_t D, gr_mat_t A, gr_ctx_t ctx);
 
+/**
+ * @brief Returns the displacement matrix nxm matrices.
+ * Complexity: O(n*m), iterates through each element.
+ * @param[out] D Resulting L shaped matrix
+ * @param[in] A Input matrix
+ */
 int gr_mat_displacement(gr_mat_t D, gr_mat_t A, gr_ctx_t ctx);
 
 #endif

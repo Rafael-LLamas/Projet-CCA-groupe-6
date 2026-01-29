@@ -15,10 +15,9 @@ struct Command registry[] = {
     {"displacement", test_displacement_matrices}, {"random", test_random_toeplitz}, {NULL, NULL}};
 
 void usage() {
-  fprintf(stderr, "Usage: ./main [test_name] ...\n\n");
-  fprintf(stderr, "Available tests:\n");
+  fprintf(stderr, "Usage: ./main [test_name] ...\n");
+  fprintf(stderr, "Available tests:\n");;
   for (int i = 0; registry[i].name != NULL; i++) { fprintf(stderr, "  - %s\n", registry[i].name); }
-  fprintf(stderr, "\nBut we thought about you. We are turning all tests while you are reading this.\n");
 }
 
 void execute_command(char *name, int (*func)(void)) {
