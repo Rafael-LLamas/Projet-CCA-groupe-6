@@ -54,7 +54,7 @@ Doing this way allows us to use gr_mat_mul directly rather
 than translating two instances of vectors.
 */
 
-int gr_mat_displacement_square(gr_mat_t D, gr_mat_t A, gr_ctx_t ctx) {
+int gr_mat_displacement_square_safe(gr_mat_t D, gr_mat_t A, gr_ctx_t ctx) {
   slong n = gr_mat_nrows(A, ctx);
   gr_mat_t Z, ZT, Temp1, Temp2;
   gr_mat_init(Z, n, n, ctx);
@@ -108,14 +108,15 @@ operation, giving us ∇A:
 */
 
 int gr_mat_displacement(gr_mat_t D, gr_mat_t A, gr_ctx_t ctx) {
+
   slong n = gr_mat_nrows(A, ctx);
   slong m = gr_mat_ncols(A, ctx);
   if (gr_mat_nrows(D, ctx) != n || gr_mat_ncols(D, ctx) != m) return GR_UNABLE;
-
   gr_ptr ptr_cur, ptr_prev, ptr_dest;
+
   // inner part
   for (slong i = n - 1; i > 0; i--) {
-    for (slong j = m - 1; j > 0; j--) {
+    for (slong j = 1; j < m; j++) {
       ptr_cur = gr_mat_entry_ptr(A, i, j, ctx);
       ptr_prev = gr_mat_entry_ptr(A, i - 1, j - 1, ctx);
       ptr_dest = gr_mat_entry_ptr(D, i, j, ctx);
@@ -167,6 +168,7 @@ int test_displacement_matrices() {
     flint_printf("Input Manual Matrix A:\n");
     gr_mat_print(A, ctx);
     flint_printf("\n");
+    flint_printf("Input LU Matrix A:\n");
     gr_mat_displacement(D, A, ctx);
     flint_printf("Displacement Matrix (∇A):\n");
     gr_mat_print(D, ctx);
@@ -232,7 +234,7 @@ int test_displacement_matrices() {
     double time_slow, time_fast;
     flint_printf("\n\nRunning Safe Method (Matrix Mul)...\n"); // matrix multiplication
     start = clock();
-    gr_mat_displacement_square(D1, A, ctx);
+    gr_mat_displacement_square_safe(D1, A, ctx);
     // flint_printf("Safe Book result D1:\n");
     // gr_mat_print(D1, ctx);
     end = clock();

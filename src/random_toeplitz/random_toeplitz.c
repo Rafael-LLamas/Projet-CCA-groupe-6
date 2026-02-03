@@ -69,7 +69,7 @@ void random_toeplitz(gr_mat_t A, int n, int m, flint_rand_t state, gr_ctx_t ctx)
 
 int test_random_toeplitz() {
   gr_ctx_t ctx;
-  gr_ctx_init_nmod(ctx, 29);
+  gr_ctx_init_nmod(ctx, 1009);
   gr_mat_t ran;
   flint_rand_t state;
   flint_rand_init(state);

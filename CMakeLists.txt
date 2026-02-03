@@ -47,6 +47,7 @@ set(SOURCES
     src/main.c
     src/displacement_matrices/displacement_matrices.c
     src/random_toeplitz/random_toeplitz.c
+    src/utility/matrix_aux.c
 )
 
 add_executable(main ${SOURCES})
@@ -54,4 +55,5 @@ target_link_libraries(main PRIVATE flint_core)
 target_include_directories(main PRIVATE # this one helps with include paths
     src/displacement_matrices
     src/random_toeplitz
+    src/utility
 )

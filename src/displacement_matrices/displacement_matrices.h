@@ -23,7 +23,7 @@ int test_displacement_matrices();
  * @param[out] D Resulting L shaped matrix of xnx
  * @param[in] A Input square nxn toeplitz matrix
  */
-int gr_mat_displacement_square(gr_mat_t D, gr_mat_t A, gr_ctx_t ctx);
+int gr_mat_displacement_square_safe(gr_mat_t D, gr_mat_t A, gr_ctx_t ctx);
 
 /**
  * @brief Returns the displacement matrix nxm matrices.

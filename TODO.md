@@ -1,24 +1,22 @@
-# Week of 26/01/2026
+# Week of 01/02/2026
 
-## Utilities & Testing
-- [ ] **Random Generators**
-    - Write a function to generate random matrices of size nxn. (square for now)
-    - Write a function to generate random vectors (for testing multiplication/actions).
+- implement a random Matrix generator (matrix_aux.c)
+    + just normal, iterate each elements and assign a random element in it.
 
-## Core Stuff
-- [ ] **Displacement Matrix Function**
-    - Write a function that accepts matrix `A` as input which then calculates and returns the Displacement Matrix.
-- [ ] **Translation Function Toeplitz -> Normal**
-    - Write a function that accepts a Toeplitz / Quasi-Toeplitz matrix `A` and returns a full matrix.
+- LU decomposition (matrix_aux.c)
+    + gr_mat_lu is not proper, returns a LU that in a row echelon form and not a strict upper and lower form
+    + extract the LU with the logic sent from the prof
+    ! U is in Row Echelon Form (staircase shape),not necessariliy an upper.
+        !! should ensure that pivots dont need to be in (i,i)
+    + plug this in to the generation of a displacement matrix -> take matrix A, generate G and H^T
 
-## Ez Stuff
-- [ ] **Init Project Report**
-- [X] **Create some weekly TODO list**
-- [LATER] **Update the readme**. 
+- check memory leaks
+    + oh boy
 
+----------------------- if enough time -----------------------
 
-### Notes:
-- Next meeting this friday 30/01/2026 10:45
-- Christophe Mouilleron (2011) Deplacement Op. Section 1.3
-- Do some executions in sagemath
-- verify how sagemath hangles polynomial matrix mult for block toeplitz.
+- toeplitz matrix addition
+    + apparently not as easy as it seems
+
+- toeplitz matrix multiplication
+    + apparently not as easy as it seems
