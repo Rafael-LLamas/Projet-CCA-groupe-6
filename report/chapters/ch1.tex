@@ -2,6 +2,82 @@
 
 \subsection{Toeplitz Matrices}
 
+A Toeplitz matrix is in which each element in first row and first column descends diagonally.
+For a matrix $A \in \mathbb{K}^{n \times m}$, it satisfies the condition $A_{i,j} = A_{i+1, j+1}$.
+Formally, it is defined by a sequence of elements $\{a_k\}$ such that:
+
+\begin{equation}
+    A =
+    \begin{pmatrix}
+        a_0     & a_{-1}  & a_{-2}  & \cdots & a_{-(m-1)} \\
+        a_1     & a_0     & a_{-1}  & \cdots & a_{-(m-2)} \\
+        a_2     & a_1     & a_0     & \cdots & a_{-(m-3)} \\
+        \vdots  & \vdots  & \vdots  & \ddots & \vdots     \\
+        a_{n-1} & a_{n-2} & a_{n-3} & \cdots & a_{n-m}
+    \end{pmatrix}
+\end{equation}
+\[
+    A_{i,j} = a_{i-j}, \quad 0 \le i < n,\; 0 \le j < m
+\]
+
 \subsubsection{Quasi Toeplitz Matrices}
 
+A Quasi-Toeplitz matrix is not strictly Toeplitz but shares similar structural properties.
+Can benefit the structural advantages of Toeplitz partially in these matrices.
+
 \subsection{Displacement Matrices}
+
+For a matrix $A \in \mathbb{K}^{n \times m}$, we define the displacement matrix $\nabla A$ using:
+\begin{equation}
+    \nabla A = A - Z A Z^T
+\end{equation}
+where $Z$ represents the lower shift matrix and $Z^T$ represents the upper shift matrix.
+Essentially, $Z$ is a matrix with ones on the first sub-diagonal and zeros everywhere else:
+\begin{equation}
+    Z = \begin{pmatrix}
+    0 & 0 & 0 & \cdots & 0 \\
+    1 & 0 & 0 & \cdots & 0 \\
+    0 & 1 & 0 & \cdots & 0 \\
+    \vdots & \vdots & \ddots & \ddots & \vdots \\
+    0 & 0 & \cdots & 1 & 0
+    \end{pmatrix}
+    Z^T = \begin{pmatrix}
+    0 & 1 & 0 & \cdots & 0 \\
+    0 & 0 & 1 & \cdots & 0 \\
+    0 & 0 & 0 & \cdots & 1 \\
+    \vdots & \vdots & \ddots & \ddots & \vdots \\
+    0 & 0 & \cdots & 0 & 0
+    \end{pmatrix}
+\end{equation}
+Multiplying a matrix $A$ by $Z$ from the left ($ZA$) shifts the rows of $A$ down by one (zeros at the top).
+Multiplying by $Z^T$ from the right ($AZ^T$) shifts the columns to the right, (zeros at the first column).
+
+\subsubsection{Mathematical Approach}
+Result, operation $ZAZ^T$ shifts the entire matrix $A$ one step to the bottom-right. 
+
+For a generic Toeplitz matrix of size $n \times m$, this subtraction results in zeros everywhere except for the first row and the first column.
+\begin{equation}
+    \nabla A = \begin{pmatrix}
+    y_0 & x_1 & x_2 & \cdots & x_{m-1} \\
+    y_1 & 0 & 0 & \cdots & 0 \\
+    y_2 & 0 & 0 & \cdots & 0 \\
+    \vdots & \vdots & \vdots & \ddots & \vdots \\
+    y_{n-1} & 0 & 0 & \cdots & 0
+    \end{pmatrix} \in \mathbb{K}^{n \times m}
+\end{equation}
+This allows us to represent the $n \times m$ matrix using only $O(n + m)$ elements rather than storing the full $O(nm)$ dense matrix.
+
+\subsubsection{Computational Approach}
+While this definition involves matrix multiplication, in this case $O(n^2 * m)$ or similar depending on the multiplication method used,
+calculating $\nabla A$ explicitly via matrix multiplication is inefficient.
+
+The displacement calculation can be reduced to an element based loop with complexity $O(nm)$:
+\begin{equation}
+    (\nabla A)_{i,j} = 
+    \begin{cases} 
+    A_{i,j} & \text{if } i=0 \text{ or } j=0 \\
+    A_{i,j} - A_{i-1, j-1} & \text{otherwise}
+    \end{cases}
+\end{equation}
+
+This approach allows us to iterate from the bottom row to the top updating values in place.

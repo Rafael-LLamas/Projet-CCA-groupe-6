@@ -87,8 +87,12 @@ int rand_quasi_toeplitz() {}
 
 int test_random_toeplitz() {
   gr_ctx_t ctx;
+<<<<<<< HEAD
   gr_ctx_init_nmod(ctx, 29);
   int error;
+=======
+  gr_ctx_init_nmod(ctx, 1009);
+>>>>>>> 1f292f5652e563890b594ab63f57b2ddbd3022b0
   gr_mat_t ran;
   flint_rand_t state;
   flint_rand_init(state);
