@@ -10,9 +10,6 @@
         !! should ensure that pivots dont need to be in (i,i)
     + plug this in to the generation of a displacement matrix -> take matrix A, generate G and H^T
 
-- check memory leaks
-    + oh boy
-
 ----------------------- if enough time -----------------------
 
 - toeplitz matrix addition
