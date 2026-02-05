@@ -12,8 +12,10 @@ struct Command {
 };
 
 // raphael add your functions here ---
-struct Command registry[] = {
-    {"displacement", test_displacement_matrices}, {"random", test_random_toeplitz}, {"aux", test_matrix_aux}};
+struct Command registry[] = {{"displacement", test_displacement_matrices},
+                             {"random", test_random_toeplitz},
+                             {"aux", test_matrix_aux},
+                             {NULL, NULL}};
 
 void usage() {
   fprintf(stderr, "Usage: ./main [test_name] ...\n");
@@ -29,8 +31,10 @@ void execute_command(char *name, int (*func)(void)) {
     perror("Failed to open output file");
     return;
   }
-  if (func()) perror("A test failed.");
-  fflush(stdout);
+  if (func()) {
+    perror("A test failed.");
+    fprintf(stderr, "\n Test: %s\n", name);
+  }
 }
 
 int run_selected(char *name) {
