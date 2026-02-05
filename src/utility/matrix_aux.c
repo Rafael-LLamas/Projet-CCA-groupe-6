@@ -39,7 +39,7 @@ int gr_mat_lu_detach(gr_mat_t L, gr_mat_t U, gr_mat_t LU, gr_ctx_t ctx) {
   for (int i = 0; i < gr_mat_nrows(LU, ctx); i++) {
     for (int j = 0; j < gr_mat_ncols(LU, ctx); j++) {
       if (i == j) {
-        error = gr_mat_set_ui(gr_mat_entry_ptr(L, i, j, ctx), 1, ctx);
+        error = gr_set_ui(gr_mat_entry_ptr(L, i, j, ctx), 1, ctx);
         if (error != 0) return error;
       }
     }
