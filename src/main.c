@@ -4,6 +4,7 @@
 
 #include "displacement_matrices.h"
 #include "random_toeplitz.h"
+#include "utility/matrix_aux.h"
 
 struct Command {
   char *name;
@@ -12,11 +13,12 @@ struct Command {
 
 // raphael add your functions here ---
 struct Command registry[] = {
-    {"displacement", test_displacement_matrices}, {"random", test_random_toeplitz}, {NULL, NULL}};
+    {"displacement", test_displacement_matrices}, {"random", test_random_toeplitz}, {"aux", test_matrix_aux}};
 
 void usage() {
   fprintf(stderr, "Usage: ./main [test_name] ...\n");
-  fprintf(stderr, "Available tests:\n");;
+  fprintf(stderr, "Available tests:\n");
+  ;
   for (int i = 0; registry[i].name != NULL; i++) { fprintf(stderr, "  - %s\n", registry[i].name); }
 }
 
