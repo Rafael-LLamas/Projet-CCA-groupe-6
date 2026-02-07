@@ -57,3 +57,11 @@ target_include_directories(main PRIVATE # this one helps with include paths
     src/random_toeplitz
     src/utility
 )
+
+####
+# Tests
+###
+
+add_test(NAME DisplacementTest COMMAND main displacement)
+add_test(NAME RandomTest       COMMAND main random)
+add_test(NAME AuxTest          COMMAND main aux)
