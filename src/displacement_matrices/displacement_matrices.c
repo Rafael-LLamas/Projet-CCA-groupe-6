@@ -9,53 +9,6 @@
 #include <stdlib.h>
 #include <time.h>
 
-/*
-We are currently focusing on square Toeplitz matrices.
-We can represent a Toeplitz matrix with only 2 vectors,
-thus reducing its size + time of calculation.
-
-This file is the first step in calculation of this
-displacement matrix (∇A):
-
-∇A = A − ZAZ^T
-
-This essentially shifts the matrix A one step to the right
-and bottom, leaving the first line and the first column
-with 0s, minus A, creates 2 vectors representing the
-Toeplitz matrix.
-
-Some vocabulary:
-    Z   : Lower Shift
-    Z^T : Upper Shift
-
-Later we will focus on non square toeplitz matrices,
-block toeplitz matrices.
-
-Structure for optimized storage:
-We know that the displacemenet matrix is an L shaped one.
-
-                    L U U U ... U
-                    L 0 0 0 ... 0
-                    L 0 0 0 ... 0
-                    ... 0 0 ... 0
-                    L 0 0 0 ... 0
-
-Which is 2 vectors. For future proofing, we will store them
-in 2 matrices.
-
-        L   1
-        L   0               1 0 0 0 ... 0
-        L   0       and     0 U U U ... U
-        ... 0
-        L   0
-
-We will name these two matrices G and H^T as marked in
-Definition 1.6
-For different rangs, the size of these will change.
-Doing this way allows us to use gr_mat_mul directly rather
-than translating two instances of vectors.
-*/
-
 int gr_mat_displacement_square_safe(gr_mat_t D, gr_mat_t A, gr_ctx_t ctx) {
   slong n = gr_mat_nrows(A, ctx);
   gr_mat_t Z, ZT, Temp1, Temp2;
@@ -80,41 +33,10 @@ int gr_mat_displacement_square_safe(gr_mat_t D, gr_mat_t A, gr_ctx_t ctx) {
   return GR_SUCCESS;
 }
 
-/*
-Keeping this function in mind,
-Let's turn our focus to a more general case.
-
-For any matrix A of size nxm, we find it's ∇A.
-(rows x cols)
-
-I noticed, doing on paper, its just a substraction
-of diagonal values. We can optimize this operation while
-evading temporary (any Z) matrices.
-Instead of O(n^3), we can just iterate through n * m
-elements (first n-1 * m-1 then n + m), giving us a
-complexity of O(nm). Of matrix A:
-
-                    1 2 3
-                    4 1 2
-                    5 4 9
-                    6 5 4
-
-We can substract the top left diagonal values starting from
-(n,m) to (1,1). Resulting in a correct shift + substract
-operation, giving us ∇A:
-
-                    1 2 3
-                    4 0 0
-                    5 0 8
-                    6 0 0
-*/
-
 int gr_mat_displacement(gr_mat_t D, gr_mat_t A, gr_ctx_t ctx) {
-
   slong n = gr_mat_nrows(A, ctx);
   slong m = gr_mat_ncols(A, ctx);
   if (gr_mat_nrows(D, ctx) != n || gr_mat_ncols(D, ctx) != m) return GR_UNABLE;
-  FLINT_CHECK(gr_mat_zero(D, ctx)); // this line cost me 2 hours
   gr_ptr ptr_cur, ptr_prev, ptr_dest;
 
   // inner part
@@ -134,63 +56,40 @@ int gr_mat_displacement(gr_mat_t D, gr_mat_t A, gr_ctx_t ctx) {
   return GR_SUCCESS;
 }
 
-/*
-Now that we can corectly distinguish where we can optimize.
-
-Any matrix call from gr_mat_displacement is going to return ∇A,
-We can see this as the ones marked form a Toeplitz matrix:
-
-                    *1 *2 *3
-                    *4 *1 *2
-                    *5 *4  9
-                    *6 *5 *4
-
-
-Now that we have succesfully detatched the LU matrix with
-L and U (see matrix_aux.c), we can now store them as G and H^T:
-
-L is lower, G acts as a lower basis in this context. It is
-formed by the first nb.rank columns of L.
-
-U is upper, H acts as an upper basis. H is stored transpose
-of the first nb.rank rows of U.
-*/
-
-int gr_mat_G_H(gr_mat_t G, gr_mat_t H, gr_mat_t A, gr_ctx_t ctx) {
-  int error = GR_SUCCESS;
+int gr_mat_G_H(gr_mat_t G, gr_mat_t H, gr_mat_t A, slong *rank, gr_ctx_t ctx) {
   slong m = gr_mat_nrows(A, ctx);
   slong n = gr_mat_ncols(A, ctx);
-  slong rank;
+  slong rank_displacement;
   slong *P = flint_malloc(m * sizeof(slong));
-
+  gr_mat_displacement(A, A, ctx);
+  FLINT_CHECK(gr_mat_rank(&rank_displacement, A, ctx));
+  if (rank_displacement != *rank) {
+    if (*rank == -1) {
+      gr_mat_clear(H, ctx);
+      gr_mat_clear(G, ctx);
+    }
+    gr_mat_init(G, m, rank_displacement, ctx);
+    gr_mat_init(H, n, rank_displacement, ctx);
+    *rank = rank_displacement;
+  }
   gr_mat_t LU, L, U;
   gr_mat_init(LU, m, n, ctx);
   gr_mat_init(L, m, m, ctx);
   gr_mat_init(U, m, n, ctx);
-
-  error = gr_mat_lu(&rank, P, LU, A, 0, ctx);
-  if (error != 0) goto cleanup;
-  error = gr_mat_lu_detach(L, U, LU, ctx);
-  if (error != 0) goto cleanup;
-  for (slong i = 0; i < m; i++) { // extract G
-    for (slong j = 0; j < rank; j++) {
-      error = gr_set(gr_mat_entry_ptr(G, i, j, ctx), gr_mat_entry_srcptr(L, i, j, ctx), ctx);
-      if (error != 0) goto cleanup;
-    }
-  }
-  for (slong i = 0; i < rank; i++) { // extract H
-    for (slong j = 0; j < n; j++) {
-      error = gr_set(gr_mat_entry_ptr(H, j, i, ctx), gr_mat_entry_srcptr(U, i, j, ctx), ctx);
-      if (error != 0) goto cleanup;
-    }
-  }
-  for (slong i = 0; i < gr_mat_nrows(G, ctx); i++) FLINT_CHECK(gr_mat_move_row(G, i, P[i], ctx)); // TODO
-cleanup:
+  FLINT_CHECK(gr_mat_lu(rank, P, LU, A, 0, ctx));
+  FLINT_CHECK(gr_mat_lu_detach(L, U, LU, ctx));
+  for (slong i = 0; i < m; i++) // extract G
+    for (slong j = 0; j < *rank; j++)
+      FLINT_CHECK(gr_set(gr_mat_entry_ptr(G, i, j, ctx), gr_mat_entry_srcptr(L, i, j, ctx), ctx));
+  for (slong i = 0; i < *rank; i++) // extract H
+    for (slong j = 0; j < n; j++)
+      FLINT_CHECK(gr_set(gr_mat_entry_ptr(H, j, i, ctx), gr_mat_entry_srcptr(U, i, j, ctx), ctx));
+  // for (slong i = 0; i < gr_mat_nrows(G, ctx); i++) FLINT_CHECK(gr_mat_move_row(G, i, P[i], ctx));
   flint_free(P);
   gr_mat_clear(LU, ctx);
   gr_mat_clear(L, ctx);
   gr_mat_clear(U, ctx);
-  return error;
+  return GR_SUCCESS;
 }
 
 // TODO - might integrate with cmake tests later
@@ -311,26 +210,20 @@ int test_displacement_matrices() {
 
   flint_printf("\n\n:-------: A Toeplitz matrix -> G & H Test :-------:\n");
   {
-    gr_mat_t A, A_disp, B, G, H, HT;
-    slong m = 7, n = 7, rank;
+    gr_mat_t A, B, T, G, H, HT;
+    slong m = 7, n = 7, rank = 0;
     slong *P = flint_malloc(sizeof(slong) * m);
     flint_rand_t state;
     gr_ctx_init_nmod(ctx, GNMOD);
     flint_rand_init(state);
     gr_mat_init(A, m, n, ctx);
-    gr_mat_init(A_disp, m, n, ctx);
     gr_mat_init(B, m, n, ctx);
+    gr_mat_init(T, m, n, ctx);
     random_toeplitz(A, n, m, state, ctx);
+    FLINT_CHECK(gr_mat_set(T, A, ctx));
     flint_printf("Original matrix A:\n");
     gr_mat_print(A, ctx);
-    flint_printf("\nDisplacement Matrix of A:\n");
-    gr_mat_displacement(A_disp, A, ctx);
-    gr_mat_print(A_disp, ctx);
-    FLINT_CHECK(gr_mat_rank(&rank, A_disp, ctx));
-    flint_printf("\nRank detected: %ld\n", rank);
-    gr_mat_init(G, m, rank, ctx);
-    gr_mat_init(H, n, rank, ctx);
-    gr_mat_G_H(G, H, A_disp, ctx);
+    gr_mat_G_H(G, H, A, &rank, ctx);
     flint_printf("\nGenerator G (%ldx%ld):\n", m, rank);
     gr_mat_print(G, ctx);
     flint_printf("\nGenerator H (%ldx%ld):\n", n, rank);
@@ -338,11 +231,14 @@ int test_displacement_matrices() {
     gr_mat_init(HT, rank, n, ctx); // reconstruct B = G * H^T
     FLINT_CHECK(gr_mat_transpose(HT, H, ctx));
     FLINT_CHECK(gr_mat_mul(B, G, HT, ctx));
-    flint_printf("\nReconstructed Matrix B (=displacement of A):\n");
+    flint_printf("\nReconstructed Matrix B:\n");
     gr_mat_print(B, ctx);
+    flint_printf("\nShould Be equal to displacement matrix of A:\n");
+    FLINT_CHECK(gr_mat_displacement(T, T, ctx));
+    gr_mat_print(T, ctx);
     flint_free(P);
     gr_mat_clear(A, ctx);
-    gr_mat_clear(A_disp, ctx);
+    gr_mat_clear(T, ctx);
     gr_mat_clear(G, ctx);
     gr_mat_clear(H, ctx);
     gr_mat_clear(HT, ctx);
@@ -351,26 +247,20 @@ int test_displacement_matrices() {
 
   flint_printf("\n\n:-------: A Quasi Toeplitz matrix -> G & H Test :-------:\n");
   {
-    gr_mat_t A, A_disp, B, G, H, HT;
-    slong m = 7, n = 7, rank;
+    gr_mat_t A, B, T, G, H, HT;
+    slong m = 7, n = 7, rank = 0;
     slong *P = flint_malloc(sizeof(slong) * m);
     flint_rand_t state;
     gr_ctx_init_nmod(ctx, GNMOD);
     flint_rand_init(state);
     gr_mat_init(A, m, n, ctx);
-    gr_mat_init(A_disp, m, n, ctx);
     gr_mat_init(B, m, n, ctx);
+    gr_mat_init(T, m, n, ctx);
     random_quasi_toeplitz(A, n, m, state, ctx);
+    FLINT_CHECK(gr_mat_set(T, A, ctx));
     flint_printf("Original matrix A:\n");
     gr_mat_print(A, ctx);
-    flint_printf("\nDisplacement Matrix of A:\n");
-    gr_mat_displacement(A_disp, A, ctx);
-    gr_mat_print(A_disp, ctx);
-    FLINT_CHECK(gr_mat_rank(&rank, A_disp, ctx));
-    flint_printf("\nRank detected: %ld\n", rank);
-    gr_mat_init(G, m, rank, ctx);
-    gr_mat_init(H, n, rank, ctx);
-    gr_mat_G_H(G, H, A_disp, ctx);
+    gr_mat_G_H(G, H, A, &rank, ctx);
     flint_printf("\nGenerator G (%ldx%ld):\n", m, rank);
     gr_mat_print(G, ctx);
     flint_printf("\nGenerator H (%ldx%ld):\n", n, rank);
@@ -378,11 +268,14 @@ int test_displacement_matrices() {
     gr_mat_init(HT, rank, n, ctx); // reconstruct B = G * H^T
     FLINT_CHECK(gr_mat_transpose(HT, H, ctx));
     FLINT_CHECK(gr_mat_mul(B, G, HT, ctx));
-    flint_printf("\nReconstructed Matrix B (=displacement of A):\n");
+    flint_printf("\nReconstructed Matrix B:\n");
     gr_mat_print(B, ctx);
+    flint_printf("\nShould Be equal to displacement matrix of A:\n");
+    FLINT_CHECK(gr_mat_displacement(T, T, ctx));
+    gr_mat_print(T,ctx);
     flint_free(P);
     gr_mat_clear(A, ctx);
-    gr_mat_clear(A_disp, ctx);
+    gr_mat_clear(T, ctx);
     gr_mat_clear(G, ctx);
     gr_mat_clear(H, ctx);
     gr_mat_clear(HT, ctx);

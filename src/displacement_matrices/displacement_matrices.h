@@ -29,11 +29,11 @@ int gr_mat_displacement(gr_mat_t D, gr_mat_t A, gr_ctx_t ctx);
 
 /**
  * @brief Returns the G and H matrices by the LU decomposition.
- * Complexity: O(n*m), iterates through each element.
  * @param[out] G Resulting G matrix
  * @param[out] H Resulting H^T matrix
  * @param[in] A Input Quasi Toeplitz or Toeplitz matrix
+ * @param rank Rank of the displacement matrix of A. (Attention for G and H the function will change: "-1" if already init., "0" if not init. )
  */
-int gr_mat_G_H(gr_mat_t G, gr_mat_t H, gr_mat_t A, gr_ctx_t ctx);
+int gr_mat_G_H(gr_mat_t G, gr_mat_t H, gr_mat_t A, slong *rank, gr_ctx_t ctx);
 
 #endif
