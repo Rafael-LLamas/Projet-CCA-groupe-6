@@ -92,7 +92,33 @@ int gr_mat_G_H(gr_mat_t G, gr_mat_t H, gr_mat_t A, slong *rank, gr_ctx_t ctx) {
   return GR_SUCCESS;
 }
 
-// TODO - might integrate with cmake tests later
+int gr_mat_reconstruct_A_safe(gr_mat_t *A, gr_mat_t G, gr_mat_t H, gr_ctx_t ctx) {
+  slong m = gr_mat_nrows(G, ctx);
+  slong n = gr_mat_nrows(H, ctx);
+  slong rank = gr_mat_ncols(G, ctx);
+  gr_mat_init(*A, m, n, ctx); // need to discuss this later
+  gr_ptr sum_res = gr_heap_init(ctx); // final value for A[i,j]
+  gr_ptr temp = gr_heap_init(ctx);    // g * h
+  for (slong i = 0; i < m; i++) {     // for every element of A
+    for (slong j = 0; j < n; j++) {
+      FLINT_CHECK(gr_zero(sum_res, ctx));
+      for (slong k = 0; k < rank; k++) { // Sigma - calculate this directly (L_k * U_k)[i,j]
+        slong minij = FLINT_MIN(i, j);
+        for (slong x = 0; x <= minij; x++) { 
+          // L[i, x] = G[i-x, k]
+          // U[x, j] = H[j-x, k]
+          FLINT_CHECK(gr_mul(temp, gr_mat_entry_ptr(G, i - x, k, ctx), gr_mat_entry_ptr(H, j - x, k, ctx), ctx));
+          FLINT_CHECK(gr_add(sum_res, sum_res, temp, ctx));
+        }
+      }
+      FLINT_CHECK(gr_set(gr_mat_entry_ptr(*A, i, j, ctx), sum_res, ctx));
+    }
+  }
+  gr_heap_clear(sum_res, ctx);
+  gr_heap_clear(temp, ctx);
+  return GR_SUCCESS;
+}
+
 int test_displacement_matrices() {
   flint_printf("*----------* Displacement Matrix Test *----------*\n");
   gr_ctx_t ctx;
@@ -272,7 +298,7 @@ int test_displacement_matrices() {
     gr_mat_print(B, ctx);
     flint_printf("\nShould Be equal to displacement matrix of A:\n");
     FLINT_CHECK(gr_mat_displacement(T, T, ctx));
-    gr_mat_print(T,ctx);
+    gr_mat_print(T, ctx);
     flint_free(P);
     gr_mat_clear(A, ctx);
     gr_mat_clear(T, ctx);
@@ -282,6 +308,27 @@ int test_displacement_matrices() {
     gr_mat_clear(B, ctx);
   }
 
+  flint_printf("\n\n:-------: Reconstruction Test :-------:\n");
+  {
+    gr_mat_t A, A_rec, G, H;
+    slong m = 7, n = 7, rank = 0;
+    flint_rand_t state;
+    gr_ctx_init_nmod(ctx, GNMOD);
+    flint_rand_init(state);
+    gr_mat_init(A, m, n, ctx);
+    random_quasi_toeplitz(A, n, m, state, ctx);
+    flint_printf("Original Matrix A:\n");
+    gr_mat_print(A, ctx);
+    gr_mat_G_H(G, H, A, &rank, ctx);
+    FLINT_CHECK(gr_mat_reconstruct_A_safe(&A_rec, G, H, ctx));
+    flint_printf("\nReconstructed Matrix:\n");
+    gr_mat_print(A_rec, ctx);
+    gr_mat_clear(A_rec, ctx);
+    gr_mat_clear(A, ctx);
+    gr_mat_clear(G, ctx);
+    gr_mat_clear(H, ctx);
+    flint_rand_clear(state);
+  }
   gr_ctx_clear(ctx);
   return res;
 }

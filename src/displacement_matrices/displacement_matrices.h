@@ -36,4 +36,6 @@ int gr_mat_displacement(gr_mat_t D, gr_mat_t A, gr_ctx_t ctx);
  */
 int gr_mat_G_H(gr_mat_t G, gr_mat_t H, gr_mat_t A, slong *rank, gr_ctx_t ctx);
 
+int gr_mat_reconstruct_A_safe(gr_mat_t *A, gr_mat_t G, gr_mat_t H, gr_ctx_t ctx);
+
 #endif
