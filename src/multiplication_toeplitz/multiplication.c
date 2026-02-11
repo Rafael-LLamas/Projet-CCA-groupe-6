@@ -50,36 +50,26 @@ int gr_multiplication_toeplitz(gr_mat_t C, gr_mat_t A, gr_mat_t B, gr_ctx_t ctx)
 }
 
 int gr_multiplication_générateur_déplacement(G_c, H_c, G_a, H_a, G_b, H_b, ctx) {
+  /*
+  Donc si j'ai compris cette fois-ci:
+  On a 4 générateur de déplacement pour les matrices A et B.
+  Pour eviter des multiplication inutile on va juste les utilisé pour avoir en théorie du O(nlog(n))(complexité de FFT
+  si je me souviens bien ?) Donc normalement C = G_c * H_c^T et C = A * B donc :
+  G_c = G_A | U , U = A * G_b ,A = somme( L(gk) * U(Hk))
+  H_c = V | H_b , V = B^t * H_a ,B = somme( L(hk) * U(gk))
+  */
   int error;
-  gr_mat_t temp;
-  gr_mat_t HtransA, HtransB;
-  error = gr_mat_init_set(HtransA, H_a, ctx);
+  gr_mat_t U, V;
+
+  error = gr_mat_reconstruct_A_safe(G_a, H_a, U, ctx);
   if (error != 0) { return error; }
-  error = gr_mat_init_set(HtransB, H_b, ctx);
+  error = gr_mat_concat_horizontal(G_c, G_a, U, ctx);
   if (error != 0) { return error; }
-  error = gr_mat_transpose(HtransA, HtransA, ctx);
+
+  error = gr_mat_reconstruct_A_safe(H_b, G_b, V, ctx);
   if (error != 0) { return error; }
-  error = gr_mat_transpose(HtransB, HtransB, ctx);
-  if (error != 0) { return error; }
-  error = gr_mat_init_set(temp, G_a, ctx);
-  if (error != 0) { return error; }
-  error = gr_mat_mul(temp, temp, HtransA, ctx);
-  if (error != 0) { return error; }
-  error = gr_mat_mul(temp, temp, G_b, ctx);
-  if (error != 0) { return error; }
-  error = gr_mat_concat_horizontal(G_c, G_a, temp, ctx);
-  if (error != 0) { return error; }
-  error = gr_mat_set(temp, G_b, ctx);
-  if (error != 0) { return error; }
-  error = gr_mat_mul(temp, temp, HtransB, ctx);
-  if (error != 0) { return error; }
-  error = gr_mat_transpose(temp, temp, ctx);
-  if (error != 0) { return error; }
-  error = gr_mat_mul(temp, temp, H_a, ctx);
-  if (error != 0) { return error; }
-  error = gr_mat_concat_horizontal(H_c, temp, H_b, ctx);
-  gr_mat_clear(HtransA, ctx);
-  gr_mat_clear(HtransB, ctx);
-  gr_mat_clear(temp, ctx);
+  error = gr_mat_concat_horizontal(H_c, V, H_b, ctx);
+  gr_mat_clear(U, ctx);
+  gr_mat_clear(V, ctx);
   return error;
 }
