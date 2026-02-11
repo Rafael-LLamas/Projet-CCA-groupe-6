@@ -21,12 +21,14 @@ int gr_multiplication_toeplitz(gr_mat_t C, gr_mat_t A, gr_mat_t B, gr_ctx_t ctx)
     for (int j = 0; j < gr_mat_ncols(A, ctx); j++) {
       error = gr_mul(gr_mat_entry_ptr(C, i, 0, ctx), gr_mat_entry_srcptr(A, i, j, ctx),
                      gr_mat_entry_srcptr(B, j, 0, ctx), ctx);
+      if (error != 0) { return error; }
     }
   }
   for (int j = 1; j < gr_mat_ncols(C, ctx); j++) {
     for (int i = 0; i < gr_mat_ncols(A, ctx); i++) {
       error = gr_mul(gr_mat_entry_ptr(C, 0, j, ctx), gr_mat_entry_srcptr(A, 0, i, ctx),
                      gr_mat_entry_srcptr(B, i, j, ctx), ctx);
+      if (error != 0) { return error; }
     }
   }
   gr_ptr temp;
@@ -35,11 +37,49 @@ int gr_multiplication_toeplitz(gr_mat_t C, gr_mat_t A, gr_mat_t B, gr_ctx_t ctx)
     for (int j = 1; j < gr_mat_ncols(C, ctx); j++) {
       error = gr_mul(gr_mat_entry_ptr(C, i, j, ctx), gr_mat_entry_srcptr(A, i, gr_mat_ncols(A, ctx) - 1, ctx),
                      gr_mat_entry_srcptr(B, gr_mat_ncols(A, ctx) - 1, j, ctx), ctx);
+      if (error != 0) { return error; }
       error = gr_add(gr_mat_entry_ptr(C, i, j, ctx), gr_mat_entry_srcptr(C, i - 1, j - 1, ctx),
                      gr_mat_entry_ptr(C, i, j, ctx), ctx);
+      if (error != 0) { return error; }
       gr_mul(temp, gr_mat_entry_srcptr(A, i - 1, 0, ctx), gr_mat_entry_srcptr(B, 0, j - 1, ctx), ctx);
       error = gr_sub(gr_mat_entry_ptr(C, i, j, ctx), gr_mat_entry_srcptr(C, i - 1, j - 1, ctx), (gr_srcptr)temp, ctx);
+      if (error != 0) { return error; }
     }
   }
   return 0;
+}
+
+int gr_multiplication_générateur_déplacement(G_c, H_c, G_a, H_a, G_b, H_b, ctx) {
+  int error;
+  gr_mat_t temp;
+  gr_mat_t HtransA, HtransB;
+  error = gr_mat_init_set(HtransA, H_a, ctx);
+  if (error != 0) { return error; }
+  error = gr_mat_init_set(HtransB, H_b, ctx);
+  if (error != 0) { return error; }
+  error = gr_mat_transpose(HtransA, HtransA, ctx);
+  if (error != 0) { return error; }
+  error = gr_mat_transpose(HtransB, HtransB, ctx);
+  if (error != 0) { return error; }
+  error = gr_mat_init_set(temp, G_a, ctx);
+  if (error != 0) { return error; }
+  error = gr_mat_mul(temp, temp, HtransA, ctx);
+  if (error != 0) { return error; }
+  error = gr_mat_mul(temp, temp, G_b, ctx);
+  if (error != 0) { return error; }
+  error = gr_mat_concat_horizontal(G_c, G_a, temp, ctx);
+  if (error != 0) { return error; }
+  error = gr_mat_set(temp, G_b, ctx);
+  if (error != 0) { return error; }
+  error = gr_mat_mul(temp, temp, HtransB, ctx);
+  if (error != 0) { return error; }
+  error = gr_mat_transpose(temp, temp, ctx);
+  if (error != 0) { return error; }
+  error = gr_mat_mul(temp, temp, H_a, ctx);
+  if (error != 0) { return error; }
+  error = gr_mat_concat_horizontal(H_c, temp, H_b, ctx);
+  gr_mat_clear(HtransA, ctx);
+  gr_mat_clear(HtransB, ctx);
+  gr_mat_clear(temp, ctx);
+  return error;
 }
