@@ -1,0 +1,6 @@
+----- Things accomplished this week -----
+[] - Changed to a simpler main to integrate cmake tests, run tests command: make test
+[] - gr_mat_G_H() now takes the plain matrix and calculates the deplacement within the function
+
+
+----- Questions -----

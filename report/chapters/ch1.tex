@@ -35,34 +35,34 @@ where $Z$ represents the lower shift matrix and $Z^T$ represents the upper shift
 Essentially, $Z$ is a matrix with ones on the first sub-diagonal and zeros everywhere else:
 \begin{equation}
     Z = \begin{pmatrix}
-    0 & 0 & 0 & \cdots & 0 \\
-    1 & 0 & 0 & \cdots & 0 \\
-    0 & 1 & 0 & \cdots & 0 \\
-    \vdots & \vdots & \ddots & \ddots & \vdots \\
-    0 & 0 & \cdots & 1 & 0
+        0      & 0      & 0      & \cdots & 0      \\
+        1      & 0      & 0      & \cdots & 0      \\
+        0      & 1      & 0      & \cdots & 0      \\
+        \vdots & \vdots & \ddots & \ddots & \vdots \\
+        0      & 0      & \cdots & 1      & 0
     \end{pmatrix}
     Z^T = \begin{pmatrix}
-    0 & 1 & 0 & \cdots & 0 \\
-    0 & 0 & 1 & \cdots & 0 \\
-    0 & 0 & 0 & \cdots & 1 \\
-    \vdots & \vdots & \ddots & \ddots & \vdots \\
-    0 & 0 & \cdots & 0 & 0
+        0      & 1      & 0      & \cdots & 0      \\
+        0      & 0      & 1      & \cdots & 0      \\
+        0      & 0      & 0      & \cdots & 1      \\
+        \vdots & \vdots & \ddots & \ddots & \vdots \\
+        0      & 0      & \cdots & 0      & 0
     \end{pmatrix}
 \end{equation}
 Multiplying a matrix $A$ by $Z$ from the left ($ZA$) shifts the rows of $A$ down by one (zeros at the top).
 Multiplying by $Z^T$ from the right ($AZ^T$) shifts the columns to the right, (zeros at the first column).
 
 \subsubsection{Mathematical Approach}
-Result, operation $ZAZ^T$ shifts the entire matrix $A$ one step to the bottom-right. 
+Result, operation $ZAZ^T$ shifts the entire matrix $A$ one step to the bottom-right.
 
 For a generic Toeplitz matrix of size $n \times m$, this subtraction results in zeros everywhere except for the first row and the first column.
 \begin{equation}
     \nabla A = \begin{pmatrix}
-    y_0 & x_1 & x_2 & \cdots & x_{m-1} \\
-    y_1 & 0 & 0 & \cdots & 0 \\
-    y_2 & 0 & 0 & \cdots & 0 \\
-    \vdots & \vdots & \vdots & \ddots & \vdots \\
-    y_{n-1} & 0 & 0 & \cdots & 0
+        y_0     & x_1    & x_2    & \cdots & x_{m-1} \\
+        y_1     & 0      & 0      & \cdots & 0       \\
+        y_2     & 0      & 0      & \cdots & 0       \\
+        \vdots  & \vdots & \vdots & \ddots & \vdots  \\
+        y_{n-1} & 0      & 0      & \cdots & 0
     \end{pmatrix} \in \mathbb{K}^{n \times m}
 \end{equation}
 This allows us to represent the $n \times m$ matrix using only $O(n + m)$ elements rather than storing the full $O(nm)$ dense matrix.
@@ -73,11 +73,30 @@ calculating $\nabla A$ explicitly via matrix multiplication is inefficient.
 
 The displacement calculation can be reduced to an element based loop with complexity $O(nm)$:
 \begin{equation}
-    (\nabla A)_{i,j} = 
-    \begin{cases} 
-    A_{i,j} & \text{if } i=0 \text{ or } j=0 \\
-    A_{i,j} - A_{i-1, j-1} & \text{otherwise}
+    (\nabla A)_{i,j} =
+    \begin{cases}
+        A_{i,j}                & \text{if } i=0 \text{ or } j=0 \\
+        A_{i,j} - A_{i-1, j-1} & \text{otherwise}
     \end{cases}
 \end{equation}
 
 This approach allows us to iterate from the bottom row to the top updating values in place.
+
+\subsection{Generator Matrices}
+Displacement matrices, $\nabla A$, typically have a low rank $\alpha$ (displacement rank).
+For Toeplitz matrices, $\alpha$ is generally small ($\alpha \le 2$).
+This allows us to store efficiently the displacement matrix into two smaller matrices $G$ and $H$.
+
+While the product $G H^T$ results in the displacement $\nabla A$,
+the original matrix $A$ can be reconstructed using the columns of the generators mentioned at Proposition 10.5 in \cite{aecf-2017-pdf}.
+
+Let $g_k$ and $h_k$ denote the $k$-th columns of $G$ and $H$ respectively.
+
+The matrix $A$ can be written as a sum of elements of lower and upper triangular matrices:
+\begin{equation}
+    A = \sum_{k=1}^{\alpha} L(g_k) U(h_k)
+\end{equation}
+\begin{itemize}
+    \item $L(g_k)$ is a lower triangular Toeplitz matrix with the first column $g_k$.
+    \item $U(h_k)$ is an upper triangular Toeplitz matrix with the first row $h_k^T$.
+\end{itemize}
