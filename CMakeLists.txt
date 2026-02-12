@@ -40,6 +40,7 @@ target_link_libraries(flint_core INTERFACE
     ${GMP_LIB}
     ${MPFR_LIB}
 )
+
 ####
 # EXECUTABLES
 ###
@@ -48,6 +49,7 @@ set(SOURCES
     src/displacement_matrices/displacement_matrices.c
     src/random_toeplitz/random_toeplitz.c
     src/utility/matrix_aux.c
+    src/multiplication_toeplitz/multiplication.c
 )
 
 add_executable(main ${SOURCES})
@@ -56,12 +58,14 @@ target_include_directories(main PRIVATE # this one helps with include paths
     src/displacement_matrices
     src/random_toeplitz
     src/utility
+    src/multiplication
 )
 
 ####
 # Tests
 ###
 
-add_test(NAME DisplacementTest COMMAND main displacement)
-add_test(NAME RandomTest       COMMAND main random)
-add_test(NAME AuxTest          COMMAND main aux)
+add_test(NAME DisplacementTest      COMMAND main displacement)
+add_test(NAME RandomTest            COMMAND main random)
+add_test(NAME AuxTest               COMMAND main aux)
+add_test(NAME MultiplicationTest    COMMAND main multiplication)

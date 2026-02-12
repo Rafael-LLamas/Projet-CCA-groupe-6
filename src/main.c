@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "displacement_matrices.h"
+#include "multiplication_toeplitz/multiplication.h"
 #include "random_toeplitz.h"
 #include "utility/matrix_aux.h"
 
@@ -14,6 +15,7 @@ typedef struct {
 Command registry[] = {{"displacement", test_displacement_matrices},
                       {"random", test_random_toeplitz},
                       {"aux", test_matrix_aux},
+                      {"multiplication", test_multiplication_generateurs},
                       {NULL, NULL}};
 
 int main(int argc, char *argv[]) {
