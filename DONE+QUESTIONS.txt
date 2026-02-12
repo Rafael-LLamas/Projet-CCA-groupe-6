@@ -1,6 +1,11 @@
 ----- Things accomplished this week -----
-[] - Changed to a simpler main to integrate cmake tests, run tests command: make test
+[] - Changed to a simpler main to integrate cmake tests, run tests command: make test (results are still in .txt files dont need to execute ./main)
 [] - gr_mat_G_H() now takes the plain matrix and calculates the deplacement within the function
-
+[] - gr_mat_addition_générateur() take G and H of A and B. Only concatanate G_a and G_b into G_c and H_a and H_b into H_c
+[] - gr_multiplication_generateur_deplacement() take generator fo A and B and return G_c and H_c, see comments on the code for more detail and test include
+[] - gr_mat_reconstruct_A_safe() take G and H and return a matrix A,do A = Sigma L(gk) * U(hk) for k = 0 to 1,test include 
 
 ----- Questions -----
+
+J'ai un doute sur la fonction pour multiplier les générateurs de déplacement. En effet, la formule donné, nous dis de faire la concatenation de G_a | W | alpha mais alpha vaut la multiplication de la matrice de déplacement Z * A alors que nous voulons précisement éviter a
+Que devons nous faire apres ? 
