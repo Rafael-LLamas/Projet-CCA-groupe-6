@@ -32,10 +32,14 @@ int gr_mat_displacement(gr_mat_t D, gr_mat_t A, gr_ctx_t ctx);
  * @param[out] G Resulting G matrix
  * @param[out] H Resulting H^T matrix
  * @param[in] A Input Quasi Toeplitz or Toeplitz matrix
- * @param rank There are 3 cases: (1-) If know the rank of A, the rank of A. (2-) If not know the rank and G and H are initialized, -1. (3-) If not know the rank of A and G and H are uninitialized, the function will initialize, put 0.
+ * @param rank There are 3 cases: (1-) If know the rank of A, the rank of A. (2-) If not know the rank and G and H are
+ * initialized, -1. (3-) If not know the rank of A and G and H are uninitialized, the function will initialize, put 0.
  */
 int gr_mat_G_H(gr_mat_t G, gr_mat_t H, gr_mat_t A, slong *rank, gr_ctx_t ctx);
 
+/**
+ * @brief GH^T -> SigmaLU
+ */
 int gr_mat_reconstruct_A_safe(gr_mat_t A, gr_mat_t G, gr_mat_t H, gr_ctx_t ctx);
 
 #endif

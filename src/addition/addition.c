@@ -13,7 +13,7 @@ int gr_mat_addition_générateur(gr_mat_t G_a, gr_mat_t H_a, gr_mat_t G_b, gr_ma
                                gr_ctx_t ctx) {
   /*
   C'est juste la concaténation des générateurs de déplacement de A et B
-  Il n'y a rien de magique et complexe
+  Il n'y a rien de magique et complexe - dit rafael hamas
   */
   gr_mat_concat_horizontal(G_c, G_a, G_b, ctx);
   gr_mat_concat_horizontal(H_c, H_a, H_b, ctx);
