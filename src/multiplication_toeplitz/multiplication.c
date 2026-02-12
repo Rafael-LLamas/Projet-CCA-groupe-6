@@ -49,7 +49,8 @@ int gr_multiplication_toeplitz(gr_mat_t C, gr_mat_t A, gr_mat_t B, gr_ctx_t ctx)
   return 0;
 }
 
-int gr_multiplication_générateur_déplacement(G_c, H_c, G_a, H_a, G_b, H_b, ctx) {
+int gr_multiplication_générateur_déplacement(gr_mat_t G_c, gr_mat_t H_c, gr_mat_t G_a, gr_mat_t H_a, gr_mat_t G_b,
+                                             gr_mat_t H_b, gr_mat_t ctx) {
   /*
   Donc si j'ai compris cette fois-ci:
   On a 4 générateur de déplacement pour les matrices A et B.
@@ -61,15 +62,66 @@ int gr_multiplication_générateur_déplacement(G_c, H_c, G_a, H_a, G_b, H_b, ct
   int error;
   gr_mat_t U, V;
 
-  error = gr_mat_reconstruct_A_safe(G_a, H_a, U, ctx);
+  gr_mat_init(U, gr_mat_nrows(G_a, ctx), gr_mat_cols(G_b), ctx);
+  gr_mat_init(V, gr_mat_nrows(H_b, ctx), gr_mat_cols(H_a), ctx);
+  error = gr_mat_reconstruct_A_safe(U, G_a, H_a, ctx);
+  if (error != 0) { return error; }
+  error = gr_mat_mul(U, U, G_b, ctx);
   if (error != 0) { return error; }
   error = gr_mat_concat_horizontal(G_c, G_a, U, ctx);
   if (error != 0) { return error; }
 
-  error = gr_mat_reconstruct_A_safe(H_b, G_b, V, ctx);
+  error = gr_mat_reconstruct_A_safe(V, H_b, G_b, ctx);
+  if (error != 0) { return error; }
+  error = gr_mat_mul(V, V, H_a, ctx);
   if (error != 0) { return error; }
   error = gr_mat_concat_horizontal(H_c, V, H_b, ctx);
   gr_mat_clear(U, ctx);
   gr_mat_clear(V, ctx);
+  return error;
+}
+
+int test_multiplication_générateurs() {
+  int error;
+  gr_mat_t A, B, C, G_a, H_a, G_b, H_b, G_c, H_c;
+  gr_ctx_t ctx;
+  flint_rand_t state;
+  gr_ctx_init_nmod(ctx, 47);
+  flint_rand_init(state);
+  error = random_toeplitz(A, gr_mat_nrows(A, ctx), gr_mat_ncols(A, ctx), state, ctx);
+  if (error != 0) { return error; }
+  error = random_toeplitz(B, gr_mat_nrows(B, ctx), gr_mat_ncols(B, ctx), state, ctx);
+  if (error != 0) { return error; }
+  gr_mat_init(C, gr_mat_nrows(A, ctx), gr_mat_ncols(B, ctx), ctx);
+  error = gr_mat_G_H(G_a, H_a, A, 0, ctx);
+  if (error != 0) { return error; }
+  error = gr_mat_G_H(G_b, H_b, B, 0, ctx);
+  if (error != 0) { return error; }
+  error = gr_multiplication_toeplitz(C, A, B, ctx);
+  if (error != 0) { return error; }
+  flint_printf("\-------------------------Matrices C faite sans les générateurs---------------------------------/");
+  flint_printf("Matrice C = \n");
+  gr_mat_print(C, ctx);
+  flint_printf("\n");
+  gr_mat_G_H(C, G_c, H_c, 0, ctx);
+  flint_printf("Matrice G_c = \n");
+  gr_mat_print(G_c, ctx);
+  flint_printf("\n");
+  flint_printf("Matrice H_c = \n");
+  gr_mat_print(H_c, ctx);
+  flint_printf("\n");
+  gr_multiplication_générateur_déplacement(G_c, H_c, G_a, H_a, G_b, H_b, ctx);
+  flint_printf("\-------------------------Matrices C faite avec les générateurs---------------------------------/");
+  flint_printf("Matrice G_c = \n");
+  gr_mat_print(G_c, ctx);
+  flint_printf("\n");
+  flint_printf("Matrice H_c = \n");
+  gr_mat_print(H_c, ctx);
+  flint_printf("\n");
+  gr_mat_reconstruct_A_safe(C, G_c, H_c, ctx);
+  flint_printf("Matrice C = \n");
+  gr_mat_print(C, ctx);
+  flint_printf("\n");
+
   return error;
 }
