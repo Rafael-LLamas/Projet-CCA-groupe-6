@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "displacement_matrices.h"
-#include "multiplication_toeplitz/multiplication.h"
+#include "operations/multiplication.h"
 #include "random_toeplitz.h"
 #include "utility/matrix_aux.h"
 
