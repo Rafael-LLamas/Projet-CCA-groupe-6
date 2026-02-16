@@ -93,9 +93,9 @@ int test_multiplication_generateurs() {
   error = random_toeplitz(B, gr_mat_nrows(B, ctx), gr_mat_ncols(B, ctx), state, ctx);
   if (error != 0) { return error; }
   gr_mat_init(C, gr_mat_nrows(A, ctx), gr_mat_ncols(B, ctx), ctx);
-  error = gr_mat_G_H(G_a, H_a, A, 0, ctx);
+  error = gr_mat_G_H(G_a, H_a, A, ctx);
   if (error != 0) { return error; }
-  error = gr_mat_G_H(G_b, H_b, B, 0, ctx);
+  error = gr_mat_G_H(G_b, H_b, B, ctx);
   if (error != 0) { return error; }
   error = gr_multiplication_toeplitz(C, A, B, ctx);
   if (error != 0) { return error; }
@@ -103,7 +103,7 @@ int test_multiplication_generateurs() {
   flint_printf("Matrice C = \n");
   gr_mat_print(C, ctx);
   flint_printf("\n");
-  gr_mat_G_H(C, G_c, H_c, 0, ctx);
+  gr_mat_G_H(C, G_c, H_c, ctx);
   flint_printf("Matrice G_c = \n");
   gr_mat_print(G_c, ctx);
   flint_printf("\n");

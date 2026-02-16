@@ -35,10 +35,11 @@ int gr_mat_displacement(gr_mat_t D, gr_mat_t A, gr_ctx_t ctx);
  * @param rank There are 3 cases: (1-) If know the rank of A, the rank of A. (2-) If not know the rank and G and H are
  * initialized, -1. (3-) If not know the rank of A and G and H are uninitialized, the function will initialize, put 0.
  */
-int gr_mat_G_H(gr_mat_t G, gr_mat_t H, gr_mat_t A, slong *rank, gr_ctx_t ctx);
+int gr_mat_G_H(gr_mat_t G, gr_mat_t H, gr_mat_t A, gr_ctx_t ctx);
 
 /**
- * @brief GH^T -> SigmaLU
+ * @brief Returns the Matrix A from generators G and H via SigmaLU.
+ * @param[in] G Generator M
  */
 int gr_mat_reconstruct_A_safe(gr_mat_t A, gr_mat_t G, gr_mat_t H, gr_ctx_t ctx);
 
