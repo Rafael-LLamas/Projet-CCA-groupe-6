@@ -49,7 +49,7 @@ int gr_multiplication_toeplitz(gr_mat_t C, gr_mat_t A, gr_mat_t B, gr_ctx_t ctx)
   return 0;
 }
 
-int gr_multiplication_générateur_déplacement(gr_mat_t G_c, gr_mat_t H_c, gr_mat_t G_a, gr_mat_t H_a, gr_mat_t G_b,
+int gr_multiplication_generateur_deplacement(gr_mat_t G_c, gr_mat_t H_c, gr_mat_t G_a, gr_mat_t H_a, gr_mat_t G_b,
                                              gr_mat_t H_b, gr_ctx_t ctx) {
   /*
   Donc si j'ai compris cette fois-ci:
@@ -110,7 +110,7 @@ int test_multiplication_generateurs() {
   flint_printf("Matrice H_c = \n");
   gr_mat_print(H_c, ctx);
   flint_printf("\n");
-  gr_multiplication_générateur_déplacement(G_c, H_c, G_a, H_a, G_b, H_b, ctx);
+  gr_multiplication_generateur_deplacement(G_c, H_c, G_a, H_a, G_b, H_b, ctx);
   flint_printf(":------------------------Matrices C faite avec les générateurs---------------------------------:");
   flint_printf("Matrice G_c = \n");
   gr_mat_print(G_c, ctx);

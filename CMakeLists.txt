@@ -59,8 +59,7 @@ target_include_directories(main PRIVATE
     src/displacement_matrices
     src/random_toeplitz
     src/utility
-    src/multiplication
-    src/addition
+    src/operations
 )
 
 ####

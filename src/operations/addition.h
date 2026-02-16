@@ -6,12 +6,7 @@
 #include "flint/gr_mat.h"
 #include "flint/gr_poly.h"
 
-int test_random_toeplitz();
-
-int random_quasi_toeplitz(gr_mat_t A, int n, int m, flint_rand_t state, gr_ctx_t ctx);
-
-int random_toeplitz(gr_mat_t A, int n, int m, flint_rand_t state, gr_ctx_t ctx);
-
-int rand_quasi_toeplitz(gr_mat_t A, int n, int m, int nb_rand, gr_ctx_t ctx);
+int gr_mat_addition_générateur(gr_mat_t G_a, gr_mat_t H_a, gr_mat_t G_b, gr_mat_t H_b, gr_mat_t G_c, gr_mat_t H_c,
+                               gr_ctx_t ctx);
 
 #endif
