@@ -83,6 +83,10 @@ add_executable(test_random_toeplitz tests/random_toeplitz.test.c)
 target_link_libraries(test_random_toeplitz PRIVATE project_lib)
 add_test(NAME Random.random_toeplitz            COMMAND test_random_toeplitz random_toeplitz)
 
-add_executable(test_operations_multiplication tests/random_toeplitz.test.c)
+add_executable(test_operations_multiplication tests/multiplication.test.c)
 target_link_libraries(test_operations_multiplication PRIVATE project_lib)
 add_test(NAME Operations.multiplication_generators            COMMAND test_operations_multiplication multiplication_generators)
+
+add_executable(test_operations_addition tests/addition.test.c)
+target_link_libraries(test_operations_addition PRIVATE project_lib)
+add_test(NAME Operations.addition_generators_toepltiz            COMMAND test_operations_addition addition_generators_toeplitz)

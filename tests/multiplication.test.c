@@ -8,6 +8,7 @@
 #include "flint/gr_mat.h"
 #include "flint/gr_poly.h"
 #include "matrix_aux.h"
+#include "multiplication.h"
 #include "random_toeplitz.h"
 
 int test_multiplication_generateurs() {

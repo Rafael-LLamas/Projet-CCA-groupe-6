@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-int gr_mat_addition_générateur(gr_mat_t G_a, gr_mat_t H_a, gr_mat_t G_b, gr_mat_t H_b, gr_mat_t G_c, gr_mat_t H_c,
+int gr_mat_addition_generateur(gr_mat_t G_a, gr_mat_t H_a, gr_mat_t G_b, gr_mat_t H_b, gr_mat_t G_c, gr_mat_t H_c,
                                gr_ctx_t ctx) {
   /*
   C'est juste la concaténation des générateurs de déplacement de A et B
