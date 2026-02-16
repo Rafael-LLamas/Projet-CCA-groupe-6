@@ -52,4 +52,4 @@ Can also specifically call tests:
 
 ## Autors
 - Ali Arda Barut
-- Raphael LLamas
+- Rafael LLamas

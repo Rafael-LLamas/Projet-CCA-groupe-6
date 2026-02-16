@@ -64,7 +64,7 @@ int random_toeplitz(gr_mat_t A, int n, int m, flint_rand_t state, gr_ctx_t ctx) 
   if (error != 0) { return error; }
   error = gr_mat_randtest(row, state, ctx);
   if (error != 0) { return error; }
-  error = gr_set(gr_mat_entry_ptr(row, 0, 0, ctx), gr_mat_entry_ptr(col, 0, 0, ctx), ctx);
+  error = gr_set(gr_mat_entry_ptr(row, 0, 0, ctx), gr_mat_entry_srcptr(col, 0, 0, ctx), ctx);
   if (error != 0) { return error; }
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < m; j++) {
