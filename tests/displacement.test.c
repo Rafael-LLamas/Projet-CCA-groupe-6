@@ -215,7 +215,6 @@ int test_quasi_toeplitz_to_G_H() {
 int test_reconstructions() {
   flint_printf("\n\n:-------: Reconstruction Test :-------:\n");
   gr_ctx_t ctx;
-  gr_ctx_init_nmod(ctx, GNMOD);
   gr_mat_t A, G, H;
   slong m = 7, n = 7;
   flint_rand_t state;
