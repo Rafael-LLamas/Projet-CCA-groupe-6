@@ -53,9 +53,7 @@ Mkfile.old
 dkms.conf
 
 # debug information filesuilt
-.vscode/launch.json
-.vscode/settings.json
-.vscode/tasks.json
+.vscode/
 
 # Cmake
 CMakeLists.txt.user
