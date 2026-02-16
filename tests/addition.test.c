@@ -2,17 +2,16 @@
 #include <string.h>
 #include <time.h>
 
+#include "addition.h"
 #include "displacement_matrices.h"
 #include "flint/flint.h"
 #include "flint/gr.h"
 #include "flint/gr_mat.h"
 #include "flint/gr_poly.h"
 #include "matrix_aux.h"
-#include "addition.h"
 #include "random_toeplitz.h"
 
 int test_addition_generateurs_toeplitz_square() {
-  int error;
   gr_mat_t A1, B1, C1;
   gr_ctx_t ctx;
   flint_rand_t state;
@@ -23,7 +22,6 @@ int test_addition_generateurs_toeplitz_square() {
   gr_mat_init(A1, N, N, ctx);
   gr_mat_init(B1, N, N, ctx);
   gr_mat_init(C1, N, N, ctx);
-  flint_rand_t rand_state;
   flint_rand_init(state);
   FLINT_CHECK(random_toeplitz(A1, gr_mat_nrows(A1, ctx), gr_mat_ncols(A1, ctx), state, ctx));
   FLINT_CHECK(random_toeplitz(B1, gr_mat_nrows(B1, ctx), gr_mat_ncols(B1, ctx), state, ctx));
@@ -32,10 +30,12 @@ int test_addition_generateurs_toeplitz_square() {
   flint_printf("\nWith Generators:\n");
   gr_mat_t A1_G, A1_H, B1_G, B1_H, C2_G, C2_H, C2;
   gr_mat_init(C2, N, N, ctx);
-  gr_mat_init(C2_G, N, 1, ctx);
-  gr_mat_init(C2_H, N, 1, ctx);
+
   FLINT_CHECK(gr_mat_G_H(A1_G, A1_H, A1, ctx));
   FLINT_CHECK(gr_mat_G_H(B1_G, B1_H, B1, ctx));
+  gr_mat_init(C2_G, N, 4, ctx); // moddif ici pour avoir un code dynamique mais normalement le G d'une toeplitz est de
+                                // taille Nx2 donc le G_res = Nx4
+  gr_mat_init(C2_H, N, 4, ctx);
   FLINT_CHECK(gr_mat_addition_generateur(A1_G, A1_H, B1_G, B1_H, C2_G, C2_H, ctx));
   FLINT_CHECK(gr_mat_reconstruct_A_safe(C2, C2_G, C2_H, ctx));
   gr_mat_print(C2, ctx);
