@@ -44,28 +44,45 @@ target_link_libraries(flint_core INTERFACE
 ####
 # EXECUTABLES
 ###
-set(SOURCES
-    src/main.c
+set(PROJECT_SOURCES
     src/displacement_matrices/displacement_matrices.c
     src/random_toeplitz/random_toeplitz.c
     src/utility/matrix_aux.c
     src/operations/multiplication.c
     src/operations/addition.c
 )
-
-add_executable(main ${SOURCES})
-target_link_libraries(main PRIVATE flint_core)
-target_include_directories(main PRIVATE
+add_library(project_lib STATIC ${PROJECT_SOURCES})
+target_link_libraries(project_lib PUBLIC flint_core)
+target_include_directories(project_lib PUBLIC
     src/displacement_matrices
     src/random_toeplitz
     src/utility
     src/operations
 )
+add_executable(main_app src/main.c)
+target_link_libraries(main_app PRIVATE project_lib)
 
 ####
 # Tests
 ###
-add_test(NAME DisplacementTest      COMMAND main displacement)
-add_test(NAME RandomTest            COMMAND main random)
-add_test(NAME AuxTest               COMMAND main aux)
-add_test(NAME MultiplicationTest    COMMAND main multiplication)
+add_executable(test_displacement tests/displacement.test.c)
+target_link_libraries(test_displacement PRIVATE project_lib)
+add_test(NAME Displacement.toeplitz_deplacement COMMAND test_displacement toeplitz_deplacement)
+add_test(NAME Displacement.manual_deplacement   COMMAND test_displacement manual_deplacement)
+add_test(NAME Displacement.large_deplacement    COMMAND test_displacement large_deplacement)
+add_test(NAME Displacement.toeplitz_G_H         COMMAND test_displacement toeplitz_G_H)
+add_test(NAME Displacement.quasi_toeplitz_G_H   COMMAND test_displacement quasi_toeplitz_G_H)
+add_test(NAME Displacement.reconstruction       COMMAND test_displacement reconstruction)
+
+add_executable(test_utility tests/utility.test.c)
+target_link_libraries(test_utility PRIVATE project_lib)
+add_test(NAME Utility.LU_detatch                COMMAND test_utility LU_detatch)
+add_test(NAME Utility.LU_detatch2               COMMAND test_utility LU_detatch2)
+
+add_executable(test_random_toeplitz tests/random_toeplitz.test.c)
+target_link_libraries(test_random_toeplitz PRIVATE project_lib)
+add_test(NAME Random.random_toeplitz            COMMAND test_random_toeplitz random_toeplitz)
+
+add_executable(test_operations_multiplication tests/random_toeplitz.test.c)
+target_link_libraries(test_operations_multiplication PRIVATE project_lib)
+add_test(NAME Operations.multiplication_generators            COMMAND test_operations_multiplication multiplication_generators)

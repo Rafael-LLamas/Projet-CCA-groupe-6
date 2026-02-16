@@ -1,0 +1,138 @@
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+
+#include "displacement_matrices.h"
+#include "flint/flint.h"
+#include "flint/gr.h"
+#include "flint/gr_mat.h"
+#include "flint/gr_poly.h"
+#include "matrix_aux.h"
+#include "random_toeplitz.h"
+
+int test_random_toepltiz() {
+  gr_ctx_t ctx;
+  gr_ctx_init_nmod(ctx, 47);
+  int error;
+  gr_mat_t ran, D;
+  slong *rank = flint_malloc(sizeof(slong));
+  gr_mat_init(ran, 5, 5, ctx);
+  error = rand_quasi_toeplitz(ran, 5, 5, 1, ctx);
+  if (error != 0) {
+    gr_mat_clear(ran, ctx);
+    gr_ctx_clear(ctx);
+    flint_free(rank);
+    exit(error);
+  }
+  error = gr_mat_rank(rank, ran, ctx);
+  if (error != 0) {
+    flint_printf("%d\n", error);
+    gr_mat_clear(ran, ctx);
+    gr_ctx_clear(ctx);
+    flint_free(rank);
+    exit(error);
+  }
+  flint_printf("----------------------------------------------\nResultat quasi = ");
+  gr_mat_print(ran, ctx);
+  flint_printf("\n");
+  flint_printf("rank = %wd \n", *rank);
+  gr_mat_clear(ran, ctx);
+  gr_mat_init(ran, 5, 5, ctx);
+  error = rand_quasi_toeplitz(ran, 5, 5, 4, ctx);
+  if (error != 0) {
+    gr_mat_clear(ran, ctx);
+    gr_ctx_clear(ctx);
+    flint_free(rank);
+    exit(error);
+  }
+
+  flint_printf("----------------------------------------------\nResultat quasi = ");
+  gr_mat_print(ran, ctx);
+  flint_printf("\n");
+  gr_mat_clear(ran, ctx);
+  gr_mat_init(ran, 5, 5, ctx);
+  error = rand_quasi_toeplitz(ran, 5, 5, 2, ctx);
+  if (error != 0) {
+    gr_mat_clear(ran, ctx);
+    gr_ctx_clear(ctx);
+    flint_free(rank);
+    exit(error);
+  }
+  flint_printf("----------------------------------------------\nResultat quasi = ");
+  gr_mat_print(ran, ctx);
+  flint_printf("\n");
+  gr_mat_clear(ran, ctx);
+  gr_mat_init(ran, 5, 5, ctx);
+  error = rand_quasi_toeplitz(ran, 5, 5, 3, ctx);
+  if (error != 0) {
+    gr_mat_clear(ran, ctx);
+    gr_ctx_clear(ctx);
+    flint_free(rank);
+    exit(error);
+  }
+
+  flint_printf("----------------------------------------------\nResultat quasi = ");
+  gr_mat_print(ran, ctx);
+  flint_printf("\n");
+  gr_mat_clear(ran, ctx);
+  gr_mat_init(ran, 15, 15, ctx);
+  error = rand_quasi_toeplitz(ran, 15, 15, 0, ctx);
+  if (error != 0) {
+    gr_mat_clear(ran, ctx);
+    gr_ctx_clear(ctx);
+    flint_free(rank);
+    exit(error);
+  }
+  gr_mat_init(D, 15, 15, ctx);
+  error = gr_mat_displacement_square_safe(D, ran, ctx);
+  if (error != 0) {
+    gr_mat_clear(ran, ctx);
+    gr_mat_clear(D, ctx);
+    gr_ctx_clear(ctx);
+    flint_free(rank);
+    exit(error);
+  }
+  error = gr_mat_rank(rank, D, ctx);
+  if (error != 0) {
+    gr_mat_clear(ran, ctx);
+    gr_mat_clear(D, ctx);
+    gr_ctx_clear(ctx);
+    flint_free(rank);
+    exit(error);
+  }
+  flint_printf("----------------------------------------------\nResultat quasi = ");
+  gr_mat_print(ran, ctx);
+  flint_printf("\n\n\n");
+  flint_printf(" deplacement =  ");
+  gr_mat_print(D, ctx);
+  flint_printf("\n");
+  flint_printf("rank de déplcement = %wd \n", *rank);
+  gr_mat_clear(D, ctx);
+  gr_mat_clear(ran, ctx);
+  gr_ctx_clear(ctx);
+  flint_free(rank);
+  return GR_SUCCESS;
+}
+
+int main(int argc, char *argv[]) {
+  if (argc == 1) { return GR_UNABLE; }
+  // start test
+  fprintf(stderr, "=> Start test \"%s\"\n", argv[1]);
+  int ok = GR_SUCCESS;
+  if (strcmp("random_toeplitz", argv[1]) == 0) {
+    ok = test_random_toepltiz();
+  } else if (strcmp("this is your DIY project rafael hamas", argv[1]) == 0) {
+    ok = test_random_toepltiz();
+  } else {
+    fprintf(stderr, "Error: test \"%s\" not found!\n", argv[1]);
+    exit(EXIT_FAILURE);
+  }
+
+  if (!ok) {
+    fprintf(stderr, "Test \"%s\" finished: SUCCESS\n", argv[1]);
+    return EXIT_SUCCESS;
+  } else {
+    fprintf(stderr, "Test \"%s\" finished: FAILURE\n", argv[1]);
+    return EXIT_FAILURE;
+  }
+}

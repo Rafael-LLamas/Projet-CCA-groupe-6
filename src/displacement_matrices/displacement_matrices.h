@@ -29,11 +29,10 @@ int gr_mat_displacement(gr_mat_t D, gr_mat_t A, gr_ctx_t ctx);
 
 /**
  * @brief Returns the G and H matrices by the LU decomposition.
+ * @warning G and H should be uninitialized.
  * @param[out] G Resulting G matrix
  * @param[out] H Resulting H^T matrix
  * @param[in] A Input Quasi Toeplitz or Toeplitz matrix
- * @param rank There are 3 cases: (1-) If know the rank of A, the rank of A. (2-) If not know the rank and G and H are
- * initialized, -1. (3-) If not know the rank of A and G and H are uninitialized, the function will initialize, put 0.
  */
 int gr_mat_G_H(gr_mat_t G, gr_mat_t H, gr_mat_t A, gr_ctx_t ctx);
 
