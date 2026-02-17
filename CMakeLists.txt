@@ -59,8 +59,8 @@ target_include_directories(project_lib PUBLIC
     src/utility
     src/operations
 )
-add_executable(main_app src/main.c)
-target_link_libraries(main_app PRIVATE project_lib)
+add_executable(main src/main.c)
+target_link_libraries(main PRIVATE project_lib)
 
 ####
 # Tests

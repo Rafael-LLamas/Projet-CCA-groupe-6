@@ -136,15 +136,14 @@ int test_toeplitz_to_G_H() {
   flint_printf("\n\n:-------: A Toeplitz matrix -> G & H Test :-------:\n");
   gr_ctx_t ctx;
   gr_ctx_init_nmod(ctx, GNMOD);
+  int res = GR_SUCCESS;
   gr_mat_t A, B, T, G, H, HT;
   slong m = 7, n = 7;
-  slong *P = flint_malloc(sizeof(slong) * m);
-  flint_rand_t state;
-  gr_ctx_init_nmod(ctx, GNMOD);
-  flint_rand_init(state);
   gr_mat_init(A, m, n, ctx);
   gr_mat_init(B, m, n, ctx);
   gr_mat_init(T, m, n, ctx);
+  flint_rand_t state;
+  flint_rand_init(state);
   random_toeplitz(A, n, m, state, ctx);
   FLINT_CHECK(gr_mat_set(T, A, ctx));
   flint_printf("Original matrix A:\n");
@@ -157,34 +156,42 @@ int test_toeplitz_to_G_H() {
   gr_mat_init(HT, gr_mat_ncols(H, ctx), gr_mat_nrows(H, ctx), ctx);
   FLINT_CHECK(gr_mat_transpose(HT, H, ctx));
   FLINT_CHECK(gr_mat_mul(B, G, HT, ctx));
-  flint_printf("\nReconstructed Matrix B:\n");
+  flint_printf("\nReconstructed Displacement Matrix B:\n");
   gr_mat_print(B, ctx);
   flint_printf("\nShould Be equal to displacement matrix of A:\n");
   FLINT_CHECK(gr_mat_displacement(T, T, ctx));
   gr_mat_print(T, ctx);
-  flint_free(P);
+  if (gr_mat_equal(B, T, ctx) == T_TRUE) {
+    flint_printf("[SUCCESS] Generators correctly represent displacement.\n");
+  } else {
+    flint_printf("[FAILURE] Generators do not match displacement.\n");
+    res = GR_TEST_FAIL;
+  }
   gr_mat_clear(A, ctx);
   gr_mat_clear(T, ctx);
   gr_mat_clear(G, ctx);
   gr_mat_clear(H, ctx);
   gr_mat_clear(HT, ctx);
   gr_mat_clear(B, ctx);
-  return GR_SUCCESS;
+  flint_rand_clear(state);
+  gr_ctx_clear(ctx);
+  return res;
 }
 
 int test_quasi_toeplitz_to_G_H() {
   flint_printf("\n\n:-------: A Quasi Toeplitz matrix -> G & H Test :-------:\n");
   gr_ctx_t ctx;
   gr_ctx_init_nmod(ctx, GNMOD);
+  int res = GR_SUCCESS;
+
+  // 1. Init ALL matrices to 0x0 or size
   gr_mat_t A, B, T, G, H, HT;
   slong m = 7, n = 7;
-  slong *P = flint_malloc(sizeof(slong) * m);
-  flint_rand_t state;
-  gr_ctx_init_nmod(ctx, GNMOD);
-  flint_rand_init(state);
   gr_mat_init(A, m, n, ctx);
   gr_mat_init(B, m, n, ctx);
   gr_mat_init(T, m, n, ctx);
+  flint_rand_t state;
+  flint_rand_init(state);
   random_quasi_toeplitz(A, n, m, state, ctx);
   FLINT_CHECK(gr_mat_set(T, A, ctx));
   flint_printf("Original matrix A:\n");
@@ -197,31 +204,41 @@ int test_quasi_toeplitz_to_G_H() {
   gr_mat_init(HT, gr_mat_ncols(H, ctx), gr_mat_nrows(H, ctx), ctx);
   FLINT_CHECK(gr_mat_transpose(HT, H, ctx));
   FLINT_CHECK(gr_mat_mul(B, G, HT, ctx));
-  flint_printf("\nReconstructed Matrix B:\n");
+  flint_printf("\nReconstructed Displacement Matrix B:\n");
   gr_mat_print(B, ctx);
   flint_printf("\nShould Be equal to displacement matrix of A:\n");
   FLINT_CHECK(gr_mat_displacement(T, T, ctx));
   gr_mat_print(T, ctx);
-  flint_free(P);
+  if (gr_mat_equal(B, T, ctx) == T_TRUE) {
+    flint_printf("[SUCCESS] Generators correctly do displacement\n");
+  } else {
+    flint_printf("[FAILURE] Generators dont match displacement\n");
+    res = GR_TEST_FAIL;
+  }
   gr_mat_clear(A, ctx);
   gr_mat_clear(T, ctx);
   gr_mat_clear(G, ctx);
   gr_mat_clear(H, ctx);
   gr_mat_clear(HT, ctx);
   gr_mat_clear(B, ctx);
-  return GR_SUCCESS;
+  flint_rand_clear(state);
+  gr_ctx_clear(ctx);
+  return res;
 }
 
 int test_reconstructions() {
   flint_printf("\n\n:-------: Reconstruction Test :-------:\n");
+  int res = GR_SUCCESS;
   gr_ctx_t ctx;
-  gr_mat_t A, G, H;
-  slong m = 7, n = 7;
-  flint_rand_t state;
   gr_ctx_init_nmod(ctx, GNMOD);
-  flint_rand_init(state);
+  gr_mat_t A, A_ref, G, H;
+  slong m = 7, n = 7;
   gr_mat_init(A, m, n, ctx);
+  gr_mat_init(A_ref, m, n, ctx);
+  flint_rand_t state;
+  flint_rand_init(state);
   random_quasi_toeplitz(A, n, m, state, ctx);
+  FLINT_CHECK(gr_mat_set(A_ref, A, ctx));
   flint_printf("Original Matrix A:\n");
   gr_mat_print(A, ctx);
   gr_mat_G_H(G, H, A, ctx);
@@ -229,11 +246,19 @@ int test_reconstructions() {
   FLINT_CHECK(gr_mat_reconstruct_A_safe(A, G, H, ctx));
   flint_printf("\nReconstructed Matrix:\n");
   gr_mat_print(A, ctx);
+  if (gr_mat_equal(A, A_ref, ctx) == T_TRUE) {
+    flint_printf("[SUCCESS] Reconstruction matches original.\n");
+  } else {
+    flint_printf("[FAILURE] Reconstruction not matching\n");
+    res = GR_TEST_FAIL;
+  }
   gr_mat_clear(A, ctx);
+  gr_mat_clear(A_ref, ctx);
   gr_mat_clear(G, ctx);
   gr_mat_clear(H, ctx);
   flint_rand_clear(state);
-  return GR_SUCCESS;
+  gr_ctx_clear(ctx);
+  return res;
 }
 
 int main(int argc, char *argv[]) {

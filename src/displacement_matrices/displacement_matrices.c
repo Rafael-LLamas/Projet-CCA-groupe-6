@@ -60,24 +60,34 @@ int gr_mat_G_H(gr_mat_t G, gr_mat_t H, gr_mat_t A, gr_ctx_t ctx) {
   slong m = gr_mat_nrows(A, ctx);
   slong n = gr_mat_ncols(A, ctx);
   slong *P = flint_malloc(m * sizeof(slong));
-  gr_mat_displacement(A, A, ctx);
+  gr_mat_t D;
+  gr_mat_init(D, m, n, ctx);
+  int res = gr_mat_displacement(D, A, ctx);
+  if (res != GR_SUCCESS) {
+    gr_mat_clear(D, ctx);
+    flint_free(P);
+    return res;
+  }
   gr_mat_t LU, L, U;
   slong rank;
   gr_mat_init(LU, m, n, ctx);
   gr_mat_init(L, m, m, ctx);
   gr_mat_init(U, m, n, ctx);
-  FLINT_CHECK(gr_mat_lu(&rank, P, LU, A, 0, ctx));
+  FLINT_CHECK(gr_mat_lu(&rank, P, LU, D, 0, ctx));
   gr_mat_init(G, m, rank, ctx);
   gr_mat_init(H, n, rank, ctx);
   FLINT_CHECK(gr_mat_lu_detach(L, U, LU, ctx));
-  for (slong i = 0; i < m; i++) // extract G
+  for (slong i = 0; i < m; i++)
     for (slong j = 0; j < rank; j++)
       FLINT_CHECK(gr_set(gr_mat_entry_ptr(G, i, j, ctx), gr_mat_entry_srcptr(L, i, j, ctx), ctx));
-  for (slong i = 0; i < rank; i++) // extract H
+  slong limit = FLINT_MIN(m, n);
+  for (slong i = limit - 1; i >= 0; i--)
+    if (i != P[i]) FLINT_CHECK(gr_mat_swap_rows(G, NULL, i, P[i], ctx));
+  for (slong i = 0; i < rank; i++)
     for (slong j = 0; j < n; j++)
       FLINT_CHECK(gr_set(gr_mat_entry_ptr(H, j, i, ctx), gr_mat_entry_srcptr(U, i, j, ctx), ctx));
-  // for (slong i = 0; i < gr_mat_nrows(G, ctx); i++) FLINT_CHECK(gr_mat_move_row(G, i, P[i], ctx));
   flint_free(P);
+  gr_mat_clear(D, ctx);
   gr_mat_clear(LU, ctx);
   gr_mat_clear(L, ctx);
   gr_mat_clear(U, ctx);

@@ -33,9 +33,6 @@ int test_addition_generateurs_toeplitz_square() {
 
   FLINT_CHECK(gr_mat_G_H(A1_G, A1_H, A1, ctx));
   FLINT_CHECK(gr_mat_G_H(B1_G, B1_H, B1, ctx));
-  gr_mat_init(C2_G, N, 4, ctx); // moddif ici pour avoir un code dynamique mais normalement le G d'une toeplitz est de
-                                // taille Nx2 donc le G_res = Nx4
-  gr_mat_init(C2_H, N, 4, ctx);
   FLINT_CHECK(gr_mat_addition_generateur(A1_G, A1_H, B1_G, B1_H, C2_G, C2_H, ctx));
   FLINT_CHECK(gr_mat_reconstruct_A_safe(C2, C2_G, C2_H, ctx));
   gr_mat_print(C2, ctx);
