@@ -16,8 +16,13 @@ int test_multiplication_generateurs() {
   gr_mat_t A, B, C, G_a, H_a, G_b, H_b, G_c, H_c;
   gr_ctx_t ctx;
   flint_rand_t state;
+  ulong s1, s2;
+
   gr_ctx_init_nmod(ctx, 47);
   flint_rand_init(state);
+  flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
+  flint_rand_get_seed(&s1, &s2, state);
+  flint_printf("s1 = %wu\ns2 = %wu\n", s1, s2);
   gr_mat_init(A, 5, 5, ctx);
   gr_mat_init(B, 5, 5, ctx);
   error = random_toeplitz(A, 5, 5, state, ctx);
@@ -35,20 +40,35 @@ int test_multiplication_generateurs() {
   if (error != 0) { return error; }
   error = gr_mat_G_H(G_b, H_b, B, ctx);
   if (error != 0) { return error; }
-  error = gr_multiplication_toeplitz(C, A, B, ctx);
+  error = gr_mat_mul(C, A, B, ctx);
   if (error != 0) { return error; }
   flint_printf(":------------------------Matrices C faite sans les générateurs---------------------------------:\n");
   flint_printf("Matrice C = \n");
   gr_mat_print(C, ctx);
   flint_printf("\n");
   error = gr_mat_G_H(G_c, H_c, C, ctx);
+  if (error != 0) { return error; }
   flint_printf("Matrice G_c = \n");
   gr_mat_print(G_c, ctx);
   flint_printf("\n");
   flint_printf("Matrice H_c = \n");
   gr_mat_print(H_c, ctx);
   flint_printf("\n");
-  error = gr_multiplication_generateur_deplacement(G_c, H_c, G_a, H_a, G_b, H_b, ctx);
+  // error = gr_multiplication_generateur_deplacement(G_c, H_c, G_a, H_a, G_b, H_b, ctx);
+  // if (error != 0) { return error; }
+  // flint_printf(":------------------------Matrices C semi-faite avec les
+  // générateurs---------------------------------:\n"); flint_printf("Matrice G_c = \n"); gr_mat_print(G_c, ctx);
+  // flint_printf("\n");
+  // flint_printf("Matrice H_c = \n");
+  // gr_mat_print(H_c, ctx);
+  // flint_printf("\n");
+  // error = gr_mat_reconstruct_A_safe(C, G_c, H_c, ctx);
+  // if (error != 0) { return error; }
+  // flint_printf("Matrice C = \n");
+  // gr_mat_print(C, ctx);
+  // flint_printf("\n");
+  error = gr_multiplication_generateur_deplacement_fast(G_c, H_c, G_a, H_a, G_b, H_b, ctx);
+  if (error != 0) { return error; }
   flint_printf(":------------------------Matrices C faite avec les générateurs---------------------------------:\n");
   flint_printf("Matrice G_c = \n");
   gr_mat_print(G_c, ctx);
@@ -57,9 +77,21 @@ int test_multiplication_generateurs() {
   gr_mat_print(H_c, ctx);
   flint_printf("\n");
   error = gr_mat_reconstruct_A_safe(C, G_c, H_c, ctx);
+  if (error != 0) { return error; }
   flint_printf("Matrice C = \n");
   gr_mat_print(C, ctx);
   flint_printf("\n");
+  gr_mat_clear(C, ctx);
+  gr_mat_clear(A, ctx);
+  gr_mat_clear(B, ctx);
+  gr_mat_clear(G_a, ctx);
+  gr_mat_clear(G_b, ctx);
+  gr_mat_clear(G_c, ctx);
+  gr_mat_clear(H_a, ctx);
+  gr_mat_clear(H_b, ctx);
+  gr_mat_clear(H_c, ctx);
+  gr_ctx_clear(ctx);
+  flint_rand_clear(state);
   return error;
 }
 

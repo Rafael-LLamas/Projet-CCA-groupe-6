@@ -17,6 +17,7 @@ int test_random_toepltiz() {
   gr_mat_t ran, D;
   flint_rand_t state;
   flint_rand_init(state);
+  flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
   slong *rank = flint_malloc(sizeof(slong));
   gr_mat_init(ran, 5, 5, ctx);
   error = rand_quasi_toeplitz(ran, 5, 5, 1, ctx);

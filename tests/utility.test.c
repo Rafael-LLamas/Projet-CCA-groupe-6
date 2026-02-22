@@ -18,6 +18,7 @@ int test_LU_detatch() {
   slong rank, *P;
   flint_rand_t state;
   flint_rand_init(state);
+  flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
   P = flint_malloc(sizeof(slong) * 10);
   gr_mat_init(A, 5, 10, ctx);
   gr_mat_init(C, 10, 10, ctx);

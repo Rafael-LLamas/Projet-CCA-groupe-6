@@ -98,6 +98,7 @@ int test_large_matrix_deplacement_time() {
   gr_mat_init(D2, N, N, ctx);
   flint_rand_t rand_state;
   flint_rand_init(rand_state);
+  flint_rand_set_seed(rand_state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
   FLINT_CHECK(gr_mat_randtest(A, rand_state, ctx));
   //   flint_printf("Random Matrix A:\n");
   //   gr_mat_print(A, ctx);
@@ -144,6 +145,7 @@ int test_toeplitz_to_G_H() {
   gr_mat_init(T, m, n, ctx);
   flint_rand_t state;
   flint_rand_init(state);
+  flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
   random_toeplitz(A, n, m, state, ctx);
   FLINT_CHECK(gr_mat_set(T, A, ctx));
   flint_printf("Original matrix A:\n");
@@ -192,6 +194,7 @@ int test_quasi_toeplitz_to_G_H() {
   gr_mat_init(T, m, n, ctx);
   flint_rand_t state;
   flint_rand_init(state);
+  flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
   random_quasi_toeplitz(A, n, m, state, ctx);
   FLINT_CHECK(gr_mat_set(T, A, ctx));
   flint_printf("Original matrix A:\n");
@@ -237,6 +240,7 @@ int test_reconstructions() {
   gr_mat_init(A_ref, m, n, ctx);
   flint_rand_t state;
   flint_rand_init(state);
+  flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
   random_quasi_toeplitz(A, n, m, state, ctx);
   FLINT_CHECK(gr_mat_set(A_ref, A, ctx));
   flint_printf("Original Matrix A:\n");

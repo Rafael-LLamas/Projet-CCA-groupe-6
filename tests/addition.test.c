@@ -17,6 +17,7 @@ int test_addition_generateurs_toeplitz_square() {
   flint_rand_t state;
   gr_ctx_init_nmod(ctx, GNMOD);
   flint_rand_init(state);
+  flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
   int N = 5;
   flint_printf("Reference (FLINT):\n");
   gr_mat_init(A1, N, N, ctx);
