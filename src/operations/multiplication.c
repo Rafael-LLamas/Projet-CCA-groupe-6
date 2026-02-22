@@ -212,6 +212,8 @@ int gr_multiplication_generateur_deplacement_fast(gr_mat_t G_c, gr_mat_t H_c, gr
   gr_mat_clear(b, ctx);
   gr_mat_clear(Tmp, ctx);
   gr_mat_clear(LastCol, ctx);
+  gr_mat_clear(G_temp, ctx);
+  gr_mat_clear(H_temp, ctx);
   gr_mat_clear(G_res, ctx);
   gr_mat_clear(H_res, ctx);
 
