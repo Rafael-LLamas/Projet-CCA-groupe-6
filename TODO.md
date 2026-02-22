@@ -1,3 +1,26 @@
+# Week of 16/02/2026
+
+- do more tests on multiplication (any anywhere on the project they are really important)
+
+- main benchmarking start
+
+- inverse / resolution systeme
+
+- init nmod randomization
+
+- O0 to O3
+Unoptimized Time: 0.069541 seconds
+Running Optimized Method (Element-wise)...
+Optimized Time: 0.006297 seconds
+
+Unoptimized Time: 0.065375 seconds
+Running Optimized Method (Element-wise)...
+Optimized Time: 0.001711 seconds
+
++ util peut etre:
+    - n_randprime
+    
+
 # Week of 09/02/2026
 
 - GH^T -> Eps. LU 

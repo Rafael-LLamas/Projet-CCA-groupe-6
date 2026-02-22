@@ -79,10 +79,7 @@ int gr_mat_G_H(gr_mat_t G, gr_mat_t H, gr_mat_t A, gr_ctx_t ctx) {
   FLINT_CHECK(gr_mat_lu_detach(L, U, LU, ctx));
   for (slong i = 0; i < m; i++)
     for (slong j = 0; j < rank; j++)
-      FLINT_CHECK(gr_set(gr_mat_entry_ptr(G, i, j, ctx), gr_mat_entry_srcptr(L, i, j, ctx), ctx));
-  slong limit = FLINT_MIN(m, n);
-  for (slong i = limit - 1; i >= 0; i--)
-    if (i != P[i]) FLINT_CHECK(gr_mat_swap_rows(G, NULL, i, P[i], ctx));
+      FLINT_CHECK(gr_set(gr_mat_entry_ptr(G, P[i], j, ctx), gr_mat_entry_srcptr(L, i, j, ctx), ctx));
   for (slong i = 0; i < rank; i++)
     for (slong j = 0; j < n; j++)
       FLINT_CHECK(gr_set(gr_mat_entry_ptr(H, j, i, ctx), gr_mat_entry_srcptr(U, i, j, ctx), ctx));

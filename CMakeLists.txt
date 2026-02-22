@@ -4,7 +4,7 @@ project(model_project VERSION 0.1.0 LANGUAGES C)
 include(CTest)
 enable_testing()
 
-add_compile_options(-g -O0 -Wall)
+add_compile_options(-g -O3 -Wall)
 set(CMAKE_C_STANDARD 99)
 
 # Setting path location
@@ -67,12 +67,13 @@ target_link_libraries(main PRIVATE project_lib)
 ###
 add_executable(test_displacement tests/displacement.test.c)
 target_link_libraries(test_displacement PRIVATE project_lib)
-add_test(NAME Displacement.toeplitz_deplacement COMMAND test_displacement toeplitz_deplacement)
-add_test(NAME Displacement.manual_deplacement   COMMAND test_displacement manual_deplacement)
-add_test(NAME Displacement.large_deplacement    COMMAND test_displacement large_deplacement)
-add_test(NAME Displacement.toeplitz_G_H         COMMAND test_displacement toeplitz_G_H)
-add_test(NAME Displacement.quasi_toeplitz_G_H   COMMAND test_displacement quasi_toeplitz_G_H)
-add_test(NAME Displacement.reconstruction       COMMAND test_displacement reconstruction)
+add_test(NAME Displacement.toeplitz_deplacement             COMMAND test_displacement toeplitz_deplacement)
+add_test(NAME Displacement.manual_deplacement               COMMAND test_displacement manual_deplacement)
+add_test(NAME Displacement.large_deplacement                COMMAND test_displacement large_deplacement)
+add_test(NAME Displacement.toeplitz_G_H                     COMMAND test_displacement toeplitz_G_H)
+add_test(NAME Displacement.quasi_toeplitz_G_H               COMMAND test_displacement quasi_toeplitz_G_H)
+add_test(NAME Displacement.toeplitz_reconstruction          COMMAND test_displacement toeplitz_reconstruction)
+add_test(NAME Displacement.quasi_toeplitz_reconstruction    COMMAND test_displacement quasi_toeplitz_reconstruction)
 
 add_executable(test_utility tests/utility.test.c)
 target_link_libraries(test_utility PRIVATE project_lib)
