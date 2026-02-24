@@ -7,18 +7,19 @@
 #include "flint/gr.h"
 #include "flint/gr_mat.h"
 #include "flint/gr_poly.h"
+#include "flint/ulong_extras.h"
 #include "matrix_aux.h"
 #include "random_toeplitz.h"
 
 int test_LU_detatch() {
   gr_ctx_t ctx;
-  gr_ctx_init_nmod(ctx, GNMOD);
   flint_printf("\n:-------: LU Detatch on random Matrix :-------:\n");
   gr_mat_t A, LU, L, U, B, C;
   slong rank, *P;
   flint_rand_t state;
   flint_rand_init(state);
   flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
+  gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
   P = flint_malloc(sizeof(slong) * 10);
   gr_mat_init(A, 5, 10, ctx);
   gr_mat_init(C, 10, 10, ctx);
@@ -134,7 +135,10 @@ int test_LU_detatch_2() {
   flint_printf("\n\n:-------: LU Detatch on weird Matrix :-------:\n");
   gr_mat_t A, LU, L, U, B;
   slong rank, *P;
-  gr_ctx_init_nmod(ctx, GNMOD);
+  flint_rand_t state;
+  flint_rand_init(state);
+  flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
+  gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
   P = flint_malloc(sizeof(slong) * 10);
   gr_mat_init(A, 5, 4, ctx);
   gr_mat_init(LU, 5, 4, ctx);
@@ -195,11 +199,20 @@ int test_LU_detatch_2() {
   gr_mat_clear(B, ctx);
   flint_free(P);
   gr_ctx_clear(ctx);
+  flint_rand_clear(state);
   return GR_SUCCESS;
 }
-
+void usage(char *argv[]) {
+  fprintf(stderr, "Usage: %s <test_name>\n", argv[0]);
+  fprintf(stderr, "Available tests:\n");
+  fprintf(stderr, "  - LU_detatch\n");
+  fprintf(stderr, "  - LU_detatch2\n");
+}
 int main(int argc, char *argv[]) {
-  if (argc == 1) { return GR_UNABLE; }
+  if (argc < 2) {
+    usage(argv);
+    return GR_UNABLE;
+  }
   // start test
   fprintf(stderr, "=> Start test \"%s\"\n", argv[1]);
   int ok = GR_SUCCESS;

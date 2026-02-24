@@ -78,9 +78,14 @@ int test_addition_generateurs_toeplitz_square() {
   return GR_SUCCESS;
 }
 
+void usage(char *argv[]) {
+  fprintf(stderr, "Usage: %s <test_name>\n", argv[0]);
+  fprintf(stderr, "Available tests:\n");
+  fprintf(stderr, "  - addition_generators_toeplitz\n");
+}
 int main(int argc, char *argv[]) {
   if (argc < 2) {
-    fprintf(stderr, "Usage: %s <test_name>\n", argv[0]);
+    usage(argv);
     return GR_UNABLE;
   }
 
@@ -88,8 +93,6 @@ int main(int argc, char *argv[]) {
   int ok = GR_SUCCESS;
 
   if (strcmp("addition_generators_toeplitz", argv[1]) == 0) {
-    ok = test_addition_generateurs_toeplitz_square();
-  } else if (strcmp("placeholder", argv[1]) == 0) {
     ok = test_addition_generateurs_toeplitz_square();
   } else {
     fprintf(stderr, "Error: test \"%s\" not found!\n", argv[1]);

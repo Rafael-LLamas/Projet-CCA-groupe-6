@@ -7,17 +7,52 @@
 #include "flint/gr.h"
 #include "flint/gr_mat.h"
 #include "flint/gr_poly.h"
+#include "flint/ulong_extras.h"
 #include "matrix_aux.h"
 #include "random_toeplitz.h"
 
 int test_random_toepltiz() {
   gr_ctx_t ctx;
-  gr_ctx_init_nmod(ctx, 47);
+  int error;
+  gr_mat_t ran;
+  flint_rand_t state;
+  flint_rand_init(state);
+  flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
+  gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
+  slong *rank = flint_malloc(sizeof(slong));
+  gr_mat_init(ran, 5, 5, ctx);
+  error = random_toeplitz(ran, 5, 5, state, ctx);
+  if (error != 0) {
+    gr_mat_clear(ran, ctx);
+    gr_ctx_clear(ctx);
+    flint_free(rank);
+    exit(error);
+  }
+  error = gr_mat_rank(rank, ran, ctx);
+  if (error != 0) {
+    gr_mat_clear(ran, ctx);
+    gr_ctx_clear(ctx);
+    flint_free(rank);
+    exit(error);
+  }
+  flint_printf("----------------------------------------------\nResultat toeplitz = \n");
+  gr_mat_print(ran, ctx);
+  flint_printf("\n");
+  flint_printf("rank = %wd \n", *rank);
+  gr_mat_clear(ran, ctx);
+  gr_ctx_clear(ctx);
+  flint_free(rank);
+  flint_rand_clear(state);
+  return GR_SUCCESS;
+}
+int test_random_quasi_toeplitz() {
+  gr_ctx_t ctx;
   int error;
   gr_mat_t ran, D;
   flint_rand_t state;
   flint_rand_init(state);
   flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
+  gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
   slong *rank = flint_malloc(sizeof(slong));
   gr_mat_init(ran, 5, 5, ctx);
   error = rand_quasi_toeplitz(ran, 5, 5, 1, ctx);
@@ -111,27 +146,6 @@ int test_random_toepltiz() {
   flint_printf("\n");
   flint_printf("rank de déplcement = %wd \n", *rank);
 
-  gr_mat_clear(ran, ctx);
-  gr_mat_init(ran, 5, 5, ctx);
-  error = random_toeplitz(ran, 5, 5, state, ctx);
-  if (error != 0) {
-    gr_mat_clear(ran, ctx);
-    gr_ctx_clear(ctx);
-    flint_free(rank);
-    exit(error);
-  }
-  error = gr_mat_rank(rank, ran, ctx);
-  if (error != 0) {
-    gr_mat_clear(ran, ctx);
-    gr_mat_clear(D, ctx);
-    gr_ctx_clear(ctx);
-    flint_free(rank);
-    exit(error);
-  }
-  flint_printf("----------------------------------------------\nResultat toeplitz = \n");
-  gr_mat_print(ran, ctx);
-  flint_printf("\n");
-  flint_printf("rank = %wd \n", *rank);
   gr_mat_clear(D, ctx);
   gr_mat_clear(ran, ctx);
   gr_ctx_clear(ctx);
@@ -140,15 +154,25 @@ int test_random_toepltiz() {
   return GR_SUCCESS;
 }
 
+void usage(char *argv[]) {
+  fprintf(stderr, "Usage: %s <test_name>\n", argv[0]);
+  fprintf(stderr, "Available tests:\n");
+  fprintf(stderr, "  - random_toeplitz\n");
+  fprintf(stderr, "  - random_quasi_toeplitz\n");
+}
+
 int main(int argc, char *argv[]) {
-  if (argc == 1) { return GR_UNABLE; }
+  if (argc < 2) {
+    usage(argv);
+    return GR_UNABLE;
+  }
   // start test
   fprintf(stderr, "=> Start test \"%s\"\n", argv[1]);
   int ok = GR_SUCCESS;
   if (strcmp("random_toeplitz", argv[1]) == 0) {
     ok = test_random_toepltiz();
-  } else if (strcmp("this is your DIY project rafael hamas", argv[1]) == 0) {
-    ok = test_random_toepltiz();
+  } else if (strcmp("random_quasi_toeplitz", argv[1]) == 0) {
+    ok = test_random_quasi_toeplitz();
   } else {
     fprintf(stderr, "Error: test \"%s\" not found!\n", argv[1]);
     exit(EXIT_FAILURE);
