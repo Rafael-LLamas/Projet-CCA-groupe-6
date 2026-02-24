@@ -87,21 +87,6 @@ int test_multiplication_generateurs() {
   flint_printf("Matrice C = \n");
   gr_mat_print(C, ctx);
   flint_printf("\n");
-  error = gr_mat_G_H(G_c, H_c, C, ctx);
-  if (error != 0) {
-    gr_mat_clear(C, ctx);
-    gr_mat_clear(A, ctx);
-    gr_mat_clear(B, ctx);
-    gr_mat_clear(G_a, ctx);
-    gr_mat_clear(G_b, ctx);
-    gr_mat_clear(G_c, ctx);
-    gr_mat_clear(H_a, ctx);
-    gr_mat_clear(H_b, ctx);
-    gr_mat_clear(H_c, ctx);
-    gr_ctx_clear(ctx);
-    flint_rand_clear(state);
-    return error;
-  }
   flint_printf(":------------------------Matrices C faite avec les générateurs---------------------------------:\n");
   error = gr_multiplication_generateur_deplacement_fast(G_c, H_c, G_a, H_a, G_b, H_b, ctx);
   if (error != 0) {

@@ -207,8 +207,6 @@ int gr_multiplication_generateur_deplacement_fast(gr_mat_t G_c, gr_mat_t H_c, gr
   error = gr_mat_concat_horizontal(H_res, H_temp, b, ctx);
   if (error != 0) { return error; }
 
-  gr_mat_clear(G_c, ctx);
-  gr_mat_clear(H_c, ctx);
   error = gr_mat_init_set(G_c, G_res, ctx);
   if (error != 0) { return error; }
   error = gr_mat_init_set(H_c, H_res, ctx);
