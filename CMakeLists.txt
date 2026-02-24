@@ -62,6 +62,10 @@ target_include_directories(project_lib PUBLIC
 add_executable(main src/main.c)
 target_link_libraries(main PRIVATE project_lib)
 
+# temp
+add_executable(inverse_test src/toeplitz_inverse/toeplitz_inverse.c)
+target_link_libraries(inverse_test PRIVATE project_lib)
+
 ####
 # Tests
 ###
