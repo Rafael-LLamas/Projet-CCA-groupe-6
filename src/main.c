@@ -60,19 +60,19 @@ void launch_external_terminal(int argc, char *argv[]) {
   }
 
 #ifdef _WIN32
-  // /k garde la console ouverte après l'exécution
+  // /Windows
   snprintf(command, sizeof(command), "start cmd /k \"%s %s\"", argv[0], args_joined);
 #elif __APPLE__
-  // On ajoute un read à la fin de la commande AppleScript
+  // MacOS
   snprintf(command, sizeof(command),
            "osascript -e 'tell application \"Terminal\" to do script \"cd \\\"$(pwd)\\\"; ./%s %s; echo; echo --- "
            "Termine ---; read -n 1 -s -p \\\"Appuyez sur une touche pour quitter...\\\"\"'",
            argv[0], args_joined);
 #else
-  // Sous Linux, on demande à bash d'exécuter le programme puis d'attendre une saisie
+  // Linux
   snprintf(command, sizeof(command),
-           "x-terminal-emulator -e bash -c \"./%s %s; echo; echo --- Termine ---; read -n 1 -s -r -p 'Appuyez sur une "
-           "touche pour quitter...'\" &",
+           "x-terminal-emulator -e bash -c \"./%s %s; echo; echo '--- Termine ---'; read -n 1 -s -r -p 'Appuyez sur "
+           "une touche pour quitter...'\" 2>/dev/null &",
            argv[0], args_joined);
 #endif
 
