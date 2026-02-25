@@ -1,10 +1,8 @@
 #include "flint/flint.h"
 #include "flint/gr_mat.h"
 #include "flint/gr_poly.h"
-#include "flint/gr_types.h"
-#include "flint/nmod_mat.h"
-#include "flint/nmod_poly.h"
 #include "flint/ulong_extras.h"
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -48,6 +46,39 @@ double get_time_ms() {
 #define ANSI_COLOR_BOLD "\x1b[1m"
 #define ANSI_CURSOR_UP "\x1b[A"
 #define ANSI_CLEAR_LINE "\x1b[2K"
+
+void launch_external_terminal(int argc, char *argv[]) {
+  char command[2048];
+  char args_joined[512] = "";
+
+  // On reconstruit les arguments SANS le "-out"
+  for (int i = 1; i < argc; i++) {
+    if (strcmp(argv[i], "-out") != 0) {
+      strcat(args_joined, argv[i]);
+      strcat(args_joined, " ");
+    }
+  }
+
+#ifdef _WIN32
+  // /k garde la console ouverte après l'exécution
+  snprintf(command, sizeof(command), "start cmd /k \"%s %s\"", argv[0], args_joined);
+#elif __APPLE__
+  // On ajoute un read à la fin de la commande AppleScript
+  snprintf(command, sizeof(command),
+           "osascript -e 'tell application \"Terminal\" to do script \"cd \\\"$(pwd)\\\"; ./%s %s; echo; echo --- "
+           "Termine ---; read -n 1 -s -p \\\"Appuyez sur une touche pour quitter...\\\"\"'",
+           argv[0], args_joined);
+#else
+  // Sous Linux, on demande à bash d'exécuter le programme puis d'attendre une saisie
+  snprintf(command, sizeof(command),
+           "x-terminal-emulator -e bash -c \"./%s %s; echo; echo --- Termine ---; read -n 1 -s -r -p 'Appuyez sur une "
+           "touche pour quitter...'\" &",
+           argv[0], args_joined);
+#endif
+
+  printf(ANSI_COLOR_YELLOW "Lancement du benchmark dans le terminal externe...\n" ANSI_COLOR_RESET);
+  system(command);
+}
 
 int compare_doubles(const void *a, const void *b) {
   double arg1 = *(const double *)a;
@@ -173,7 +204,7 @@ int benchmark_displacement() {
   gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
 
   printf("\n" ANSI_COLOR_BOLD ANSI_COLOR_MAGENTA "=== BENCHMARK DISPLACEMENT ===" ANSI_COLOR_RESET "\n");
-  printf("%-8s | %-12s | %-12s | %-12s\n", "Size", "Displace", "GH (Comp)", "Reconst");
+  printf("%-8s | %-12s | %-12s | %-12s\n", "Size", "Displace (ms)", "GH (ms)", "Reconst (ms)");
   printf("---------|--------------|--------------|--------------\n");
 
   for (int s = 0; s < num_sizes; s++) {
@@ -318,7 +349,7 @@ int benchmark_addition() {
 };
 void run_all_benchmarks() {
   printf("\033[H\033[J"); // Clear terminal
-  printf(ANSI_COLOR_BOLD ANSI_COLOR_CYAN "=== GLOBAL BENCHMARK SUITE ===\n" ANSI_COLOR_RESET);
+  printf(ANSI_COLOR_BOLD ANSI_COLOR_CYAN "=== GLOBAL BENCHMARK ===\n" ANSI_COLOR_RESET);
   benchmark_addition();
   benchmark_multiplication();
   benchmark_displacement();
@@ -340,6 +371,21 @@ int main(int argc, char *argv[]) {
   if (argc < 2) {
     usage(argv);
     return EXIT_FAILURE;
+  }
+  bool external = false;
+  for (int i = 1; i < argc; i++) {
+    if (strcmp(argv[i], "-out") == 0) {
+      external = true;
+      break;
+    }
+  }
+
+  if (external) {
+    launch_external_terminal(argc, argv);
+    printf(ANSI_COLOR_GREEN "Le terminal externe a ete lance. Ce terminal (pere) reste ouvert.\n" ANSI_COLOR_RESET);
+    printf("Appuyez sur Entree pour fermer le terminal pere...\n");
+    getchar();
+    return EXIT_SUCCESS;
   }
 
   if (strcmp(argv[1], "benchmark") == 0) {
