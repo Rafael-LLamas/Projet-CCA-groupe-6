@@ -65,9 +65,9 @@ void launch_external_terminal(int argc, char *argv[]) {
 #elif __APPLE__
   // MacOS
   snprintf(command, sizeof(command),
-           "osascript -e 'tell application \"Terminal\" to do script \"cd \\\"$(pwd)\\\"; ./%s %s; echo; echo --- "
-           "Termine ---; read -n 1 -s -p \\\"Appuyez sur une touche pour quitter...\\\"\"'",
-           argv[0], args_joined);
+           "osascript -e 'tell application \"Terminal\" to do script \"cd \\\"%s\\\"; sh -c \\\"./%s %s; echo; echo "
+           "--- Termine ---; read -n 1 -p \\\\\\\"Appuyez sur une touche pour quitter...\\\\\\\"\\\"\"'",
+           get_current_dir_name(), argv[0], args_joined);
 #else
   // Linux
   snprintf(command, sizeof(command),
