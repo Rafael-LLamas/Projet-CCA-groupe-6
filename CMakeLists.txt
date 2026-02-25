@@ -47,6 +47,7 @@ target_link_libraries(flint_core INTERFACE
 set(PROJECT_SOURCES
     src/displacement_matrices/displacement_matrices.c
     src/random_toeplitz/random_toeplitz.c
+    src/toeplitz_inverse/toeplitz_inverse.c
     src/utility/matrix_aux.c
     src/operations/multiplication.c
     src/operations/addition.c
@@ -56,42 +57,43 @@ target_link_libraries(project_lib PUBLIC flint_core)
 target_include_directories(project_lib PUBLIC
     src/displacement_matrices
     src/random_toeplitz
+    src/toeplitz_inverse
     src/utility
     src/operations
 )
 add_executable(main src/main.c)
 target_link_libraries(main PRIVATE project_lib)
 
-# temp
-add_executable(inverse_test src/toeplitz_inverse/toeplitz_inverse.c)
-target_link_libraries(inverse_test PRIVATE project_lib)
-
 ####
 # Tests
 ###
 add_executable(test_displacement tests/displacement.test.c)
 target_link_libraries(test_displacement PRIVATE project_lib)
-add_test(NAME Displacement.toeplitz_deplacement             COMMAND test_displacement toeplitz_deplacement)
-add_test(NAME Displacement.manual_deplacement               COMMAND test_displacement manual_deplacement)
-add_test(NAME Displacement.large_deplacement                COMMAND test_displacement large_deplacement)
-add_test(NAME Displacement.toeplitz_G_H                     COMMAND test_displacement toeplitz_G_H)
-add_test(NAME Displacement.quasi_toeplitz_G_H               COMMAND test_displacement quasi_toeplitz_G_H)
-add_test(NAME Displacement.toeplitz_reconstruction          COMMAND test_displacement toeplitz_reconstruction)
-add_test(NAME Displacement.quasi_toeplitz_reconstruction    COMMAND test_displacement quasi_toeplitz_reconstruction)
+add_test(NAME Displacement.toeplitz_deplacement                     COMMAND test_displacement toeplitz_deplacement)
+add_test(NAME Displacement.manual_deplacement                       COMMAND test_displacement manual_deplacement)
+add_test(NAME Displacement.large_deplacement                        COMMAND test_displacement large_deplacement)
+add_test(NAME Displacement.toeplitz_G_H                             COMMAND test_displacement toeplitz_G_H)
+add_test(NAME Displacement.quasi_toeplitz_G_H                       COMMAND test_displacement quasi_toeplitz_G_H)
+add_test(NAME Displacement.toeplitz_reconstruction                  COMMAND test_displacement toeplitz_reconstruction)
+add_test(NAME Displacement.quasi_toeplitz_reconstruction            COMMAND test_displacement quasi_toeplitz_reconstruction)
 
 add_executable(test_utility tests/utility.test.c)
 target_link_libraries(test_utility PRIVATE project_lib)
-add_test(NAME Utility.LU_detatch                COMMAND test_utility LU_detatch)
-add_test(NAME Utility.LU_detatch2               COMMAND test_utility LU_detatch2)
+add_test(NAME Utility.LU_detatch                                    COMMAND test_utility LU_detatch)
+add_test(NAME Utility.LU_detatch2                                   COMMAND test_utility LU_detatch2)
 
 add_executable(test_random_toeplitz tests/random_toeplitz.test.c)
 target_link_libraries(test_random_toeplitz PRIVATE project_lib)
-add_test(NAME Random.random_toeplitz            COMMAND test_random_toeplitz random_toeplitz)
+add_test(NAME Random.random_toeplitz                                COMMAND test_random_toeplitz random_toeplitz)
 
 add_executable(test_operations_multiplication tests/multiplication.test.c)
 target_link_libraries(test_operations_multiplication PRIVATE project_lib)
-add_test(NAME Operations.multiplication_generators            COMMAND test_operations_multiplication multiplication_generators)
+add_test(NAME Operations.multiplication_generators                  COMMAND test_operations_multiplication multiplication_generators)
 
 add_executable(test_operations_addition tests/addition.test.c)
 target_link_libraries(test_operations_addition PRIVATE project_lib)
-add_test(NAME Operations.addition_generators_toepltiz            COMMAND test_operations_addition addition_generators_toeplitz)
+add_test(NAME Operations.addition_generators_toepltiz               COMMAND test_operations_addition addition_generators_toeplitz)
+
+add_executable(test_inversion tests/inverse.test.c)
+target_link_libraries(test_inversion PRIVATE project_lib)
+add_test(NAME Inverse.base_case                                     COMMAND test_inversion inverse_base_case)
