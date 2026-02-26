@@ -97,3 +97,4 @@ add_test(NAME Operations.addition_generators_toepltiz               COMMAND test
 add_executable(test_inversion tests/inverse.test.c)
 target_link_libraries(test_inversion PRIVATE project_lib)
 add_test(NAME Inverse.base_case                                     COMMAND test_inversion inverse_base_case)
+add_test(NAME Inverse.2x2                                           COMMAND test_inversion inverse_2x2)
