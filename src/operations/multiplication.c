@@ -3,8 +3,6 @@
 #include "flint/gr.h"
 #include "flint/gr_mat.h"
 #include "flint/gr_poly.h"
-#include "matrix_aux.h"
-#include "random_toeplitz.h"
 
 #include <stdlib.h>
 #include <time.h>

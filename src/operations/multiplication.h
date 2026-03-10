@@ -1,10 +1,7 @@
 #ifndef MULTIPLICATION_H
 #define MULTIPLICATION_H
 
-#include "flint/flint.h"
 #include "flint/gr.h"
-#include "flint/gr_mat.h"
-#include "flint/gr_poly.h"
 
 int test_multiplication_generateurs();
 

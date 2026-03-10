@@ -1,9 +1,7 @@
 #include "addition.h"
-#include "displacement_matrices.h"
 #include "flint/flint.h"
 #include "flint/gr.h"
 #include "flint/gr_mat.h"
-#include "flint/gr_poly.h"
 #include "multiplication.h"
 
 /*
@@ -333,19 +331,25 @@ int gr_toeplitz_inverse(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, 
       }
     }
   }
-
+free_all:
   gr_mat_clear(G_x, ctx);
   gr_mat_clear(H_x, ctx);
+free_tce:
   gr_mat_clear(G_tce, ctx);
   gr_mat_clear(H_tce, ctx);
+free_ebt:
   gr_mat_clear(G_ebt, ctx);
   gr_mat_clear(H_ebt, ctx);
+free_t:
   gr_mat_clear(G_t, ctx);
   gr_mat_clear(H_t, ctx);
+free_e:
   gr_mat_clear(G_e, ctx);
   gr_mat_clear(H_e, ctx);
+free_top:
   gr_mat_window_clear(G_top, ctx);
   gr_mat_window_clear(H_top, ctx);
+free_bottom:
   gr_mat_window_clear(G_bottom, ctx);
   gr_mat_window_clear(H_bottom, ctx);
   return res;
