@@ -24,10 +24,10 @@ int test_inverse_base_case() {
   gr_mat_init(H_A, n, rank, ctx);
   gr_mat_init(G_D, n, rank, ctx);
   gr_mat_init(H_D, n, rank, ctx);
-  gr_set_si(gr_mat_entry_ptr(G_A, 0, 0, ctx), 3, ctx);
-  gr_set_si(gr_mat_entry_ptr(G_A, 0, 1, ctx), -1, ctx);
-  gr_set_si(gr_mat_entry_ptr(H_A, 0, 0, ctx), 2, ctx);
-  gr_set_si(gr_mat_entry_ptr(H_A, 0, 1, ctx), 1, ctx);
+  res = gr_set_si(gr_mat_entry_ptr(G_A, 0, 0, ctx), 3, ctx);
+  res = gr_set_si(gr_mat_entry_ptr(G_A, 0, 1, ctx), -1, ctx);
+  res = gr_set_si(gr_mat_entry_ptr(H_A, 0, 0, ctx), 2, ctx);
+  res = gr_set_si(gr_mat_entry_ptr(H_A, 0, 1, ctx), 1, ctx);
   flint_printf("Testing Strassen Inverse Base Case (n=1) over nmod 17\n");
   flint_printf("---------------------------------------------------\n");
   flint_printf("Input G_A: ");
@@ -68,10 +68,10 @@ int test_inverse_2x2() {
   flint_printf("---------------------------------------------------\n");
   gr_mat_t A;
   gr_mat_init(A, 2, 2, ctx);
-  gr_set_ui(gr_mat_entry_ptr(A, 0, 0, ctx), 3, ctx);
-  gr_set_ui(gr_mat_entry_ptr(A, 0, 1, ctx), 5, ctx);
-  gr_set_ui(gr_mat_entry_ptr(A, 1, 0, ctx), 7, ctx);
-  gr_set_ui(gr_mat_entry_ptr(A, 1, 1, ctx), 3, ctx);
+  res = gr_set_ui(gr_mat_entry_ptr(A, 0, 0, ctx), 3, ctx);
+  res = gr_set_ui(gr_mat_entry_ptr(A, 0, 1, ctx), 5, ctx);
+  res = gr_set_ui(gr_mat_entry_ptr(A, 1, 0, ctx), 7, ctx);
+  res = gr_set_ui(gr_mat_entry_ptr(A, 1, 1, ctx), 3, ctx);
   flint_printf("Input A:\n");
   gr_mat_print(A, ctx);
   flint_printf("\n");
@@ -149,7 +149,7 @@ int test_inverse_2x2() {
   flint_printf("\n");
   gr_mat_t identity;
   gr_mat_init(identity, 2, 2, ctx);
-  gr_mat_one(identity, ctx);
+  res = gr_mat_one(identity, ctx);
   // gr_mat_equal returns truth_t (T_TRUE / T_FALSE / T_UNKNOWN), not int
   truth_t check;
   check = gr_mat_equal(product, identity, ctx);

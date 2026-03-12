@@ -110,6 +110,7 @@ int benchmark_multiplication() {
   slong sizesn[] = {128, 1024, 4096};
   slong sizesm[] = {128, 1024, 4096};
   int num_sizes = 3;
+  int error = GR_SUCCESS;
   if (!csv) return GR_UNABLE;
 
   if (n != -1 || m != -1) {
@@ -159,31 +160,32 @@ int benchmark_multiplication() {
       gr_mat_init(H_c, 0, 0, ctx);
 
       // Données
-      random_toeplitz(A, ntemp, mtemp, state, ctx);
-      random_toeplitz(B, mtemp, ntemp, state, ctx);
-      gr_mat_G_H(G_a, H_a, A, ctx);
-      gr_mat_G_H(G_b, H_b, B, ctx);
-      for (slong r = 0; r < mtemp; r++) gr_set(gr_mat_entry_ptr(X, r, 0, ctx), gr_mat_entry_srcptr(A, 0, 0, ctx), ctx);
+      error = random_toeplitz(A, ntemp, mtemp, state, ctx);
+      error = random_toeplitz(B, mtemp, ntemp, state, ctx);
+      error = gr_mat_G_H(G_a, H_a, A, ctx);
+      error = gr_mat_G_H(G_b, H_b, B, ctx);
+      for (slong r = 0; r < mtemp; r++)
+        error = gr_set(gr_mat_entry_ptr(X, r, 0, ctx), gr_mat_entry_srcptr(A, 0, 0, ctx), ctx);
 
       // --- 1. TOEPLITZ x TOEPLITZ ---
       double t1 = get_time_ms();
-      gr_multiplication_generateur_deplacement_fast(G_c, H_c, G_a, H_a, G_b, H_b, ctx);
+      error = gr_multiplication_generateur_deplacement_fast(G_c, H_c, G_a, H_a, G_b, H_b, ctx);
       toe_toe_mine[i] = get_time_ms() - t1;
       toe_toe_flint[i] = 0;
       if (flint) {
         double t2 = get_time_ms();
-        gr_mat_mul(C, A, B, ctx);
+        error = gr_mat_mul(C, A, B, ctx);
         toe_toe_flint[i] = get_time_ms() - t2;
       }
 
       // --- 2. TOEPLITZ x VECTEUR ---
       double t3 = get_time_ms();
-      gr_mat_apply_struct_fast(Res_V, G_a, H_a, X, ctx);
+      error = gr_mat_apply_struct_fast(Res_V, G_a, H_a, X, ctx);
       toe_vec_mine[i] = get_time_ms() - t3;
       toe_vec_flint[i] = 0;
       if (flint) {
         double t4 = get_time_ms();
-        gr_mat_mul(Res_V, A, X, ctx);
+        error = gr_mat_mul(Res_V, A, X, ctx);
         toe_vec_flint[i] = get_time_ms() - t4;
       }
 
@@ -230,7 +232,7 @@ int benchmark_multiplication() {
   fclose(csv);
   gr_ctx_clear(ctx);
   flint_rand_clear(state);
-  return 0;
+  return error;
 }
 int benchmark_displacement() {
   FILE *csv = fopen("bench_displacement.csv", "w");
@@ -271,18 +273,18 @@ int benchmark_displacement() {
       gr_mat_init(H, 0, 0, ctx);
       gr_mat_init(A_rec, cur_n, cur_n, ctx);
 
-      random_toeplitz(A, cur_n, cur_n, state, ctx);
+      error = random_toeplitz(A, cur_n, cur_n, state, ctx);
 
       double start = get_time_ms();
-      gr_mat_displacement(D, A, ctx);
+      error = gr_mat_displacement(D, A, ctx);
       t_disp += (get_time_ms() - start);
 
       start = get_time_ms();
-      gr_mat_G_H(G, H, A, ctx);
+      error = gr_mat_G_H(G, H, A, ctx);
       t_gh += (get_time_ms() - start);
 
       start = get_time_ms();
-      gr_mat_reconstruct_A_safe(A_rec, G, H, ctx);
+      error = gr_mat_reconstruct_A_safe(A_rec, G, H, ctx);
       t_rec += (get_time_ms() - start);
 
       gr_mat_clear(A, ctx);
@@ -355,19 +357,19 @@ int benchmark_addition() {
       gr_mat_init(G_c, 0, 0, ctx);
       gr_mat_init(H_c, 0, 0, ctx);
 
-      random_toeplitz(A, cur_n, cur_m, state, ctx);
-      random_toeplitz(B, cur_n, cur_m, state, ctx);
-      gr_mat_G_H(G_a, H_a, A, ctx);
-      gr_mat_G_H(G_b, H_b, B, ctx);
+      error = random_toeplitz(A, cur_n, cur_m, state, ctx);
+      error = random_toeplitz(B, cur_n, cur_m, state, ctx);
+      error = gr_mat_G_H(G_a, H_a, A, ctx);
+      error = gr_mat_G_H(G_b, H_b, B, ctx);
 
       double t1 = get_time_ms();
-      gr_mat_addition_generateur(G_c, H_c, G_a, H_a, G_b, H_b, ctx);
+      error = gr_mat_addition_generateur(G_c, H_c, G_a, H_a, G_b, H_b, ctx);
       gen_times[i] = get_time_ms() - t1;
 
       flint_times[i] = 0;
       if (flint) {
         double t3 = get_time_ms();
-        gr_mat_add(C, A, B, ctx);
+        error = gr_mat_add(C, A, B, ctx);
         flint_times[i] = get_time_ms() - t3;
       }
 

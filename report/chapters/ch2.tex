@@ -1,0 +1,35 @@
+\section{Operation}
+
+\subsection{Addition}
+ Grace au générateurs, nous pouvons addtionner nos matrices sans utiliser la formule standart.
+ En effet, selon la propriété 10.7 et 10.8 du cours (ref cours ICI), on apprends que la somme de 2 matrices toeplitz peut etre simplfié par la concatenation de leurs générateurs de déplacement.
+ Cela permet de passrr a un coup de O(nxm) a un cout de O($\alpha$xm) pour 2 matrices A et B de tailles nxm et leurs générateurs de taille $\alpha$ pour ceux de A et $\beta$ pour ceux de B.
+ Avec flint, on peut utiliser la fonction 
+ (ici la fonction)
+pour faire la concatenation de nos générateurs.
+ \subsubsection{Exemple}
+On va prendre les matrices A, B et C le résultat de l'addition de A et B.
+(METTRE LES MATRICES ICI)
+si on prends les générateurs de A = (T,U) et B = (G,H)
+(ICI GÉNÉRATEURS)
+et que l'on fait la concaténation on obtiens
+(ICI RESULTAT DE LA CONCATENATION)
+pour verifier notre résultat on peut utiliser la fonction 
+(ici la fonction)
+pour recomposer la matrice que l'on a obtenue D
+(ICI D)
+
+On remarque bien que celle-ci est identique a la matrices C
+
+\subsection{Multiplication}
+Toujours avec les générateurs, on peut simplifier la multiplication de 2 matrices et donc réduire son cout en concatenant :
+- les générateurs de A=(T,U) et B=(G,H)
+- W = Z x A x Ztranspose x G
+- V = Btranspose x U
+- a (resp. b) un vecteur qui est la dernière colonne de Z x A (resp Ztranspose x B)
+cela nous permet de passer de O(n3) pour l'algo naif a O($\alpha$²M(n))
+\subsubsection{Exemple}
+pareil donner des exemples de chaque etapes a bien rédiger
+\subsection{Inversion}
+Pour arda
+
