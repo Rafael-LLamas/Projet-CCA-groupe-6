@@ -20,7 +20,9 @@ It is possible to benchmark the proejct using the main executable.
 ## Dependencies for a Mac user:
 > Flint with CMake is primarily for Windows users, I use the GNU autotools build. Install prerequisites:
 > 
-> `brew install autoconf automake libtool gmp mpfr`
+> ```bash
+> brew install autoconf automake libtool gmp mpf
+> ```
 >
 > To build FLINT:
 >
@@ -28,9 +30,10 @@ It is possible to benchmark the proejct using the main executable.
 > cd flint-3.4.0/
 >
 > ./bootstrap.sh
->
-> # Replace path correctly to your specification
-> # March native as my CPU is an older generation
+> ```
+> Replace path correctly to your specification
+> This is an example on an intel based Mac using Homebrew (March native as my CPU is an older generation)
+> ```bash
 > ./configure \
 >    --disable-assert \
 >    --enable-avx2 \
@@ -39,12 +42,24 @@ It is possible to benchmark the proejct using the main executable.
 >    --with-mpfr=/usr/local/opt/mpfr \
 >    CC=clang \
 >    CFLAGS="-Wall -O3 -march=native"
->
-> make -j9          # I only have 4 cores that run 2 threads (+1)
-> make -j 9 check   # Verify hardware <-> functions (8 threads +1)
-> make install
+>   ```
+> This is an example on an Apple Silicon based Mac using Homebrew
+> ```bash
+> ./configure \
+>   --disable-assert \
+>   --with-gmp-include=/opt/homebrew/opt/gmp/include \
+>   --with-gmp-lib=/opt/homebrew/opt/gmp/lib \
+>   --with-mpfr=/opt/homebrew/opt/mpfr \
+>   CC=clang \
+>   CFLAGS="-Wall -O3 -march=native"
+>   ```
+> Make the FLINT library and install it:
+> ```bash
+> make -j11          # I only have 10 cores
+> make -j 11 check   # Verify hardware <-> functions (10 threads +1)
+> make install       # sudo if necessary
 > ```
-> 
+
 
 ## Autors
 - Ali Arda Barut
