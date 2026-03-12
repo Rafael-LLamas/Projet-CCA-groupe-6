@@ -3,26 +3,22 @@
 Project Descrption here
 
 ## Build
-
+You can create a build folder and compile the project using CMake.
 ```bash
-mkdir build
-cmake ..
+cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+cd build
 make
 ```
 
-## Execute Tests
-The results are written in `output_[NAME].txt`.
+## Benchmark
+It is possible to benchmark the proejct using the main executable.
 ```bash
-./main
-```
-Can also specifically call tests:
-```
-./main [TEST NAME]
+./main benchmark
 ```
 
 
-> ### Note to Arda from Arda regarding FLINT
-> Cmake is primarily for Windows users, I use the GNU autotools build. Install prerequisites:
+## Dependencies for a Mac user:
+> Flint with CMake is primarily for Windows users, I use the GNU autotools build. Install prerequisites:
 > 
 > `brew install autoconf automake libtool gmp mpfr`
 >
