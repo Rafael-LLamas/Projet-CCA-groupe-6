@@ -1,15 +1,7 @@
 #ifndef DISPLACEMENT_MATRICES_H
 #define DISPLACEMENT_MATRICES_H
 
-#include "flint/flint.h"
 #include "flint/gr.h"
-#include "flint/gr_mat.h"
-#include "flint/gr_poly.h"
-
-/**
- * @brief Main testing function for displacement matrices
- */
-int test_displacement_matrices();
 
 /**
  * @brief This is the safe-book version relying purely on the optimisation of FLINT calculations
