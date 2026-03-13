@@ -2,10 +2,9 @@
 #include "flint/flint.h"
 #include "flint/gr.h"
 #include "flint/gr_mat.h"
-#include "flint/gr_poly.h"
 #include "matrix_aux.h"
-#include "random_toeplitz.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
@@ -33,26 +32,49 @@ int gr_mat_displacement_square_safe(gr_mat_t D, gr_mat_t A, gr_ctx_t ctx) {
   return GR_SUCCESS;
 }
 
-int gr_mat_displacement(gr_mat_t D, gr_mat_t A, gr_ctx_t ctx) {
+int gr_mat_displacement(gr_mat_t D, gr_mat_t A, gr_ctx_t ctx, disp_type_t type) {
   slong n = gr_mat_nrows(A, ctx);
   slong m = gr_mat_ncols(A, ctx);
-  if (gr_mat_nrows(D, ctx) != n || gr_mat_ncols(D, ctx) != m) return GR_UNABLE;
-  gr_ptr ptr_cur, ptr_prev, ptr_dest;
 
-  // inner part
-  for (slong i = n - 1; i > 0; i--) {
-    for (slong j = 1; j < m; j++) {
-      ptr_cur = gr_mat_entry_ptr(A, i, j, ctx);
-      ptr_prev = gr_mat_entry_ptr(A, i - 1, j - 1, ctx);
-      ptr_dest = gr_mat_entry_ptr(D, i, j, ctx);
-      FLINT_CHECK(gr_sub(ptr_dest, ptr_cur, ptr_prev, ctx)); // D[i,j] = A[i,j] - A[i-1, j-1]
+  if (gr_mat_nrows(D, ctx) != n || gr_mat_ncols(D, ctx) != m) return GR_UNABLE;
+  gr_ptr ptr_cur, ptr_op, ptr_dest;
+
+  if (type == DISP_MINUS) {
+
+    for (slong i = 0; i < n - 1; i++) {
+      for (slong j = 0; j < m - 1; j++) {
+        ptr_cur = gr_mat_entry_ptr(A, i, j, ctx);
+        ptr_op = gr_mat_entry_ptr(A, i + 1, j + 1, ctx);
+        ptr_dest = gr_mat_entry_ptr(D, i, j, ctx);
+        FLINT_CHECK(gr_sub(ptr_dest, ptr_cur, ptr_op, ctx)); // D[i,j] = A[i,j] - A[i+1, j+1]
+      }
     }
+
+    // copy the rest (left row & column)
+    for (slong i = 0; i < n; i++)
+      FLINT_CHECK(gr_set(gr_mat_entry_ptr(D, i, m-1, ctx), gr_mat_entry_ptr(A, i, m-1, ctx), ctx));
+    for (slong j = 1; j < m; j++)
+      FLINT_CHECK(gr_set(gr_mat_entry_ptr(D, n-1, j, ctx), gr_mat_entry_ptr(A, n-1, j, ctx), ctx));
+
+  } else {
+
+    // inner part
+    for (slong i = n - 1; i > 0; i--) {
+      for (slong j = 1; j < m; j++) {
+        ptr_cur = gr_mat_entry_ptr(A, i, j, ctx);
+        ptr_op = gr_mat_entry_ptr(A, i - 1, j - 1, ctx);
+        ptr_dest = gr_mat_entry_ptr(D, i, j, ctx);
+        FLINT_CHECK(gr_sub(ptr_dest, ptr_cur, ptr_op, ctx)); // D[i,j] = A[i,j] - A[i-1, j-1]
+      }
+    }
+
+    // copy the rest (first row & columns)
+    for (slong i = 0; i < n; i++)
+      FLINT_CHECK(gr_set(gr_mat_entry_ptr(D, i, 0, ctx), gr_mat_entry_ptr(A, i, 0, ctx), ctx));
+    for (slong j = 1; j < m; j++)
+      FLINT_CHECK(gr_set(gr_mat_entry_ptr(D, 0, j, ctx), gr_mat_entry_ptr(A, 0, j, ctx), ctx));
   }
-  // copy the rest (first row & columns)
-  for (slong i = 0; i < n; i++)
-    FLINT_CHECK(gr_set(gr_mat_entry_ptr(D, i, 0, ctx), gr_mat_entry_ptr(A, i, 0, ctx), ctx));
-  for (slong j = 1; j < m; j++)
-    FLINT_CHECK(gr_set(gr_mat_entry_ptr(D, 0, j, ctx), gr_mat_entry_ptr(A, 0, j, ctx), ctx));
+
   return GR_SUCCESS;
 }
 
@@ -62,7 +84,7 @@ int gr_mat_G_H(gr_mat_t G, gr_mat_t H, gr_mat_t A, gr_ctx_t ctx) {
   slong *P = flint_malloc(m * sizeof(slong));
   gr_mat_t D;
   gr_mat_init(D, m, n, ctx);
-  int res = gr_mat_displacement(D, A, ctx);
+  int res = gr_mat_displacement(D, A, ctx, DISP_PLUS);
   if (res != GR_SUCCESS) {
     gr_mat_clear(D, ctx);
     flint_free(P);

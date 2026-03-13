@@ -3,6 +3,12 @@
 
 #include "flint/gr.h"
 
+// Displacement type, type
+typedef enum {
+    DISP_PLUS,
+    DISP_MINUS
+} disp_type_t;
+
 /**
  * @brief This is the safe-book version relying purely on the optimisation of FLINT calculations
  * Complexity: O(n^3) naive, but this is flint so probably less
@@ -17,7 +23,7 @@ int gr_mat_displacement_square_safe(gr_mat_t D, gr_mat_t A, gr_ctx_t ctx);
  * @param[out] D Resulting L shaped matrix
  * @param[in] A Input matrix
  */
-int gr_mat_displacement(gr_mat_t D, gr_mat_t A, gr_ctx_t ctx);
+int gr_mat_displacement(gr_mat_t D, gr_mat_t A, gr_ctx_t ctx, disp_type_t type);
 
 /**
  * @brief Returns the G and H matrices by the LU decomposition.

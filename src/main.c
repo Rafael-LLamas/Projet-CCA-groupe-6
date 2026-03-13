@@ -276,7 +276,7 @@ int benchmark_displacement() {
       error = random_toeplitz(A, cur_n, cur_n, state, ctx);
 
       double start = get_time_ms();
-      error = gr_mat_displacement(D, A, ctx);
+      error = gr_mat_displacement(D, A, ctx, DISP_PLUS);
       t_disp += (get_time_ms() - start);
 
       start = get_time_ms();
