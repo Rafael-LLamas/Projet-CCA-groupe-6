@@ -50,7 +50,7 @@ int gr_mat_displacement(gr_mat_t D, gr_mat_t A, gr_ctx_t ctx, disp_type_t type) 
       }
     }
 
-    // copy the rest (left row & column)
+    // copy the rest (last row & column)
     for (slong i = 0; i < n; i++)
       FLINT_CHECK(gr_set(gr_mat_entry_ptr(D, i, m-1, ctx), gr_mat_entry_ptr(A, i, m-1, ctx), ctx));
     for (slong j = 1; j < m; j++)

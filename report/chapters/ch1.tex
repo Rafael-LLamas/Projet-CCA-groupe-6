@@ -44,8 +44,8 @@ Essentially, $Z$ is a matrix with ones on the first sub-diagonal and zeros every
     Z^T = \begin{pmatrix}
         0      & 1      & 0      & \cdots & 0      \\
         0      & 0      & 1      & \cdots & 0      \\
-        0      & 0      & 0      & \cdots & 1      \\
         \vdots & \vdots & \ddots & \ddots & \vdots \\
+        0      & 0      & \cdots & 0      & 1      \\
         0      & 0      & \cdots & 0      & 0
     \end{pmatrix}
 \end{equation}
@@ -100,3 +100,28 @@ The matrix $A$ can be written as a sum of elements of lower and upper triangular
     \item $L(g_k)$ is a lower triangular Toeplitz matrix with the first column $g_k$.
     \item $U(h_k)$ is an upper triangular Toeplitz matrix with the first row $h_k^T$.
 \end{itemize}
+
+\subsection{Displacement Operators}
+
+We define two displacements operators:
+
+\begin{equation}
+    \begin{aligned}
+        \phi_+(A) &= A - Z A Z^T = \nabla A \\
+        \phi_-(A) &= A - Z^T A Z
+    \end{aligned}
+\end{equation}
+
+In other words, $\phi_-(A)$ is the substraction of minuend A where subtrahend is the matrix A but with the columns shifted up and rows to right once.
+
+Computationally, it follows the same path as the calculation of $\nabla A$. Main difference being we can run this time in increasing order:
+
+\begin{equation}
+    \phi_-(A)_{i,j} =
+    \begin{cases}
+        A_{i,j}                & \text{if } i=n-1 \text{ or } j=m-1 \\
+        A_{i,j} - A_{i+1, j+1} & \text{otherwise}
+    \end{cases}
+\end{equation}
+
+Where \texttt{n} and \texttt{m} are respectfully the number of rows and columns of matrix A.
