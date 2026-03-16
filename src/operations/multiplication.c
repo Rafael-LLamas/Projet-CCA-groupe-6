@@ -22,14 +22,14 @@ int gr_multiplication_generateur_deplacement(gr_mat_t G_c, gr_mat_t H_c, gr_mat_
 
   gr_mat_init(W, gr_mat_nrows(T, ctx), gr_mat_ncols(G, ctx), ctx);
   gr_mat_init(V, gr_mat_nrows(H, ctx), gr_mat_ncols(U, ctx), ctx);
-  error = gr_mat_reconstruct_A_safe(W, T, U, ctx);
+  error = gr_mat_reconstruct_A(W, T, U, DISP_PLUS, ctx);
   if (error != 0) { return error; }
   error = gr_mat_mul(W, W, G, ctx);
   if (error != 0) { return error; }
   error = gr_mat_concat_horizontal(G_c, T, W, ctx);
   if (error != 0) { return error; }
 
-  error = gr_mat_reconstruct_A_safe(V, H, G, ctx);
+  error = gr_mat_reconstruct_A(V, H, G, DISP_PLUS, ctx);
   if (error != 0) { return error; }
   error = gr_mat_mul(V, V, U, ctx);
   if (error != 0) { return error; }

@@ -1,6 +1,5 @@
 #include "flint/flint.h"
 #include "flint/gr_mat.h"
-#include "flint/gr_poly.h"
 #include "flint/ulong_extras.h"
 #include <stdbool.h>
 #include <stdio.h>
@@ -11,7 +10,6 @@
 
 #include "addition.h"
 #include "displacement_matrices.h"
-#include "matrix_aux.h"
 #include "multiplication.h"
 #include "random_toeplitz.h"
 
@@ -162,8 +160,8 @@ int benchmark_multiplication() {
       // Données
       error = random_toeplitz(A, ntemp, mtemp, state, ctx);
       error = random_toeplitz(B, mtemp, ntemp, state, ctx);
-      error = gr_mat_G_H(G_a, H_a, A, ctx);
-      error = gr_mat_G_H(G_b, H_b, B, ctx);
+      error = gr_mat_G_H(G_a, H_a, A, DISP_PLUS, ctx);
+      error = gr_mat_G_H(G_b, H_b, B, DISP_PLUS, ctx);
       for (slong r = 0; r < mtemp; r++)
         error = gr_set(gr_mat_entry_ptr(X, r, 0, ctx), gr_mat_entry_srcptr(A, 0, 0, ctx), ctx);
 
@@ -276,15 +274,15 @@ int benchmark_displacement() {
       error = random_toeplitz(A, cur_n, cur_n, state, ctx);
 
       double start = get_time_ms();
-      error = gr_mat_displacement(D, A, ctx, DISP_PLUS);
+      error = gr_mat_displacement(D, A, DISP_PLUS, ctx);
       t_disp += (get_time_ms() - start);
 
       start = get_time_ms();
-      error = gr_mat_G_H(G, H, A, ctx);
+      error = gr_mat_G_H(G, H, A, DISP_PLUS, ctx);
       t_gh += (get_time_ms() - start);
 
       start = get_time_ms();
-      error = gr_mat_reconstruct_A_safe(A_rec, G, H, ctx);
+      error = gr_mat_reconstruct_A(A_rec, G, H, DISP_PLUS, ctx);
       t_rec += (get_time_ms() - start);
 
       gr_mat_clear(A, ctx);
@@ -359,8 +357,8 @@ int benchmark_addition() {
 
       error = random_toeplitz(A, cur_n, cur_m, state, ctx);
       error = random_toeplitz(B, cur_n, cur_m, state, ctx);
-      error = gr_mat_G_H(G_a, H_a, A, ctx);
-      error = gr_mat_G_H(G_b, H_b, B, ctx);
+      error = gr_mat_G_H(G_a, H_a, A, DISP_PLUS, ctx);
+      error = gr_mat_G_H(G_b, H_b, B, DISP_PLUS, ctx);
 
       double t1 = get_time_ms();
       error = gr_mat_addition_generateur(G_c, H_c, G_a, H_a, G_b, H_b, ctx);

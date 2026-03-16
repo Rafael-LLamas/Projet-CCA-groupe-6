@@ -6,9 +6,7 @@
 #include "flint/flint.h"
 #include "flint/gr.h"
 #include "flint/gr_mat.h"
-#include "flint/gr_poly.h"
 #include "flint/ulong_extras.h"
-#include "matrix_aux.h"
 #include "random_toeplitz.h"
 
 int test_random_toepltiz() {

@@ -6,9 +6,7 @@
 #include "flint/flint.h"
 #include "flint/gr.h"
 #include "flint/gr_mat.h"
-#include "flint/gr_poly.h"
 #include "flint/ulong_extras.h"
-#include "matrix_aux.h"
 #include "multiplication.h"
 #include "random_toeplitz.h"
 
@@ -49,7 +47,7 @@ int test_multiplication_generateurs() {
     gr_mat_print(B, ctx);
     flint_printf("\n\n");
     gr_mat_init(C, gr_mat_nrows(A, ctx), gr_mat_ncols(B, ctx), ctx);
-    error = gr_mat_G_H(G_a, H_a, A, ctx);
+    error = gr_mat_G_H(G_a, H_a, A, DISP_PLUS, ctx);
     if (error != 0) {
       gr_mat_clear(C, ctx);
       gr_mat_clear(A, ctx);
@@ -60,7 +58,7 @@ int test_multiplication_generateurs() {
       flint_rand_clear(state);
       return error;
     }
-    error = gr_mat_G_H(G_b, H_b, B, ctx);
+    error = gr_mat_G_H(G_b, H_b, B, DISP_PLUS, ctx);
     if (error != 0) {
       gr_mat_clear(C, ctx);
       gr_mat_clear(A, ctx);
@@ -106,7 +104,7 @@ int test_multiplication_generateurs() {
       flint_rand_clear(state);
       return error;
     }
-    error = gr_mat_reconstruct_A_safe(C, G_c, H_c, ctx);
+    error = gr_mat_reconstruct_A(C, G_c, H_c, DISP_PLUS, ctx);
     if (error != 0) {
       gr_mat_clear(C, ctx);
       gr_mat_clear(A, ctx);

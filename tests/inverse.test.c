@@ -6,11 +6,6 @@
 #include "flint/flint.h"
 #include "flint/gr.h"
 #include "flint/gr_mat.h"
-#include "flint/gr_poly.h"
-#include "flint/ulong_extras.h"
-#include "matrix_aux.h"
-#include "multiplication.h"
-#include "random_toeplitz.h"
 #include "toeplitz_inverse.h"
 
 int test_inverse_base_case() {
@@ -76,7 +71,7 @@ int test_inverse_2x2() {
   gr_mat_print(A, ctx);
   flint_printf("\n");
   gr_mat_t G_A, H_A;
-  res = gr_mat_G_H(G_A, H_A, A, ctx);
+  res = gr_mat_G_H(G_A, H_A, A, DISP_PLUS, ctx);
   if (res != GR_SUCCESS) {
     flint_printf("[ERROR] Could not compute generators.\n");
     gr_mat_clear(A, ctx);
@@ -112,7 +107,7 @@ int test_inverse_2x2() {
   // A^{-1} from generators
   gr_mat_t A_inv;
   gr_mat_init(A_inv, 2, 2, ctx);
-  res = gr_mat_reconstruct_A_safe(A_inv, G_D, H_D, ctx);
+  res = gr_mat_reconstruct_A(A_inv, G_D, H_D, DISP_PLUS, ctx);
   if (res != GR_SUCCESS) {
     flint_printf("[ERROR] Could not reconstruct A_inv.\n");
     gr_mat_clear(A_inv, ctx);

@@ -7,7 +7,6 @@
 #include "flint/flint.h"
 #include "flint/gr.h"
 #include "flint/gr_mat.h"
-#include "flint/gr_poly.h"
 #include "flint/ulong_extras.h"
 #include "matrix_aux.h"
 #include "random_toeplitz.h"
@@ -42,10 +41,10 @@ int test_addition_generateurs_toeplitz_square() {
     gr_mat_t A1_G, A1_H, B1_G, B1_H, C2_G, C2_H, C2;
     gr_mat_init(C2, N, N, ctx);
 
-    FLINT_CHECK(gr_mat_G_H(A1_G, A1_H, A1, ctx));
-    FLINT_CHECK(gr_mat_G_H(B1_G, B1_H, B1, ctx));
+    FLINT_CHECK(gr_mat_G_H(A1_G, A1_H, A1, DISP_PLUS, ctx));
+    FLINT_CHECK(gr_mat_G_H(B1_G, B1_H, B1, DISP_PLUS, ctx));
     FLINT_CHECK(gr_mat_addition_generateur(A1_G, A1_H, B1_G, B1_H, C2_G, C2_H, ctx));
-    FLINT_CHECK(gr_mat_reconstruct_A_safe(C2, C2_G, C2_H, ctx));
+    FLINT_CHECK(gr_mat_reconstruct_A(C2, C2_G, C2_H, DISP_PLUS, ctx));
 
     flint_printf("A1_G = \n");
     gr_mat_print(A1_G, ctx);

@@ -36,7 +36,7 @@ int test_toeplitz_deplacement() {
     gr_mat_print(A, ctx);
     flint_printf("\n");
     flint_printf("Input LU Matrix A:\n");
-    gr_mat_displacement(D, A, ctx, DISP_PLUS);
+    gr_mat_displacement(D, A, DISP_PLUS, ctx);
     flint_printf("Displacement Matrix (∇A):\n");
     gr_mat_print(D, ctx);
     flint_printf("\n");
@@ -78,13 +78,13 @@ int test_manual_deplacement() {
     flint_printf("Input Manual Matrix A:\n");
     gr_mat_print(A, ctx);
     flint_printf("\n");
-    gr_mat_displacement(D, A, ctx, DISP_PLUS);
+    gr_mat_displacement(D, A, DISP_PLUS, ctx);
     flint_printf("Displacement Matrix Phi_+ (∇A):\n");
     gr_mat_print(D, ctx);
     flint_printf("\n");
     int err = gr_mat_zero(D, ctx);
     if (err) exit(FLINT_TEST_FAIL);
-    gr_mat_displacement(D, A, ctx, DISP_MINUS);
+    gr_mat_displacement(D, A, DISP_PLUS, ctx);
     flint_printf("Displacement Matrix Phi_- (∇A):\n");
     gr_mat_print(D, ctx);
     flint_printf("\n");
@@ -135,7 +135,7 @@ int test_large_matrix_deplacement_time() {
   flint_printf("\nUnoptimized Time: %f seconds\n", time_slow);
   flint_printf("Running Optimized Method (Element-wise)...\n"); // faster one
   start = clock();
-  gr_mat_displacement(D2, A, ctx, DISP_PLUS);
+  gr_mat_displacement(D2, A, DISP_PLUS, ctx);
   //   flint_printf("Safe Book result D2:\n");
   //   gr_mat_print(D2, ctx);
   end = clock();
@@ -178,13 +178,13 @@ int test_toeplitz_to_G_H() {
     }
     flint_printf("Original matrix A:\n");
     gr_mat_print(A, ctx);
-    if (gr_mat_displacement(D, A, ctx, DISP_PLUS) != GR_SUCCESS) {
+    if (gr_mat_displacement(D, A, DISP_PLUS, ctx) != GR_SUCCESS) {
       flint_printf("[ERROR] gr_mat_displacement failed\n");
       res = GR_TEST_FAIL;
     }
     flint_printf("\nTrue displacement D:\n");
     gr_mat_print(D, ctx);
-    if (gr_mat_G_H(G, H, A, ctx) != GR_SUCCESS) {
+    if (gr_mat_G_H(G, H, A, DISP_PLUS, ctx) != GR_SUCCESS) {
       flint_printf("[ERROR] gr_mat_G_H failed\n");
       res = GR_TEST_FAIL;
     }
@@ -245,7 +245,7 @@ int test_quasi_toeplitz_to_G_H() {
     FLINT_CHECK(gr_mat_set(T, A, ctx));
     flint_printf("Original matrix A:\n");
     gr_mat_print(A, ctx);
-    gr_mat_G_H(G, H, A, ctx);
+    gr_mat_G_H(G, H, A, DISP_PLUS, ctx);
     flint_printf("\nGenerator G:\n");
     gr_mat_print(G, ctx);
     flint_printf("\nGenerator H:\n");
@@ -256,7 +256,7 @@ int test_quasi_toeplitz_to_G_H() {
     flint_printf("\nReconstructed Displacement Matrix B:\n");
     gr_mat_print(B, ctx);
     flint_printf("\nShould Be equal to displacement matrix of A:\n");
-    FLINT_CHECK(gr_mat_displacement(T, T, ctx, DISP_PLUS));
+    FLINT_CHECK(gr_mat_displacement(T, T, DISP_PLUS, ctx));
     gr_mat_print(T, ctx);
     if (gr_mat_equal(B, T, ctx) == T_TRUE) {
       flint_printf("[SUCCESS] Generators correctly do displacement\n");
@@ -309,7 +309,7 @@ int test_toeplitz_reconstruction() {
     gr_mat_print(A, ctx);
     flint_printf("\n");
 
-    if (gr_mat_displacement(D_orig, A, ctx, DISP_PLUS) != GR_SUCCESS) {
+    if (gr_mat_displacement(D_orig, A, DISP_PLUS, ctx) != GR_SUCCESS) {
       flint_printf("[ERROR] displacement failed\n");
       res = GR_TEST_FAIL;
     }
@@ -317,7 +317,7 @@ int test_toeplitz_reconstruction() {
     gr_mat_print(D_orig, ctx);
     flint_printf("\n");
 
-    if (gr_mat_G_H(G, H, A, ctx) != GR_SUCCESS) {
+    if (gr_mat_G_H(G, H, A, DISP_PLUS, ctx) != GR_SUCCESS) {
       flint_printf("[ERROR] gr_mat_G_H failed\n");
       res = GR_TEST_FAIL;
     }
@@ -328,7 +328,7 @@ int test_toeplitz_reconstruction() {
     gr_mat_print(H, ctx);
     flint_printf("\n");
 
-    if (gr_mat_reconstruct_A_safe(B, G, H, ctx) != GR_SUCCESS) {
+    if (gr_mat_reconstruct_A(B, G, H, DISP_PLUS, ctx) != GR_SUCCESS) {
       flint_printf("[ERROR] gr_mat_reconstruct_A_safe failed\n");
       res = GR_TEST_FAIL;
     }
@@ -425,7 +425,7 @@ int test_quasi_toeplitz_reconstruction() {
     gr_mat_print(A, ctx);
     flint_printf("\n");
 
-    if (gr_mat_G_H(G, H, A, ctx) != GR_SUCCESS) {
+    if (gr_mat_G_H(G, H, A, DISP_PLUS, ctx) != GR_SUCCESS) {
       flint_printf("[ERROR] gr_mat_G_H failed\n");
       res = GR_TEST_FAIL;
     }
@@ -436,7 +436,7 @@ int test_quasi_toeplitz_reconstruction() {
     flint_printf("\n");
 
     // Verify G * H^T == displacement(A)
-    if (gr_mat_displacement(D_ref, A_ref, ctx, DISP_PLUS) != GR_SUCCESS) {
+    if (gr_mat_displacement(D_ref, A_ref, DISP_PLUS, ctx) != GR_SUCCESS) {
       flint_printf("[ERROR] displacement failed\n");
       res = GR_TEST_FAIL;
     }
@@ -461,7 +461,7 @@ int test_quasi_toeplitz_reconstruction() {
     }
 
     // Full round-trip: reconstruct A and compare
-    if (gr_mat_reconstruct_A_safe(B, G, H, ctx) != GR_SUCCESS) {
+    if (gr_mat_reconstruct_A(B, G, H, DISP_PLUS, ctx) != GR_SUCCESS) {
       flint_printf("[ERROR] gr_mat_reconstruct_A_safe failed\n");
       res = GR_TEST_FAIL;
     }
