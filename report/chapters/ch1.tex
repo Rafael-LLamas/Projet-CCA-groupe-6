@@ -72,7 +72,7 @@ While this definition involves matrix multiplication, in this case $O(n^2 * m)$ 
 calculating $\nabla A$ explicitly via matrix multiplication is inefficient.
 
 The displacement calculation can be reduced to an element based loop with complexity $O(nm)$:
-\begin{equation}
+\begin{equation} \label{imp:phi_plus}
     (\nabla A)_{i,j} =
     \begin{cases}
         A_{i,j}                & \text{if } i=0 \text{ or } j=0 \\
@@ -93,7 +93,7 @@ the original matrix $A$ can be reconstructed using the columns of the generators
 Let $g_k$ and $h_k$ denote the $k$-th columns of $G$ and $H$ respectively.
 
 The matrix $A$ can be written as a sum of elements of lower and upper triangular matrices:
-\begin{equation}
+\begin{equation} \label{eq:SigmaLU}
     A = \sum_{k=1}^{\alpha} L(g_k) U(h_k)
 \end{equation}
 \begin{itemize}
@@ -116,7 +116,7 @@ In other words, $\phi_-(A)$ is the substraction of minuend A where subtrahend is
 
 Computationally, it follows the same path as the calculation of $\nabla A$. Main difference being we can run this time in increasing order:
 
-\begin{equation}
+\begin{equation} \label{imp:phi_minus}
     \phi_-(A)_{i,j} =
     \begin{cases}
         A_{i,j}                & \text{if } i=n-1 \text{ or } j=m-1 \\
@@ -125,3 +125,30 @@ Computationally, it follows the same path as the calculation of $\nabla A$. Main
 \end{equation}
 
 Where \texttt{n} and \texttt{m} are respectfully the number of rows and columns of matrix A.
+
+\subsection{Conclusion \& Implementation}
+
+We conclude the section of the definitions.
+Implementations of these concepts can be found in:
+
+\begin{verbatim}
+Project
+\   src
+|   \   displacement_matrices
+|   |   |   displacement_matrices.c
+|   |   |   displacement_matrices.h
+\end{verbatim}
+
+\paragraph{gr\_mat\_displacement(gr\_mat\_t D, gr\_mat\_t A, disp\_type\_t type, gr\_ctx\_t ctx)}
+Is the function taking as parameter the matrix $A$ and returns into the matrix $D$, indicating destination, the displacement matrix of $A$.
+According to the type of displacement we pass via the parameter \texttt{type}, it calculates the implementations \eqref{imp:phi_plus} or \eqref{imp:phi_minus}.
+
+\paragraph{int gr\_mat\_G\_H(gr\_mat\_t G, gr\_mat\_t H, gr\_mat\_t A, disp\_type\_t type, gr\_ctx\_t ctx))}
+Is the function that computes the generator matrices $G$ and $H^T$ for an input matrix $A$.
+Based on the displacement equations discussed previously, the equation \eqref{eq:SigmaLU}, the function first calculates the displacement matrix according to the specified type of displacement.
+Since the displacement of a structured matrix (like a Toeplitz matrix) inherently results in a matrix with a low rank ($\alpha$),
+$D$ can be factored into two smaller matrices such that $D = G H^T$.
+The function achieves this by performing an LU decomposition on the displacement matrix $D$. It then extracts the independent columns to form $G$ and the corresponding rows to form $H^T$.
+This is where the storage economy for structured matrices come from.
+
+\paragraph{int gr\_mat\_reconstruct\_A(gr\_mat\_t A, gr\_mat\_t G, gr\_mat\_t H, disp\_type\_t type, gr\_ctx\_t ctx)}
