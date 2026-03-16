@@ -1,5 +1,8 @@
 \section{Definitions}
 
+In this section, we will discuss what are Toeplitz Matrices, how are they defined and what are their properties such that we can take advantage
+during matrix implementations.
+
 \subsection{Toeplitz Matrices}
 
 A Toeplitz matrix is in which each element in first row and first column descends diagonally.
@@ -16,6 +19,7 @@ Formally, it is defined by a sequence of elements $\{a_k\}$ such that:
         a_{n-1} & a_{n-2} & a_{n-3} & \cdots & a_{n-m}
     \end{pmatrix}
 \end{equation}
+
 \[
     A_{i,j} = a_{i-j}, \quad 0 \le i < n,\; 0 \le j < m
 \]
@@ -23,7 +27,8 @@ Formally, it is defined by a sequence of elements $\{a_k\}$ such that:
 \subsubsection{Quasi Toeplitz Matrices}
 
 A Quasi-Toeplitz matrix is not strictly Toeplitz but shares similar structural properties.
-Can benefit the structural advantages of Toeplitz partially in these matrices.
+We can also define Quasi-Toeplitz matrix as a Toeplitz Matrix that has noise within.
+Notice that we can still benefit the structural advantages of Toeplitz partially in these matrices.
 
 \subsection{Displacement Matrices}
 
@@ -51,10 +56,9 @@ Essentially, $Z$ is a matrix with ones on the first sub-diagonal and zeros every
 \end{equation}
 Multiplying a matrix $A$ by $Z$ from the left ($ZA$) shifts the rows of $A$ down by one (zeros at the top).
 Multiplying by $Z^T$ from the right ($AZ^T$) shifts the columns to the right, (zeros at the first column).
+Resulting in an operation $ZAZ^T$ that shifts the entire matrix $A$ one step to the bottom-right.
 
 \subsubsection{Mathematical Approach}
-Result, operation $ZAZ^T$ shifts the entire matrix $A$ one step to the bottom-right.
-
 For a generic Toeplitz matrix of size $n \times m$, this subtraction results in zeros everywhere except for the first row and the first column.
 \begin{equation}
     \nabla A = \begin{pmatrix}
@@ -68,8 +72,8 @@ For a generic Toeplitz matrix of size $n \times m$, this subtraction results in 
 This allows us to represent the $n \times m$ matrix using only $O(n + m)$ elements rather than storing the full $O(nm)$ dense matrix.
 
 \subsubsection{Computational Approach}
-While this definition involves matrix multiplication, in this case $O(n^2 * m)$ or similar depending on the multiplication method used,
-calculating $\nabla A$ explicitly via matrix multiplication is inefficient.
+While mathematical definition involves matrix multiplication, in this case $O(n^2 * m)$ or similar depending on the multiplication method used,
+calculating $\nabla A$ based on matrix multiplication is inefficient.
 
 The displacement calculation can be reduced to an element based loop with complexity $O(nm)$:
 \begin{equation} \label{imp:phi_plus}
@@ -83,14 +87,30 @@ The displacement calculation can be reduced to an element based loop with comple
 This approach allows us to iterate from the bottom row to the top updating values in place.
 
 \subsection{Generator Matrices}
-Displacement matrices, $\nabla A$, typically have a low rank $\alpha$ (displacement rank).
+Displacement matrices, $\nabla A$, typically have a low rank $\alpha$, we call this displacement rank.
 For Toeplitz matrices, $\alpha$ is generally small ($\alpha \le 2$).
 This allows us to store efficiently the displacement matrix into two smaller matrices $G$ and $H$.
 
-While the product $G H^T$ results in the displacement $\nabla A$,
-the original matrix $A$ can be reconstructed using the columns of the generators mentioned at Proposition 10.5 in \cite{aecf-2017-pdf}.
+While the product $G \times H^T$ results in the displacement $\nabla A$,
+the original matrix $A$ can be reconstructed using the columns of the generators mentioned at Proposition 10.5 in \cite{aecf-2017-pdf}:
 
-Let $g_k$ and $h_k$ denote the $k$-th columns of $G$ and $H$ respectively.
+\begin{equation}
+    A - Z A Z^T = G H^T \quad \text{iff} \quad A = \sum_{i=1}^{\alpha} L(x_i) U(y_i),
+\end{equation}
+
+where $x_i$ (and thus $y_i$) are the columns of the generator $G$ (and thus $H$), where
+for a column vector $v = [v_0 \dots v_{n-1}]^T$, $L(v)$ denotes the lower triangular Toeplitz matrix:
+
+\begin{equation*}
+    L(v) = \begin{pmatrix}
+        v_0 & 0 & \dots & 0 \\
+        v_1 & v_0 & \dots & 0 \\
+        \vdots & \ddots & \dots & \vdots \\
+        v_{n-1} & \dots & v_1 & v_0
+    \end{pmatrix}
+\end{equation*}
+
+and $U(v)$ denotes the upper triangular Toeplitz matrix $L(v)^T$.
 
 The matrix $A$ can be written as a sum of elements of lower and upper triangular matrices:
 \begin{equation} \label{eq:SigmaLU}
