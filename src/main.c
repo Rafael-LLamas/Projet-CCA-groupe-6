@@ -46,6 +46,7 @@ double get_time_ms() {
 
 int n = -1;
 int m = -1;
+int k = -1;
 int rank = -1;
 int iteration = -1;
 bool flint = false;
@@ -167,7 +168,7 @@ int benchmark_multiplication() {
 
       // --- 1. TOEPLITZ x TOEPLITZ ---
       double t1 = get_time_ms();
-      error = gr_multiplication_generateur_deplacement_fast(G_c, H_c, G_a, H_a, G_b, H_b, ctx);
+      error = gr_mat_mul_generator(G_c, H_c, G_a, H_a, G_b, H_b, ctx);
       toe_toe_mine[i] = get_time_ms() - t1;
       toe_toe_flint[i] = 0;
       if (flint) {
@@ -178,7 +179,7 @@ int benchmark_multiplication() {
 
       // --- 2. TOEPLITZ x VECTEUR ---
       double t3 = get_time_ms();
-      error = gr_mat_apply_struct_fast(Res_V, G_a, H_a, X, ctx);
+      error = gr_mat_mul_vector(Res_V, G_a, H_a, X, ctx);
       toe_vec_mine[i] = get_time_ms() - t3;
       toe_vec_flint[i] = 0;
       if (flint) {

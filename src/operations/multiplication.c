@@ -7,39 +7,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-int gr_multiplication_generateur_deplacement(gr_mat_t G_c, gr_mat_t H_c, gr_mat_t T, gr_mat_t U, gr_mat_t G, gr_mat_t H,
-                                             gr_ctx_t ctx) {
-  /*
-  Donc si j'ai compris cette fois-ci:
-  On a 4 générateur de déplacement pour les matrices A et B.
-  Pour eviter des multiplication inutile on va juste les utilisé pour avoir en théorie du O(nlog(n))(complexité de FFT
-  si je me souviens bien ?) Donc normalement C = G_c * H_c^T et C = A * B donc :
-  G_c =  T | W | a , W = A * G ,A = somme( L(gk) * U(Hk))
-  H_c = V | H | − b , V = B^t * U ,B = somme( L(hk) * U(gk))
-  */
-  int error;
-  gr_mat_t W, V;
-
-  gr_mat_init(W, gr_mat_nrows(T, ctx), gr_mat_ncols(G, ctx), ctx);
-  gr_mat_init(V, gr_mat_nrows(H, ctx), gr_mat_ncols(U, ctx), ctx);
-  error = gr_mat_reconstruct_A(W, T, U, DISP_PLUS, ctx);
-  if (error != 0) { return error; }
-  error = gr_mat_mul(W, W, G, ctx);
-  if (error != 0) { return error; }
-  error = gr_mat_concat_horizontal(G_c, T, W, ctx);
-  if (error != 0) { return error; }
-
-  error = gr_mat_reconstruct_A(V, H, G, DISP_PLUS, ctx);
-  if (error != 0) { return error; }
-  error = gr_mat_mul(V, V, U, ctx);
-  if (error != 0) { return error; }
-  error = gr_mat_concat_horizontal(H_c, V, H, ctx);
-  gr_mat_clear(W, ctx);
-  gr_mat_clear(V, ctx);
-  return error;
-}
-
-int gr_mat_apply_struct_fast(gr_mat_t Res, gr_mat_t G, gr_mat_t H, gr_mat_t X, gr_ctx_t ctx) {
+int gr_mat_mul_vector(gr_mat_t Res, gr_mat_t G, gr_mat_t H, gr_mat_t X, gr_ctx_t ctx) {
   int error;
   slong n = gr_mat_nrows(G, ctx);
   slong alpha = gr_mat_ncols(G, ctx);
@@ -147,8 +115,8 @@ int gr_mat_apply_Zt(gr_mat_t Res, gr_mat_t M, gr_ctx_t ctx) {
   }
   return GR_SUCCESS;
 }
-int gr_multiplication_generateur_deplacement_fast(gr_mat_t G_c, gr_mat_t H_c, gr_mat_t G_a, gr_mat_t H_a, gr_mat_t G_b,
-                                                  gr_mat_t H_b, gr_ctx_t ctx) {
+int gr_mat_mul_generator(gr_mat_t G_c, gr_mat_t H_c, gr_mat_t G_a, gr_mat_t H_a, gr_mat_t G_b, gr_mat_t H_b,
+                         gr_ctx_t ctx) {
   slong n = gr_mat_nrows(G_a, ctx);
   gr_mat_t W, V, a, b, Tmp, LastCol;
   int error;
@@ -163,25 +131,25 @@ int gr_multiplication_generateur_deplacement_fast(gr_mat_t G_c, gr_mat_t H_c, gr
   // 1. W = Z * A * Z^T * G_b
   error = gr_mat_apply_Zt(Tmp, G_b, ctx);
   if (error != 0) { return error; }
-  error = gr_mat_apply_struct_fast(W, G_a, H_a, Tmp, ctx);
+  error = gr_mat_mul_vector(W, G_a, H_a, Tmp, ctx);
   if (error != 0) { return error; }
   error = gr_mat_apply_Z(W, W, ctx);
   if (error != 0) { return error; }
 
   // 2. V = B^T * H_a (Le générateur de B^T est {H_b, G_b})
-  error = gr_mat_apply_struct_fast(V, H_b, G_b, H_a, ctx);
+  error = gr_mat_mul_vector(V, H_b, G_b, H_a, ctx);
   if (error != 0) { return error; }
 
   // 3. Extraction des colonnes de correction (ZA * e_{n-1} et ZB^T * e_{n-1})
   error = gr_one(gr_mat_entry_ptr(LastCol, n - 1, 0, ctx), ctx);
   if (error != 0) { return error; }
 
-  error = gr_mat_apply_struct_fast(a, G_a, H_a, LastCol, ctx);
+  error = gr_mat_mul_vector(a, G_a, H_a, LastCol, ctx);
   if (error != 0) { return error; }
   error = gr_mat_apply_Z(a, a, ctx);
   if (error != 0) { return error; }
 
-  error = gr_mat_apply_struct_fast(b, H_b, G_b, LastCol, ctx);
+  error = gr_mat_mul_vector(b, H_b, G_b, LastCol, ctx);
   if (error != 0) { return error; }
   error = gr_mat_apply_Z(b, b, ctx);
   if (error != 0) { return error; }

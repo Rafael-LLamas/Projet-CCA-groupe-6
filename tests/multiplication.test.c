@@ -89,7 +89,7 @@ int test_multiplication_generateurs() {
     gr_mat_print(C, ctx);
     flint_printf("\n");
     flint_printf(":------------------------Matrices C faite avec les générateurs---------------------------------:\n");
-    error = gr_multiplication_generateur_deplacement_fast(G_c, H_c, G_a, H_a, G_b, H_b, ctx);
+    error = gr_mat_mul_generator(G_c, H_c, G_a, H_a, G_b, H_b, ctx);
     if (error != 0) {
       gr_mat_clear(C, ctx);
       gr_mat_clear(A, ctx);
