@@ -7,7 +7,7 @@
 #include "flint/gr.h"
 #include "flint/gr_mat.h"
 #include "flint/ulong_extras.h"
-#include "gr_mat_random_toeplitz.h"
+#include "random_toeplitz.h"
 
 int test_random_toepltiz() {
   flint_rand_t state;
@@ -64,7 +64,7 @@ int test_random_quasi_toeplitz() {
     gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
     slong *rank = flint_malloc(sizeof(slong));
     gr_mat_init(ran, 5, 5, ctx);
-    error = gr_mat_Quasi_toeplitz_rank(ran, 5, 5, 1, ctx);
+    error = gr_mat_Quasi_toeplitz_rank(ran, 5, 5, 1, state, ctx);
     if (error != 0) {
       gr_mat_clear(ran, ctx);
       gr_ctx_clear(ctx);
@@ -87,7 +87,7 @@ int test_random_quasi_toeplitz() {
     flint_printf("rank = %wd \n", *rank);
     gr_mat_clear(ran, ctx);
     gr_mat_init(ran, 5, 5, ctx);
-    error = gr_mat_Quasi_toeplitz_rank(ran, 5, 5, 4, ctx);
+    error = gr_mat_Quasi_toeplitz_rank(ran, 5, 5, 4, state, ctx);
     if (error != 0) {
       gr_mat_clear(ran, ctx);
       gr_ctx_clear(ctx);
@@ -101,7 +101,7 @@ int test_random_quasi_toeplitz() {
     flint_printf("\n");
     gr_mat_clear(ran, ctx);
     gr_mat_init(ran, 5, 5, ctx);
-    error = gr_mat_Quasi_toeplitz_rank(ran, 5, 5, 2, ctx);
+    error = gr_mat_Quasi_toeplitz_rank(ran, 5, 5, 2, state, ctx);
     if (error != 0) {
       gr_mat_clear(ran, ctx);
       gr_ctx_clear(ctx);
@@ -114,7 +114,7 @@ int test_random_quasi_toeplitz() {
     flint_printf("\n");
     gr_mat_clear(ran, ctx);
     gr_mat_init(ran, 5, 5, ctx);
-    error = gr_mat_Quasi_toeplitz_rank(ran, 5, 5, 3, ctx);
+    error = gr_mat_Quasi_toeplitz_rank(ran, 5, 5, 3, state, ctx);
     if (error != 0) {
       gr_mat_clear(ran, ctx);
       gr_ctx_clear(ctx);
@@ -128,7 +128,7 @@ int test_random_quasi_toeplitz() {
     flint_printf("\n");
     gr_mat_clear(ran, ctx);
     gr_mat_init(ran, 15, 15, ctx);
-    error = gr_mat_Quasi_toeplitz_rank(ran, 15, 15, 0, ctx);
+    error = gr_mat_Quasi_toeplitz_rank(ran, 15, 15, 0, state, ctx);
     if (error != 0) {
       gr_mat_clear(ran, ctx);
       gr_ctx_clear(ctx);

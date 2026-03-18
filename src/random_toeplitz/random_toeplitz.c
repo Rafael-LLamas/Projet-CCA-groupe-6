@@ -81,13 +81,10 @@ int gr_mat_random_toeplitz(gr_mat_t A, int n, int m, flint_rand_t state, gr_ctx_
   return 0;
 }
 
-int gr_mat_Quasi_toeplitz_rank(gr_mat_t A, int n, int m, int nb_rand, gr_ctx_t ctx) {
-
-  flint_rand_t state;
+int gr_mat_Quasi_toeplitz_rank(gr_mat_t A, int n, int m, int nb_rand, flint_rand_t state, gr_ctx_t ctx) {
   gr_mat_t temp;
   int error;
   if (nb_rand < 0) { return 1; }
-  flint_rand_init(state);
 
   error = gr_mat_random_quasi_toepitz(A, n, m, state, ctx);
   if (error != 0) { return error; }

@@ -10,8 +10,8 @@
 
 #include "addition.h"
 #include "displacement_matrices.h"
-#include "gr_mat_random_toeplitz.h"
 #include "multiplication.h"
+#include "random_toeplitz.h"
 
 // --- GESTION DU TEMPS ---
 #ifdef _WIN32
@@ -159,8 +159,14 @@ int benchmark_multiplication() {
       gr_mat_init(H_c, 0, 0, ctx);
 
       // Données
-      error = gr_mat_random_toeplitz(A, ntemp, mtemp, state, ctx);
-      error = gr_mat_random_toeplitz(B, mtemp, ntemp, state, ctx);
+      if (rank != -1) {
+        error = gr_mat_random_quasi_toeplitz_rank(A, ntemp, mtemp, rank, state, ctx);
+        error = gr_mat_random_quasi_toeplitz_rank(B, mtemp, ntemp, rank, state, ctx);
+      } else {
+        error = gr_mat_random_toeplitz(A, ntemp, mtemp, state, ctx);
+        error = gr_mat_random_toeplitz(B, mtemp, ntemp, state, ctx);
+      }
+
       error = gr_mat_G_H(G_a, H_a, A, DISP_PLUS, ctx);
       error = gr_mat_G_H(G_b, H_b, B, DISP_PLUS, ctx);
       for (slong r = 0; r < mtemp; r++)
@@ -272,7 +278,11 @@ int benchmark_displacement() {
       gr_mat_init(H, 0, 0, ctx);
       gr_mat_init(A_rec, cur_n, cur_n, ctx);
 
-      error = gr_mat_random_toeplitz(A, cur_n, cur_n, state, ctx);
+      if (rank != -1) {
+        error = gr_mat_quasi_toeplitz_rank(A, cur_n, cur_n, rank, state, ctx);
+      } else {
+        error = gr_mat_random_toeplitz(A, cur_n, cur_n, state, ctx);
+      }
 
       double start = get_time_ms();
       error = gr_mat_displacement(D, A, DISP_PLUS, ctx);
@@ -355,9 +365,14 @@ int benchmark_addition() {
       gr_mat_init(H_b, 0, 0, ctx);
       gr_mat_init(G_c, 0, 0, ctx);
       gr_mat_init(H_c, 0, 0, ctx);
+      if (rank != -1) {
+        error = gr_mat_quasi_toeplitz_rank(A, cur_n, cur_m, rank, state, ctx);
+        error = gr_mat_quasi_toeplitz_rank(B, cur_n, cur_m, rank, state, ctx);
 
-      error = gr_mat_random_toeplitz(A, cur_n, cur_m, state, ctx);
-      error = gr_mat_random_toeplitz(B, cur_n, cur_m, state, ctx);
+      } else {
+        error = gr_mat_random_toeplitz(A, cur_n, cur_m, state, ctx);
+        error = gr_mat_random_toeplitz(B, cur_n, cur_m, state, ctx);
+      }
       error = gr_mat_G_H(G_a, H_a, A, DISP_PLUS, ctx);
       error = gr_mat_G_H(G_b, H_b, B, DISP_PLUS, ctx);
 
@@ -472,6 +487,12 @@ int main(int argc, char *argv[]) {
       m = atoi(argv[++i]);
       if (m <= 0) {
         fprintf(stderr, "Error: -m needs to be > 0\n");
+        return EXIT_FAILURE;
+      }
+    } else if (strcmp(argv[i], "-k") == 0 && i + 1 < argc) {
+      k = atoi(argv[++i]);
+      if (k <= 0) {
+        fprintf(stderr, "Error: -k needs to be > 0\n");
         return EXIT_FAILURE;
       }
     }

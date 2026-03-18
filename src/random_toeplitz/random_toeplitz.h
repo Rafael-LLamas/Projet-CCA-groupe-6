@@ -25,9 +25,10 @@ int gr_mat_random_toeplitz(gr_mat_t A, int n, int m, flint_rand_t state, gr_ctx_
  * @param[in] n Input row of A
  * @param[in] m Input collunm of A
  * @param[in] nb_rand the rank of A
+ * @param[in] state The FLINT state for random
  * @param[out] A Resulting a quasi-Toeplitz n*m
  * @param[in] ctx The FLINT context object
  */
-int gr_mat_Quasi_toeplitz_rank(gr_mat_t A, int n, int m, int nb_rand, gr_ctx_t ctx);
+int gr_mat_Quasi_toeplitz_rank(gr_mat_t A, int n, int m, int nb_rand, flint_rand_t state, gr_ctx_t ctx);
 
 #endif
