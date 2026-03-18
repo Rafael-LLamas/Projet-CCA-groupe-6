@@ -6,8 +6,8 @@
 #include "flint/gr.h"
 #include "flint/gr_mat.h"
 #include "flint/ulong_extras.h"
+#include "gr_mat_random_toeplitz.h"
 #include "matrix_aux.h"
-#include "random_toeplitz.h"
 
 int test_LU_detatch() {
   gr_ctx_t ctx;

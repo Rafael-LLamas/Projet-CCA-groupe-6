@@ -3,7 +3,7 @@
 #include "flint/gr_mat.h"
 #include <stdlib.h>
 
-int random_quasi_toeplitz(gr_mat_t A, int n, int m, flint_rand_t state, gr_ctx_t ctx) {
+int gr_mat_random_quasi_toepitz(gr_mat_t A, int n, int m, flint_rand_t state, gr_ctx_t ctx) {
   /*
   Mon sommeil va en patir ......
   Donc apres avoir compris mon problème ici je génère des quasi toeplitz en suivant la logique que mets matrices auront
@@ -50,7 +50,7 @@ int random_quasi_toeplitz(gr_mat_t A, int n, int m, flint_rand_t state, gr_ctx_t
   return 0;
 }
 
-int random_toeplitz(gr_mat_t A, int n, int m, flint_rand_t state, gr_ctx_t ctx) {
+int gr_mat_random_toeplitz(gr_mat_t A, int n, int m, flint_rand_t state, gr_ctx_t ctx) {
   /*Ici je génère de façon non-chalante une matrice toeplitz en prenant 2 vecteur aléatoire que j'utilise pour def la
    * matrice*/
   gr_mat_t col, row;
@@ -81,24 +81,19 @@ int random_toeplitz(gr_mat_t A, int n, int m, flint_rand_t state, gr_ctx_t ctx) 
   return 0;
 }
 
-int rand_quasi_toeplitz(gr_mat_t A, int n, int m, int nb_rand, gr_ctx_t ctx) {
-  /*
-  Pour palié le manque de random je vais générer plusieurs matrice quasi-toeplitz et les additionner entre elles,
-  nh'ésitez pas a faire varier nb_rand.
-  !!!Attention, je pense qu'il y a une possiblilité que la matrice ne soit plus quasi-toeplitz si nb_rand est trop
-  grand!!!(faire une test pour trouver la limite ??)
-  */
+int gr_mat_Quasi_toeplitz_rank(gr_mat_t A, int n, int m, int nb_rand, gr_ctx_t ctx) {
+
   flint_rand_t state;
   gr_mat_t temp;
   int error;
   if (nb_rand < 0) { return 1; }
   flint_rand_init(state);
 
-  error = random_quasi_toeplitz(A, n, m, state, ctx);
+  error = gr_mat_random_quasi_toepitz(A, n, m, state, ctx);
   if (error != 0) { return error; }
   for (int i = 0; i < nb_rand; i++) {
     gr_mat_init(temp, n, m, ctx);
-    error = random_quasi_toeplitz(temp, n, m, state, ctx);
+    error = gr_mat_random_quasi_toepitz(temp, n, m, state, ctx);
     if (error != 0) {
       gr_mat_clear(temp, ctx);
       return error;

@@ -7,8 +7,8 @@
 #include "flint/gr.h"
 #include "flint/gr_mat.h"
 #include "flint/ulong_extras.h"
+#include "gr_mat_random_toeplitz.h"
 #include "matrix_aux.h"
-#include "random_toeplitz.h"
 
 int test_toeplitz_deplacement() {
   int i = 0;
@@ -172,8 +172,8 @@ int test_toeplitz_to_G_H() {
     gr_mat_init(D_from_GH, m, n, ctx);
     gr_mat_init(Diff, m, n, ctx);
 
-    if (random_toeplitz(A, n, m, state, ctx) != GR_SUCCESS) {
-      flint_printf("[ERROR] random_toeplitz failed\n");
+    if (gr_mat_random_toeplitz(A, n, m, state, ctx) != GR_SUCCESS) {
+      flint_printf("[ERROR] gr_mat_random_toeplitz failed\n");
       res = GR_TEST_FAIL;
     }
     flint_printf("Original matrix A:\n");
@@ -299,8 +299,8 @@ int test_toeplitz_reconstruction() {
     gr_mat_init(B, n, n, ctx);
     gr_mat_init(Diff, n, n, ctx);
 
-    if (random_toeplitz(A, n, n, state, ctx) != GR_SUCCESS) {
-      flint_printf("[ERROR] random_toeplitz failed\n");
+    if (gr_mat_random_toeplitz(A, n, n, state, ctx) != GR_SUCCESS) {
+      flint_printf("[ERROR] gr_mat_random_toeplitz failed\n");
       res = GR_TEST_FAIL;
     }
     if (gr_mat_set(A_ref, A, ctx) != GR_SUCCESS) { res = GR_TEST_FAIL; }

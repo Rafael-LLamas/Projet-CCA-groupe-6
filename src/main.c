@@ -10,8 +10,8 @@
 
 #include "addition.h"
 #include "displacement_matrices.h"
+#include "gr_mat_random_toeplitz.h"
 #include "multiplication.h"
-#include "random_toeplitz.h"
 
 // --- GESTION DU TEMPS ---
 #ifdef _WIN32
@@ -159,8 +159,8 @@ int benchmark_multiplication() {
       gr_mat_init(H_c, 0, 0, ctx);
 
       // Données
-      error = random_toeplitz(A, ntemp, mtemp, state, ctx);
-      error = random_toeplitz(B, mtemp, ntemp, state, ctx);
+      error = gr_mat_random_toeplitz(A, ntemp, mtemp, state, ctx);
+      error = gr_mat_random_toeplitz(B, mtemp, ntemp, state, ctx);
       error = gr_mat_G_H(G_a, H_a, A, DISP_PLUS, ctx);
       error = gr_mat_G_H(G_b, H_b, B, DISP_PLUS, ctx);
       for (slong r = 0; r < mtemp; r++)
@@ -272,7 +272,7 @@ int benchmark_displacement() {
       gr_mat_init(H, 0, 0, ctx);
       gr_mat_init(A_rec, cur_n, cur_n, ctx);
 
-      error = random_toeplitz(A, cur_n, cur_n, state, ctx);
+      error = gr_mat_random_toeplitz(A, cur_n, cur_n, state, ctx);
 
       double start = get_time_ms();
       error = gr_mat_displacement(D, A, DISP_PLUS, ctx);
@@ -356,8 +356,8 @@ int benchmark_addition() {
       gr_mat_init(G_c, 0, 0, ctx);
       gr_mat_init(H_c, 0, 0, ctx);
 
-      error = random_toeplitz(A, cur_n, cur_m, state, ctx);
-      error = random_toeplitz(B, cur_n, cur_m, state, ctx);
+      error = gr_mat_random_toeplitz(A, cur_n, cur_m, state, ctx);
+      error = gr_mat_random_toeplitz(B, cur_n, cur_m, state, ctx);
       error = gr_mat_G_H(G_a, H_a, A, DISP_PLUS, ctx);
       error = gr_mat_G_H(G_b, H_b, B, DISP_PLUS, ctx);
 
