@@ -7,10 +7,10 @@ enable_testing()
 add_compile_options(-g -O3 -Wall)
 set(CMAKE_C_STANDARD 99)
 
-# Setting path location
-set(FLINT_SEARCH_PATHS 
+# Setting path location
+set(FLINT_SEARCH_PATHS
     "/usr/local"
-    "/opt/homebrew" 
+    "/opt/homebrew"
     "/usr"
 )
 

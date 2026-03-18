@@ -34,7 +34,7 @@ int test_LU_detatch() {
   gr_mat_init(LU, 5, 10, ctx);
   gr_mat_init(L, 5, 10, ctx);
   gr_mat_init(U, 10, 10, ctx);
-  error = rand_quasi_toeplitz(A, 5, 10, 0, ctx);
+  error = gr_mat_random_quasi_toepitz(A, 5, 10, state, ctx);
   if (error != 0) {
     gr_mat_clear(A, ctx);
     gr_mat_clear(B, ctx);
