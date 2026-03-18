@@ -160,8 +160,8 @@ int benchmark_multiplication() {
 
       // Données
       if (rank != -1) {
-        error = gr_mat_random_quasi_toeplitz_rank(A, ntemp, mtemp, rank, state, ctx);
-        error = gr_mat_random_quasi_toeplitz_rank(B, mtemp, ntemp, rank, state, ctx);
+        error = gr_mat_quasi_toeplitz_rank(A, ntemp, mtemp, rank, state, ctx);
+        error = gr_mat_quasi_toeplitz_rank(B, mtemp, ntemp, rank, state, ctx);
       } else {
         error = gr_mat_random_toeplitz(A, ntemp, mtemp, state, ctx);
         error = gr_mat_random_toeplitz(B, mtemp, ntemp, state, ctx);
