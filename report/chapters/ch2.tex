@@ -33,4 +33,96 @@ pareil donner des exemples de chaque etapes a bien rédiger
 
 
 \subsection{Inversion}
-Pour arda
+
+\subsubsection{Introduction}
+
+In this section we will study how we implemented Strassen's Inversion method on generators.
+This code can be found in:
+\begin{verbatim}
+Project
+\   src
+|   \   toeplitz_inverse
+|   |   |   toeplitz_inverse.c
+|   |   |   toeplitz_inverse.h
+\end{verbatim}
+
+\subsubsection{Block Decomposition of the Displacement Operator}
+
+To perform Strassen's inversion recursively, we must first split our $n \times n$ matrix $A$
+into four sub-blocks of size $m \times m$ (where $m = n/2$). Let $A$ be:
+$$A = \begin{pmatrix} a & b \\ c & d \end{pmatrix}$$
+
+Similarly, we partition its displacement generators $G$ and $H$ (of size $n \times \alpha$)
+into top and bottom halves of size $m \times \alpha$:
+$$G = \begin{pmatrix} G_{top} \\ G_{bottom} \end{pmatrix}, \quad H = \begin{pmatrix} H_{top} \\ H_{bottom} \end{pmatrix}$$
+
+As mentioned before, the $\phi_{+}$ displacement of $A$ is given by:
+$$\phi_{+}(A) = A - Z_n A Z_n^T = G H^T$$
+
+Following the displacement fomula,
+If we divide $Z_n$ into four $m \times m$ blocks too, it needs the last puzzle piece to connect the shifting line from the top half
+of the matrix to the bottom half. (In other words, we need a way to represent the part c of matrix A)
+
+We build this using standard basis vectors $e$.
+Let $e_0$ be a column vector with a $1$ at the top, and $e_{m-1}$ be a column vector with a $1$ at the bottom:
+$$e_0 = \begin{pmatrix} 1 \\ 0 \\ \vdots \\ 0 \end{pmatrix}, \quad e_{m-1} = \begin{pmatrix} 0 \\ \vdots \\ 0 \\ 1 \end{pmatrix}$$
+
+When we multiply the column $e_0$ by the row $e_{m-1}^T$, we get an $m \times m$ matrix of all zeros, with a single $1$ in the top-right corner.
+This is our piece:
+$$e_0 e_{m-1}^T = \begin{pmatrix} 1 \\ 0 \\ \vdots \\ 0 \end{pmatrix} \begin{pmatrix} 0 & \dots & 0 & 1 \end{pmatrix} = \begin{pmatrix} 0 & \dots & 0 & 1 \\ 0 & \dots & 0 & 0 \\ \vdots & \ddots & \vdots & \vdots \\ 0 & \dots & 0 & 0 \end{pmatrix}$$
+
+Using this, we can write the full shift matrix $Z_n$ and its transpose $Z_n^T$ in block form:
+$$Z_n = \begin{pmatrix} Z_m & 0 \\ e_0 e_{m-1}^T & Z_m \end{pmatrix}, \quad Z_n^T = \begin{pmatrix} Z_m^T & e_{m-1} e_0^T \\ 0 & Z_m^T \end{pmatrix}$$
+
+First, we multiply $Z_n$ by $A$:
+$$Z_n A = \begin{pmatrix} Z_m & 0 \\ e_0 e_{m-1}^T & Z_m \end{pmatrix} \begin{pmatrix} a & b \\ c & d \end{pmatrix} = \begin{pmatrix} Z_m a & Z_m b \\ e_0 e_{m-1}^T a + Z_m c & e_0 e_{m-1}^T b + Z_m d \end{pmatrix}$$
+
+Next, $Z_n^T$:
+$$(Z_n A) Z_n^T = \begin{pmatrix} Z_m a & Z_m b \\ e_0 e_{m-1}^T a + Z_m c & e_0 e_{m-1}^T b + Z_m d \end{pmatrix} \begin{pmatrix} Z_m^T & e_{m-1} e_0^T \\ 0 & Z_m^T \end{pmatrix}$$
+
+Let's calculate the four resulting blocks:
+\begin{itemize}
+    \item \textbf{Top-Left:} $Z_m a Z_m^T$
+    \item \textbf{Top-Right:} $Z_m a e_{m-1} e_0^T + Z_m b Z_m^T$
+    \item \textbf{Bottom-Left:} $(e_0 e_{m-1}^T a + Z_m c) Z_m^T = e_0 e_{m-1}^T a Z_m^T + Z_m c Z_m^T$
+    \item \textbf{Bottom-Right:} $(e_0 e_{m-1}^T a + Z_m c) e_{m-1} e_0^T + (e_0 e_{m-1}^T b + Z_m d) Z_m^T$
+\end{itemize}
+
+\subsubsection{Extraction of Block Generators}
+
+By identifying the respective sub-blocks of the global displacement equation $\phi_{+}(A) = A - Z_n A Z_n^T = G H^T$, we can systematically extract the generators for each quadrant of $A$.
+
+\paragraph{a:}
+Equating the top-left blocks yields the direct displacement of $a$:
+\begin{align*}
+    a - Z_m a Z_m^T &= G_{top} H_{top}^T \\
+    \phi_{+}(a) &= G_{top} H_{top}^T
+\end{align*}
+Since this block is unaffected, its generators are restored:
+$$G_a = G_{top}, \quad H_a = H_{top}$$
+
+\paragraph{b:}
+Equating the top-right blocks to the initial equation. We isolate the terms belonging to $b$ on the left side:
+\begin{align*}
+    b - Z_m a e_{m-1} e_0^T - Z_m b Z_m^T &= G_{top} H_{bottom}^T \\
+    b - Z_m b Z_m^T &= G_{top} H_{bottom}^T + Z_m a e_{m-1} e_0^T \\
+    \phi_{+}(b) &= G_{top} H_{bottom}^T + (Z_m a e_{m-1}) e_0^T
+\end{align*}
+POINTER TO RAFAEL SUM GENERATOR:
+$$G_b = \begin{bmatrix} G_{top} \mid Z_m a e_{m-1} \end{bmatrix}, \quad H_b = \begin{bmatrix} H_{bottom} \mid e_0 \end{bmatrix}$$
+
+\paragraph{c:}
+We follow the exact same process, but with the transpose property $(X Y)^T = Y^T X^T$ to group the vectors:
+\begin{align*}
+    c - e_0 e_{m-1}^T a Z_m^T - Z_m c Z_m^T &= G_{bottom} H_{top}^T \\
+    c - Z_m c Z_m^T &= G_{bottom} H_{top}^T + e_0 e_{m-1}^T a Z_m^T \\
+    \phi_{+}(c) &= G_{bottom} H_{top}^T + e_0 (Z_m a^T e_{m-1})^T
+\end{align*}
+THus, the generators for $c$ are formed by concatenation:
+$$G_c = \begin{bmatrix} G_{bottom} \mid e_0 \end{bmatrix}, \quad H_c = \begin{bmatrix} H_{top} \mid Z_m a^T e_{m-1} \end{bmatrix}$$
+
+\paragraph{d:}
+The internal structure of the bottom-right block corresponds exactly to the top-left block evaluated on the bottom generators
+$$d = \left( \sum_{k=1}^{\alpha} L(G_{bottom, k}) U(H_{bottom, k}) \right) + a$$
+In terms of generators, matrix addition corresponds to horizontal concatenation. Given that $\phi_{+}(a)$ is generated by $G_{top}$ and $H_{top}$, we obtain:
+$$G_d = \begin{bmatrix} G_{bottom} \mid G_{top} \end{bmatrix}, \quad H_d = \begin{bmatrix} H_{bottom} \mid H_{top} \end{bmatrix}$$
