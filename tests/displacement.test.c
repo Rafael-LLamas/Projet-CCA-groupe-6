@@ -241,7 +241,7 @@ int test_quasi_toeplitz_to_G_H() {
     gr_mat_init(B, m, n, ctx);
     gr_mat_init(T, m, n, ctx);
 
-    random_quasi_toeplitz(A, n, m, state, ctx);
+    gr_mat_random_quasi_toepitz(A, n, m, state, ctx);
     FLINT_CHECK(gr_mat_set(T, A, ctx));
     flint_printf("Original matrix A:\n");
     gr_mat_print(A, ctx);
@@ -415,7 +415,7 @@ int test_quasi_toeplitz_reconstruction() {
     gr_mat_init(B, m, n, ctx);
     gr_mat_init(Diff, m, n, ctx);
 
-    if (random_quasi_toeplitz(A, m, n, state, ctx) != GR_SUCCESS) {
+    if (gr_mat_random_quasi_toepitz(A, m, n, state, ctx) != GR_SUCCESS) {
       flint_printf("[ERROR] random_quasi_toeplitz failed\n");
       res = GR_TEST_FAIL;
     }

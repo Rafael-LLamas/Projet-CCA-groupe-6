@@ -7,10 +7,10 @@ enable_testing()
 add_compile_options(-g -O3 -Wall)
 set(CMAKE_C_STANDARD 99)
 
-# Setting path location
-set(FLINT_SEARCH_PATHS 
+# Setting path location
+set(FLINT_SEARCH_PATHS
     "/usr/local"
-    "/opt/homebrew" 
+    "/opt/homebrew"
     "/usr"
 )
 
@@ -56,7 +56,7 @@ add_library(project_lib STATIC ${PROJECT_SOURCES})
 target_link_libraries(project_lib PUBLIC flint_core)
 target_include_directories(project_lib PUBLIC
     src/displacement_matrices
-    src/gr_mat_random_toeplitz
+    src/random_toeplitz
     src/toeplitz_inverse
     src/utility
     src/operations

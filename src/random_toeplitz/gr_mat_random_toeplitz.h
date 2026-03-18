@@ -1,5 +1,5 @@
-#ifndef RANDOM_TOEPLITZ_H
-#define RANDOM_TOEPLITZ_H
+#ifndef GR_MAT_RANDOM_TOEPLITZ_H
+#define GR_MAT_RANDOM_TOEPLITZ_H
 
 #include "flint/gr_mat.h"
 /**
