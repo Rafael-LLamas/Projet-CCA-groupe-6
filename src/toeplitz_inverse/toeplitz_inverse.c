@@ -34,7 +34,7 @@ int gr_toeplitz_inverse(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, 
 
   // 2: calculate the generators a b c d for n/2
   // a: Gtop Htop | b: Gtop Hbottom
-  // c: Gbottom Htop | d: (Gbottom Hbottom) / 
+  // c: Gbottom Htop | d: (Gbottom Hbottom) + a
   slong n1 = (n + 1) / 2;
   slong n2 = n / 2;
 
@@ -49,68 +49,33 @@ int gr_toeplitz_inverse(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, 
   gr_mat_init(G_e, n1, rank, ctx);
   gr_mat_init(H_e, n1, rank, ctx);
   status |= gr_toeplitz_inverse(G_e, H_e, G_top, H_top, ctx);
-  if (status != GR_SUCCESS) {
-    gr_mat_clear(G_e, ctx);
-    gr_mat_clear(H_e, ctx);
-    gr_mat_window_clear(G_top, ctx);
-    gr_mat_window_clear(H_top, ctx);
-    gr_mat_window_clear(G_bottom, ctx);
-    gr_mat_window_clear(H_bottom, ctx);
-    return status;
-  }
+  if (status != GR_SUCCESS) goto free_e_top_bottom;
 
   // 4: calculate generators for S := d - ceb
 
   // 4.1 ce = c * e
   gr_mat_t G_ce, H_ce;
-  status |= gr_multiplication_generateur_deplacement_fast(G_ce, H_ce, G_bottom, H_top, G_e, H_e, ctx);
+  status |= gr_mat_mul_generator(G_ce, H_ce, G_bottom, H_top, G_e, H_e, ctx);
   if (status != GR_SUCCESS) {
     gr_mat_clear(G_ce, ctx);
     gr_mat_clear(H_ce, ctx);
-    gr_mat_clear(G_e, ctx);
-    gr_mat_clear(H_e, ctx);
-    gr_mat_window_clear(G_top, ctx);
-    gr_mat_window_clear(H_top, ctx);
-    gr_mat_window_clear(G_bottom, ctx);
-    gr_mat_window_clear(H_bottom, ctx);
-    return status;
+    goto free_e_top_bottom;
   }
 
   // 4.2 eb = e * b
   gr_mat_t G_eb, H_eb;
-  status |= gr_multiplication_generateur_deplacement_fast(G_eb, H_eb, G_e, H_e, G_top, H_bottom, ctx);
+  status |= gr_mat_mul_generator(G_eb, H_eb, G_e, H_e, G_top, H_bottom, ctx);
   if (status != GR_SUCCESS) {
     gr_mat_clear(G_eb, ctx);
     gr_mat_clear(H_eb, ctx);
     gr_mat_clear(G_ce, ctx);
     gr_mat_clear(H_ce, ctx);
-    gr_mat_clear(G_e, ctx);
-    gr_mat_clear(H_e, ctx);
-    gr_mat_window_clear(G_top, ctx);
-    gr_mat_window_clear(H_top, ctx);
-    gr_mat_window_clear(G_bottom, ctx);
-    gr_mat_window_clear(H_bottom, ctx);
-    return status;
+    goto free_e_top_bottom;
   }
 
   // 4.3 ceb = ce * b, then negate G in-place
   gr_mat_t G_ceb, H_ceb;
-  status |= gr_multiplication_generateur_deplacement_fast(G_ceb, H_ceb, G_ce, H_ce, G_top, H_bottom, ctx);
-  if (status != GR_SUCCESS) {
-    gr_mat_clear(G_ceb, ctx);
-    gr_mat_clear(H_ceb, ctx);
-    gr_mat_clear(G_eb, ctx);
-    gr_mat_clear(H_eb, ctx);
-    gr_mat_clear(G_ce, ctx);
-    gr_mat_clear(H_ce, ctx);
-    gr_mat_clear(G_e, ctx);
-    gr_mat_clear(H_e, ctx);
-    gr_mat_window_clear(G_top, ctx);
-    gr_mat_window_clear(H_top, ctx);
-    gr_mat_window_clear(G_bottom, ctx);
-    gr_mat_window_clear(H_bottom, ctx);
-    return status;
-  }
+  status |= gr_mat_mul_generator(G_ceb, H_ceb, G_ce, H_ce, G_top, H_bottom, ctx);
   status |= gr_mat_neg(G_ceb, G_ceb, ctx);
   if (status != GR_SUCCESS) {
     gr_mat_clear(G_ceb, ctx);
@@ -119,13 +84,7 @@ int gr_toeplitz_inverse(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, 
     gr_mat_clear(H_eb, ctx);
     gr_mat_clear(G_ce, ctx);
     gr_mat_clear(H_ce, ctx);
-    gr_mat_clear(G_e, ctx);
-    gr_mat_clear(H_e, ctx);
-    gr_mat_window_clear(G_top, ctx);
-    gr_mat_window_clear(H_top, ctx);
-    gr_mat_window_clear(G_bottom, ctx);
-    gr_mat_window_clear(H_bottom, ctx);
-    return status;
+    goto free_e_top_bottom;
   }
 
   // 4.4 S = d + (−ceb)
@@ -140,13 +99,7 @@ int gr_toeplitz_inverse(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, 
     gr_mat_clear(H_eb, ctx);
     gr_mat_clear(G_ce, ctx);
     gr_mat_clear(H_ce, ctx);
-    gr_mat_clear(G_e, ctx);
-    gr_mat_clear(H_e, ctx);
-    gr_mat_window_clear(G_top, ctx);
-    gr_mat_window_clear(H_top, ctx);
-    gr_mat_window_clear(G_bottom, ctx);
-    gr_mat_window_clear(H_bottom, ctx);
-    return status;
+    goto free_e_top_bottom;
   }
 
   // 5: calculate inv generators for t := S^{-1}
@@ -157,86 +110,44 @@ int gr_toeplitz_inverse(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, 
   gr_mat_clear(G_S, ctx);
   gr_mat_clear(H_S, ctx);
   if (status != GR_SUCCESS) {
-    gr_mat_clear(G_t, ctx);
-    gr_mat_clear(H_t, ctx);
     gr_mat_clear(G_eb, ctx);
     gr_mat_clear(H_eb, ctx);
     gr_mat_clear(G_ce, ctx);
     gr_mat_clear(H_ce, ctx);
-    gr_mat_clear(G_e, ctx);
-    gr_mat_clear(H_e, ctx);
-    gr_mat_window_clear(G_top, ctx);
-    gr_mat_window_clear(H_top, ctx);
-    gr_mat_window_clear(G_bottom, ctx);
-    gr_mat_window_clear(H_bottom, ctx);
-    return status;
+    goto free_t;
   }
 
   // 6: return the inv generators for A^{-1} x y z t with the formules of strassen y:= -ebt, z := -tce, x := e + ebtce
 
   // ebt = eb * t
   gr_mat_t G_ebt, H_ebt;
-  status |= gr_multiplication_generateur_deplacement_fast(G_ebt, H_ebt, G_eb, H_eb, G_t, H_t, ctx);
+  status |= gr_mat_mul_generator(G_ebt, H_ebt, G_eb, H_eb, G_t, H_t, ctx);
   gr_mat_clear(G_eb, ctx);
   gr_mat_clear(H_eb, ctx);
   if (status != GR_SUCCESS) {
-    gr_mat_clear(G_ebt, ctx);
-    gr_mat_clear(H_ebt, ctx);
-    gr_mat_clear(G_t, ctx);
-    gr_mat_clear(H_t, ctx);
     gr_mat_clear(G_ce, ctx);
     gr_mat_clear(H_ce, ctx);
-    gr_mat_clear(G_e, ctx);
-    gr_mat_clear(H_e, ctx);
-    gr_mat_window_clear(G_top, ctx);
-    gr_mat_window_clear(H_top, ctx);
-    gr_mat_window_clear(G_bottom, ctx);
-    gr_mat_window_clear(H_bottom, ctx);
-    return status;
+    goto free_ebt;
   }
 
   // tce = t * ce
   gr_mat_t G_tce, H_tce;
-  status |= gr_multiplication_generateur_deplacement_fast(G_tce, H_tce, G_t, H_t, G_ce, H_ce, ctx);
+  status |= gr_mat_mul_generator(G_tce, H_tce, G_t, H_t, G_ce, H_ce, ctx);
   if (status != GR_SUCCESS) {
-    gr_mat_clear(G_tce, ctx);
-    gr_mat_clear(H_tce, ctx);
-    gr_mat_clear(G_ebt, ctx);
-    gr_mat_clear(H_ebt, ctx);
-    gr_mat_clear(G_t, ctx);
-    gr_mat_clear(H_t, ctx);
     gr_mat_clear(G_ce, ctx);
     gr_mat_clear(H_ce, ctx);
-    gr_mat_clear(G_e, ctx);
-    gr_mat_clear(H_e, ctx);
-    gr_mat_window_clear(G_top, ctx);
-    gr_mat_window_clear(H_top, ctx);
-    gr_mat_window_clear(G_bottom, ctx);
-    gr_mat_window_clear(H_bottom, ctx);
-    return status;
+    goto free_tce;
   }
 
   // ebtce = ebt * ce
   gr_mat_t G_ebtce, H_ebtce;
-  status |= gr_multiplication_generateur_deplacement_fast(G_ebtce, H_ebtce, G_ebt, H_ebt, G_ce, H_ce, ctx);
+  status |= gr_mat_mul_generator(G_ebtce, H_ebtce, G_ebt, H_ebt, G_ce, H_ce, ctx);
   gr_mat_clear(G_ce, ctx);
   gr_mat_clear(H_ce, ctx);
   if (status != GR_SUCCESS) {
     gr_mat_clear(G_ebtce, ctx);
     gr_mat_clear(H_ebtce, ctx);
-    gr_mat_clear(G_tce, ctx);
-    gr_mat_clear(H_tce, ctx);
-    gr_mat_clear(G_ebt, ctx);
-    gr_mat_clear(H_ebt, ctx);
-    gr_mat_clear(G_t, ctx);
-    gr_mat_clear(H_t, ctx);
-    gr_mat_clear(G_e, ctx);
-    gr_mat_clear(H_e, ctx);
-    gr_mat_window_clear(G_top, ctx);
-    gr_mat_window_clear(H_top, ctx);
-    gr_mat_window_clear(G_bottom, ctx);
-    gr_mat_window_clear(H_bottom, ctx);
-    return status;
+    goto free_tce;
   }
 
   // x = e + ebtce
@@ -244,63 +155,15 @@ int gr_toeplitz_inverse(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, 
   status |= gr_mat_addition_generateur(G_e, H_e, G_ebtce, H_ebtce, G_x, H_x, ctx);
   gr_mat_clear(G_ebtce, ctx);
   gr_mat_clear(H_ebtce, ctx);
-  if (status != GR_SUCCESS) {
-    gr_mat_clear(G_x, ctx);
-    gr_mat_clear(H_x, ctx);
-    gr_mat_clear(G_tce, ctx);
-    gr_mat_clear(H_tce, ctx);
-    gr_mat_clear(G_ebt, ctx);
-    gr_mat_clear(H_ebt, ctx);
-    gr_mat_clear(G_t, ctx);
-    gr_mat_clear(H_t, ctx);
-    gr_mat_clear(G_e, ctx);
-    gr_mat_clear(H_e, ctx);
-    gr_mat_window_clear(G_top, ctx);
-    gr_mat_window_clear(H_top, ctx);
-    gr_mat_window_clear(G_bottom, ctx);
-    gr_mat_window_clear(H_bottom, ctx);
-    return status;
-  }
+  if (status != GR_SUCCESS) { goto free_x; }
 
   // y = -ebt (in-place negate G_ebt)
   status |= gr_mat_neg(G_ebt, G_ebt, ctx);
-  if (status != GR_SUCCESS) {
-    gr_mat_clear(G_x, ctx);
-    gr_mat_clear(H_x, ctx);
-    gr_mat_clear(G_tce, ctx);
-    gr_mat_clear(H_tce, ctx);
-    gr_mat_clear(G_ebt, ctx);
-    gr_mat_clear(H_ebt, ctx);
-    gr_mat_clear(G_t, ctx);
-    gr_mat_clear(H_t, ctx);
-    gr_mat_clear(G_e, ctx);
-    gr_mat_clear(H_e, ctx);
-    gr_mat_window_clear(G_top, ctx);
-    gr_mat_window_clear(H_top, ctx);
-    gr_mat_window_clear(G_bottom, ctx);
-    gr_mat_window_clear(H_bottom, ctx);
-    return status;
-  }
+  if (status != GR_SUCCESS) { goto free_x; }
 
   // z = -tce (in-place negate G_tce)
   status |= gr_mat_neg(G_tce, G_tce, ctx);
-  if (status != GR_SUCCESS) {
-    gr_mat_clear(G_x, ctx);
-    gr_mat_clear(H_x, ctx);
-    gr_mat_clear(G_tce, ctx);
-    gr_mat_clear(H_tce, ctx);
-    gr_mat_clear(G_ebt, ctx);
-    gr_mat_clear(H_ebt, ctx);
-    gr_mat_clear(G_t, ctx);
-    gr_mat_clear(H_t, ctx);
-    gr_mat_clear(G_e, ctx);
-    gr_mat_clear(H_e, ctx);
-    gr_mat_window_clear(G_top, ctx);
-    gr_mat_window_clear(H_top, ctx);
-    gr_mat_window_clear(G_bottom, ctx);
-    gr_mat_window_clear(H_bottom, ctx);
-    return status;
-  }
+  if (status != GR_SUCCESS) { goto free_x; }
 
   // G_D / H_D
   slong rx = gr_mat_ncols(G_x, ctx);
@@ -333,14 +196,20 @@ int gr_toeplitz_inverse(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, 
       }
     }
   }
+
+free_x:
   gr_mat_clear(G_x, ctx);
   gr_mat_clear(H_x, ctx);
+free_tce:
   gr_mat_clear(G_tce, ctx);
   gr_mat_clear(H_tce, ctx);
+free_ebt:
   gr_mat_clear(G_ebt, ctx);
   gr_mat_clear(H_ebt, ctx);
+free_t:
   gr_mat_clear(G_t, ctx);
   gr_mat_clear(H_t, ctx);
+free_e_top_bottom:
   gr_mat_clear(G_e, ctx);
   gr_mat_clear(H_e, ctx);
   gr_mat_window_clear(G_top, ctx);
