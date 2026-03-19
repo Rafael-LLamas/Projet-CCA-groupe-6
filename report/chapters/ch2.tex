@@ -1,37 +1,244 @@
 \section{Operation}
 
 \subsection{Addition}
+This code can be found in:
+\begin{verbatim}
+Project
+\   src
+|   \   operations
+|   |   |   addition.c
+|   |   |   addition.h
+\end{verbatim}
  Grace au générateurs, nous pouvons addtionner nos matrices sans utiliser la formule standart.
  En effet, selon la propriété 10.7 et 10.8 du cours (ref cours ICI), on apprends que la somme de 2 matrices toeplitz peut etre simplfié par la concatenation de leurs générateurs de déplacement.
- Cela permet de passrr a un coup de O(nxm) a un cout de O($\alpha$xm) pour 2 matrices A et B de tailles nxm et leurs générateurs de taille $\alpha$ pour ceux de A et $\beta$ pour ceux de B.
+ Cela permet de passer a un coup de O($n \times m$) a un cout de O($\alpha \times m$) pour 2 matrices A et B de tailles $n \times m$ et leurs générateurs de taille $\alpha$ pour ceux de A et $\beta$ pour ceux de B.
  Avec flint, on peut utiliser la fonction
- (ici la fonction)
-pour faire la concatenation de nos générateurs.
+ \begin{verbatim}
+ int gr_mat_concat_horizontal(gr_mat_t RES,gr_mat_t A,gr_mat_t B,gr_ctx_t ctx);
+ \end{verbatim}
+ pour faire la concatenation de nos générateurs.
  \subsubsection{Exemple}
-On va prendre les matrices A, B et C le résultat de l'addition de A et B.
-(METTRE LES MATRICES ICI)
-si on prends les générateurs de A = (T,U) et B = (G,H)
-(ICI GÉNÉRATEURS)
-et que l'on fait la concaténation on obtiens
-(ICI RESULTAT DE LA CONCATENATION)
-pour verifier notre résultat on peut utiliser la fonction
-(ici la fonction)
-pour recomposer la matrice que l'on a obtenue D
-(ICI D)
+On va prendre les matrices A, B et C le résultat de l'addition de A et B.Toutes les matrices sont dans $Z/_13Z$ pour cette exemple.
+\begin{equation}
+    A =
+    \begin{pmatrix}
+        0     & 7     & 10 \\
+        5     & 0     & 7 \\
+        0     & 5     & 0  
+    \end{pmatrix}, 
+    B =
+    \begin{pmatrix}
+        9     & 12     & 4 \\
+        0    & 9     & 12 \\
+        3     & 0     & 9  
+    \end{pmatrix}, 
+    C =
+    \begin{pmatrix}
+        9     & 6     & 1 \\
+        5     & 9     & 6 \\
+        3     & 5     & 9  
+    \end{pmatrix}
+\end{equation}
 
-On remarque bien que celle-ci est identique a la matrices C
+si on prends les générateurs de A = (T,U) et B = (G,H)
+\begin{equation}
+    T =
+    \begin{pmatrix}
+        0     & 1     \\
+        1     & 0    \\
+        0     & 0      
+    \end{pmatrix}, 
+    U =
+    \begin{pmatrix}
+        5     & 0      \\
+        0     & 7      \\
+        0     & 10      
+    \end{pmatrix}
+\end{equation}
+\begin{equation}
+    G =
+    \begin{pmatrix}
+        1    & 0      \\
+        0     & 0      \\
+        9     & 1  
+    \end{pmatrix}, 
+    H =
+    \begin{pmatrix}
+        9     & 0      \\
+        12     & 9      \\
+        4     & 3  
+    \end{pmatrix}
+\end{equation}
+et que l'on fait la concaténation on obtiens
+\begin{equation}
+    RES_G =
+    \begin{pmatrix}
+        0    & 1     & 1 & 0 \\
+        1     & 0     & 0 & 0 \\
+        0     & 0     & 9  & 1
+    \end{pmatrix}
+\end{equation}
+\begin{equation}
+    RES_H =
+    \begin{pmatrix}
+        5     & 0     & 9 & 0 \\
+        0    & 7     & 12 & 9 \\
+        0     & 10     & 4  & 3
+    \end{pmatrix}
+\end{equation}
+Dans notre projet, il suffira d'appeler la fonction:
+\begin{verbatim}
+ int gr_mat_addition_generateur(gr_mat_t G_a, gr_mat_t H_a, gr_mat_t G_b, gr_mat_t H_b, 
+                                gr_mat_t G_c, gr_mat_t H_c,gr_ctx_t ctx);
+ \end{verbatim}
+avec les bons parametre pour obtenir les générateur de déplacement G et H de D.
+
+pour verifier notre résultat on peut utiliser la fonction
+\begin{verbatim}
+ int gr_mat_reconstruct_A(gr_mat_t A, gr_mat_t G, gr_mat_t H, disp_type_t type, gr_ctx_t ctx);
+ \end{verbatim}
+pour recomposer la matrice que l'on a obtenue D :
+\begin{equation}
+    D =
+    \begin{pmatrix}
+        9     & 6     & 1 \\
+        5     & 9     & 6 \\
+        3     & 5     & 9  
+    \end{pmatrix}
+\end{equation}
+
+On remarque bien que celle-ci est identique a la matrices C et donc que pour faire l'addition de 2 matrice toeplitz, on peut utiliser seulement leurs générateurs.
+
 
 \subsection{Multiplication}
+This code can be found in:
+\begin{verbatim}
+Project
+\   src
+|   \   operations
+|   |   |   multiplication.c
+|   |   |   multiplication.h
+\end{verbatim}
 Toujours avec les générateurs, on peut simplifier la multiplication de 2 matrices et donc réduire son cout en concatenant :
+
 - les générateurs de A=(T,U) et B=(G,H)
-- W = Z x A x Ztranspose x G
-- V = Btranspose x U
-- a (resp. b) un vecteur qui est la dernière colonne de Z x A (resp Ztranspose x B)
-cela nous permet de passer de O(n3) pour l'algo naif a O($\alpha$²M(n))
+
+
+- $W = Z \times A \times Z^t \times G$
+
+- $V = B^t \times U$
+
+- a (resp. b) un vecteur qui est la dernière colonne de$ Z \times A $ (resp. $Z^t \times B$)
+
+Cela nous permet de passer de O($n^3$) pour l'algo naif a $O( \alpha^2 \times M(n) )$ pour la version que nous implémentons. 
 \subsubsection{Exemple}
-pareil donner des exemples de chaque etapes a bien rédiger
+On va prendre les matrices A, B et C le résultat de la multiplication de A et B.Toutes les matrices sont dans $Z/_13Z$ pour cette exemple.
+\begin{equation}
+    A =
+    \begin{pmatrix}
+        10    & 5     & 8 \\
+        5     & 10     & 5 \\
+        3     & 5     & 10  
+    \end{pmatrix}, 
+    B =
+    \begin{pmatrix}
+        0     & 3     & 0 \\
+        3    & 0     & 3 \\
+        0     &3     & 0  
+    \end{pmatrix}, 
+    C =
+    \begin{pmatrix}
+        2     & 2     & 2 \\
+        4     & 4     & 4 \\
+        2     & 0     & 2  
+    \end{pmatrix}
+\end{equation}
 
+si on prends les générateurs de A = (T,U) et B = (G,H)
+\begin{equation}
+    T =
+    \begin{pmatrix}
+        1    & 0     \\
+        7     & 1    \\
+        12     & 11      
+    \end{pmatrix}, 
+    U =
+    \begin{pmatrix}
+        10     & 0      \\
+        5     & 4      \\
+        8     & 9      
+    \end{pmatrix}
+\end{equation}
+\begin{equation}
+    G =
+    \begin{pmatrix}
+        0    & 1      \\
+        1     & 0      \\
+        0     & 0  
+    \end{pmatrix}, 
+    H =
+    \begin{pmatrix}
+        3     & 0      \\
+        0     & 3      \\
+        0     & 0  
+    \end{pmatrix}
+\end{equation}
 
+on doit calculer W et V via leurs formule donné au début.
+\begin{equation}
+    W =
+    \begin{pmatrix}
+        0    & 0 \\
+        10     & 0 \\
+        5     & 0  
+    \end{pmatrix}, 
+    V =
+    \begin{pmatrix}
+        2     & 12    \\
+        2    & 1      \\
+        2     & 12  
+    \end{pmatrix}
+\end{equation}
+Puis faire la concatenation de T,W et $\alpha$ pour obtenir $RES_G$
+et la concatenation de  V,H et $\beta$ pour obtenir $RES_H$ (il faut faire la concatenation dans l'ordre que j'ai cité les éléments).
+\begin{equation}
+    RES_G =
+    \begin{pmatrix}
+        1     & 0     & 0 & 0 & 0 \\
+        7    & 1     & 10 & 0 & 8 \\
+        12     & 11     & 5  & 0 & 5
+    \end{pmatrix}
+\end{equation}
+\begin{equation}
+    RES_H =
+    \begin{pmatrix}
+        2     & 12     & 3 & 0 & 0 \\
+        2    & 1     & 0 & 3 & 0 \\
+        2     & 12     & 0  & 0 & 10
+    \end{pmatrix}
+\end{equation}
+Dans notre projet, il suffira d'appeler la fonction:
+\begin{verbatim}
+ int gr_mat_mul_generator(gr_mat_t G_c, gr_mat_t H_c, gr_mat_t G_a,
+                             gr_mat_t H_a, gr_mat_t G_b, gr_mat_t H_b,
+                             gr_ctx_t ctx);
+ \end{verbatim}
+avec les bons parametre pour obtenir les générateur de déplacement G et H de D.
+
+pour verifier notre résultat on peut utiliser la fonction
+\begin{verbatim}
+ int gr_mat_reconstruct_A(gr_mat_t A, gr_mat_t G, gr_mat_t H, disp_type_t type, gr_ctx_t ctx);
+ \end{verbatim}
+pour recomposer la matrice que l'on a obtenue D :
+\begin{equation}
+    D =
+    \begin{pmatrix}
+        2     & 2     & 2 \\
+        4     & 4     & 4 \\
+        2     & 0     & 2  
+    \end{pmatrix}
+\end{equation}
+La matrice D est bien égale a C donc notre facon de multiplier les 2 matrices est correct dans ce cas.
 \subsection{Inversion}
 
 \subsubsection{Introduction}

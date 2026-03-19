@@ -5,7 +5,7 @@
 
 /**
  *
- * @brief the function copute a simple concatenation of the generators given in parameter
+ * @brief the function will do an addition of A and B by concatenate their generator
 
  * @param[in] G_a Input the generator G of the matrix A
  * @param[in] H_a Input the generator H of the matrix A

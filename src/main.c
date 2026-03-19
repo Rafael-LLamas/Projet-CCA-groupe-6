@@ -108,10 +108,11 @@ int benchmark_multiplication() {
   FILE *csv = fopen("bench_multiplication.csv", "w");
   slong sizesn[] = {128, 1024, 4096};
   slong sizesm[] = {128, 1024, 4096};
+  slong sizesk[] = {128, 1024, 4096};
   int num_sizes = 3;
   int error = GR_SUCCESS;
   if (!csv) return GR_UNABLE;
-
+  if (m == -1 && k != -1 && n != -1 && k != n) { return 1; }
   if (n != -1 || m != -1) {
     num_sizes = 2;
     slong base_n = (n != -1) ? n : m;
@@ -120,6 +121,10 @@ int benchmark_multiplication() {
     sizesn[1] = base_n;
     sizesm[0] = base_m / 2;
     sizesm[1] = base_m;
+  }
+  if (k != -1) {
+    sizesk[0] = k / 2;
+    sizesk[1] = k;
   }
 
   int iterations = (iteration != -1) ? iteration : 10;
@@ -137,6 +142,7 @@ int benchmark_multiplication() {
   for (int s = 0; s < num_sizes; s++) {
     slong ntemp = sizesn[s];
     slong mtemp = sizesm[s];
+    slong ktemp = sizesk[s];
 
     double toe_toe_mine[iterations], toe_toe_flint[iterations];
     double toe_vec_mine[iterations], toe_vec_flint[iterations];
@@ -146,8 +152,8 @@ int benchmark_multiplication() {
       gr_mat_t A, B, C, X, Res_V, G_a, H_a, G_b, H_b, G_c, H_c;
 
       gr_mat_init(A, ntemp, mtemp, ctx);
-      gr_mat_init(B, mtemp, ntemp, ctx);
-      gr_mat_init(C, ntemp, ntemp, ctx);
+      gr_mat_init(B, mtemp, ktemp, ctx);
+      gr_mat_init(C, ntemp, ktemp, ctx);
       gr_mat_init(X, mtemp, 1, ctx);
       gr_mat_init(Res_V, ntemp, 1, ctx);
 
@@ -158,7 +164,6 @@ int benchmark_multiplication() {
       gr_mat_init(G_c, 0, 0, ctx);
       gr_mat_init(H_c, 0, 0, ctx);
 
-      // Données
       if (rank != -1) {
         error = gr_mat_quasi_toeplitz_rank(A, ntemp, mtemp, rank, state, ctx);
         error = gr_mat_quasi_toeplitz_rank(B, mtemp, ntemp, rank, state, ctx);
@@ -172,7 +177,6 @@ int benchmark_multiplication() {
       for (slong r = 0; r < mtemp; r++)
         error = gr_set(gr_mat_entry_ptr(X, r, 0, ctx), gr_mat_entry_srcptr(A, 0, 0, ctx), ctx);
 
-      // --- 1. TOEPLITZ x TOEPLITZ ---
       double t1 = get_time_ms();
       error = gr_mat_mul_generator(G_c, H_c, G_a, H_a, G_b, H_b, ctx);
       toe_toe_mine[i] = get_time_ms() - t1;
@@ -183,7 +187,6 @@ int benchmark_multiplication() {
         toe_toe_flint[i] = get_time_ms() - t2;
       }
 
-      // --- 2. TOEPLITZ x VECTEUR ---
       double t3 = get_time_ms();
       error = gr_mat_mul_vector(Res_V, G_a, H_a, X, ctx);
       toe_vec_mine[i] = get_time_ms() - t3;
@@ -214,7 +217,6 @@ int benchmark_multiplication() {
       gr_mat_clear(H_c, ctx);
     }
 
-    // Stats
     double am_tt, mm_tt, af_tt = 0, mf_tt = 0, am_tv, mm_tv, af_tv = 0, mf_tv = 0;
     compute_stats(toe_toe_mine, iterations, &am_tt, &mm_tt);
     compute_stats(toe_vec_mine, iterations, &am_tv, &mm_tv);
@@ -274,7 +276,7 @@ int benchmark_displacement() {
       gr_mat_t A, D, G, H, A_rec;
       gr_mat_init(A, cur_n, cur_n, ctx);
       gr_mat_init(D, cur_n, cur_n, ctx);
-      gr_mat_init(G, 0, 0, ctx); // Sera redimensionné par gr_mat_G_H
+      gr_mat_init(G, 0, 0, ctx);
       gr_mat_init(H, 0, 0, ctx);
       gr_mat_init(A_rec, cur_n, cur_n, ctx);
 
