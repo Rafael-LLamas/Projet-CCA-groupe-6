@@ -103,4 +103,6 @@ add_test(NAME Inverse.2x2                                           COMMAND test
 
 add_executable(test_compression tests/compression.test.c)
 target_link_libraries(test_compression PRIVATE project_lib)
-add_test(NAME Compression.compress_then_multiply                    COMMAND test_compression compression_then_multiply)
+add_test(NAME Compression.compress_toeplitz                         COMMAND test_compression compress_toeplitz)
+add_test(NAME Compression.compress_after_addition                   COMMAND test_compression compress_after_addition)
+add_test(NAME Compression.compress_after_multiply                   COMMAND test_compression compression_after_multiply)
