@@ -51,6 +51,7 @@ set(PROJECT_SOURCES
     src/utility/matrix_aux.c
     src/operations/multiplication.c
     src/operations/addition.c
+    src/compression/compression.c
 )
 add_library(project_lib STATIC ${PROJECT_SOURCES})
 target_link_libraries(project_lib PUBLIC flint_core)
@@ -60,6 +61,7 @@ target_include_directories(project_lib PUBLIC
     src/toeplitz_inverse
     src/utility
     src/operations
+    src/compression
 )
 add_executable(main src/main.c)
 target_link_libraries(main PRIVATE project_lib)
@@ -84,7 +86,7 @@ add_test(NAME Utility.LU_detatch2                                   COMMAND test
 
 add_executable(test_random_toeplitz tests/random_toeplitz.test.c)
 target_link_libraries(test_random_toeplitz PRIVATE project_lib)
-add_test(NAME Random.gr_mat_random_toeplitz                                COMMAND test_random_toeplitz gr_mat_random_toeplitz)
+add_test(NAME Random.gr_mat_random_toeplitz                         COMMAND test_random_toeplitz gr_mat_random_toeplitz)
 
 add_executable(test_operations_multiplication tests/multiplication.test.c)
 target_link_libraries(test_operations_multiplication PRIVATE project_lib)
@@ -98,3 +100,7 @@ add_executable(test_inversion tests/inverse.test.c)
 target_link_libraries(test_inversion PRIVATE project_lib)
 add_test(NAME Inverse.base_case                                     COMMAND test_inversion inverse_base_case)
 add_test(NAME Inverse.2x2                                           COMMAND test_inversion inverse_2x2)
+
+add_executable(test_compression tests/compression.test.c)
+target_link_libraries(test_compression PRIVATE project_lib)
+add_test(NAME Compression.compress_then_multiply                    COMMAND test_compression compression_then_multiply)
