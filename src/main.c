@@ -419,6 +419,109 @@ int benchmark_addition() {
   flint_rand_clear(state);
   return error;
 }
+int benchmark_inversion() {
+  /*TODO : faire la comparaison entre inversion flint et inversion avec les générateur + la compression, a voir si il
+   * faut rajouter avec arda*/
+  FILE *csv = fopen("bench_inversion.csv", "w");
+  slong sizesn[] = {128, 1024, 4096};
+  slong sizesm[] = {128, 1024, 4096};
+  int num_sizes = 3;
+  if (!csv) return GR_UNABLE;
+
+  if (n != -1 || m != -1) {
+    num_sizes = 2;
+    slong base_n = (n != -1) ? n : m;
+    slong base_m = (m != -1) ? m : n;
+    sizesn[0] = base_n / 2;
+    sizesn[1] = base_n;
+    sizesm[0] = base_m / 2;
+    sizesm[1] = base_m;
+  }
+
+  int iterations = (iteration != -1) ? iteration : 10;
+  int error = GR_SUCCESS;
+  fprintf(csv, "N,M,Iteration,Gen_Time_ms,Flint_Dense_Time_ms\n");
+
+  gr_ctx_t ctx;
+  flint_rand_t state;
+  flint_rand_init(state);
+  flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
+  gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
+
+  printf("\n" ANSI_COLOR_BOLD ANSI_COLOR_MAGENTA "=== BENCHMARK ADDITION (%d runs) ===" ANSI_COLOR_RESET "\n",
+         iterations);
+
+  for (int s = 0; s < num_sizes; s++) {
+    slong cur_n = sizesn[s];
+    slong cur_m = sizesm[s];
+    double gen_times[iterations], flint_times[iterations];
+    printf(ANSI_COLOR_CYAN "Size %ldx%ld :\n" ANSI_COLOR_RESET, cur_n, cur_m);
+    printf(" %-12s | %-12s | %-12s\n", "Operation", "Average (ms)", "Median (ms)");
+    printf("--------------|--------------|--------------\n");
+
+    for (int i = 0; i < iterations; i++) {
+      gr_mat_t C, A, B, G_a, G_b, H_a, H_b, G_c, H_c;
+      gr_mat_init(A, cur_n, cur_m, ctx);
+      gr_mat_init(B, cur_n, cur_m, ctx);
+      gr_mat_init(C, cur_n, cur_m, ctx);
+      gr_mat_init(G_a, 0, 0, ctx);
+      gr_mat_init(H_a, 0, 0, ctx);
+      gr_mat_init(G_b, 0, 0, ctx);
+      gr_mat_init(H_b, 0, 0, ctx);
+      gr_mat_init(G_c, 0, 0, ctx);
+      gr_mat_init(H_c, 0, 0, ctx);
+      if (rank != -1) {
+        error = gr_mat_quasi_toeplitz_rank(A, cur_n, cur_m, rank, state, ctx);
+        error = gr_mat_quasi_toeplitz_rank(B, cur_n, cur_m, rank, state, ctx);
+
+      } else {
+        error = gr_mat_random_toeplitz(A, cur_n, cur_m, state, ctx);
+        error = gr_mat_random_toeplitz(B, cur_n, cur_m, state, ctx);
+      }
+      error = gr_mat_G_H(G_a, H_a, A, DISP_PLUS, ctx);
+      error = gr_mat_G_H(G_b, H_b, B, DISP_PLUS, ctx);
+
+      double t1 = get_time_ms();
+      error = gr_mat_addition_generateur(G_c, H_c, G_a, H_a, G_b, H_b, ctx);
+      gen_times[i] = get_time_ms() - t1;
+
+      flint_times[i] = 0;
+      if (flint) {
+        double t3 = get_time_ms();
+        error = gr_mat_add(C, A, B, ctx);
+        flint_times[i] = get_time_ms() - t3;
+      }
+
+      fprintf(csv, "%ld,%ld,%d,%.4f,%.4f\n", cur_n, cur_m, i, gen_times[i], flint_times[i]);
+      printf("\rSize %ldx%ld... [%d/%d]", cur_n, cur_m, i + 1, iterations);
+      fflush(stdout);
+
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(B, ctx);
+      gr_mat_clear(C, ctx);
+      gr_mat_clear(G_a, ctx);
+      gr_mat_clear(H_a, ctx);
+      gr_mat_clear(G_b, ctx);
+      gr_mat_clear(H_b, ctx);
+      gr_mat_clear(G_c, ctx);
+      gr_mat_clear(H_c, ctx);
+    }
+
+    double avg_gen, med_gen, avg_flint = 0, med_flint = 0;
+    compute_stats(gen_times, iterations, &avg_gen, &med_gen);
+    if (flint) compute_stats(flint_times, iterations, &avg_flint, &med_flint);
+
+    printf("\r" ANSI_CLEAR_LINE);
+    printf(ANSI_COLOR_GREEN " Generators" ANSI_COLOR_RESET "   |  %-.3e   |  %-.3e \n", avg_gen, med_gen);
+    if (flint)
+      printf(ANSI_COLOR_YELLOW " Flint Dense" ANSI_COLOR_RESET "  |  %-.3e   |  %-.3e \n", "", avg_flint, med_flint);
+  }
+
+  fclose(csv);
+  gr_ctx_clear(ctx);
+  flint_rand_clear(state);
+  return error;
+}
 
 void run_all_benchmarks() {
   printf("\033[H\033[J"); // Clear terminal
@@ -426,6 +529,7 @@ void run_all_benchmarks() {
   benchmark_addition();
   benchmark_multiplication();
   benchmark_displacement();
+  // benchmark_inversion();
   printf("\n" ANSI_COLOR_BOLD ANSI_COLOR_GREEN "Full report generated in .csv files.\n" ANSI_COLOR_RESET);
 }
 // Fonction d'usage
@@ -436,6 +540,7 @@ void usage(char *argv[]) {
   fprintf(stderr, "  " ANSI_COLOR_GREEN "benchmark_add" ANSI_COLOR_RESET "    - Run addition generator benchmark\n");
   fprintf(stderr,
           "  " ANSI_COLOR_GREEN "benchmark_mul" ANSI_COLOR_RESET "    - Run multiplication generator benchmark\n");
+  fprintf(stderr, "  " ANSI_COLOR_GREEN "benchmark_inv" ANSI_COLOR_RESET "    - Run inversion generator benchmark\n");
   fprintf(stderr,
           "  " ANSI_COLOR_GREEN "benchmark_displacement" ANSI_COLOR_RESET "    - Run displacement matrix benchmark\n");
   fprintf(stderr, "  " ANSI_COLOR_GREEN "-n (integer)" ANSI_COLOR_RESET
@@ -520,6 +625,10 @@ int main(int argc, char *argv[]) {
   } else if (strcmp(argv[1], "benchmark_mul") == 0) {
     printf(ANSI_COLOR_BOLD ANSI_COLOR_BLUE "=> Running Multiplication Generator benchmark...\n" ANSI_COLOR_RESET);
     benchmark_multiplication();
+  } else if (strcmp(argv[1], "benchmark_inv") == 0) {
+    printf(ANSI_COLOR_BOLD ANSI_COLOR_BLUE "=> Running Inversion Generator benchmark...\n" ANSI_COLOR_RESET);
+    printf(ANSI_COLOR_BOLD ANSI_COLOR_RED "WORK IN PROGRESS\n" ANSI_COLOR_RESET);
+    // benchmark_inversion();
   } else if (strcmp(argv[1], "benchmark_displacement") == 0) {
     printf(ANSI_COLOR_BOLD ANSI_COLOR_BLUE "=> Running Displacement Matrix benchmark...\n" ANSI_COLOR_RESET);
     benchmark_displacement();
