@@ -226,14 +226,15 @@ int benchmark_multiplication() {
     }
 
     printf("\r" ANSI_CLEAR_LINE);
-    printf(ANSI_COLOR_CYAN "Size %ldx%ld :\n" ANSI_COLOR_RESET, ntemp, mtemp);
+    printf(ANSI_COLOR_CYAN "Size (%ldx%ld) X (%ldx%ld) :\n" ANSI_COLOR_RESET, ntemp, mtemp, mtemp, ktemp);
     printf("  %-15s | %-12s | %-12s\n", "Operation", "Average (ms)", "Median (ms)");
     printf("  ----------------|--------------|--------------\n");
-    printf("  " ANSI_COLOR_GREEN "Toe-Toe (Mine)" ANSI_COLOR_RESET "  | %-12.3f | %-12.3f\n", am_tt, mm_tt);
-    if (flint) printf("  " ANSI_COLOR_YELLOW "Toe-Toe (Flint)" ANSI_COLOR_RESET " | %-12.3f | %-12.3f\n", af_tt, mf_tt);
-    printf("  " ANSI_COLOR_BLUE "Toe-Vec (Mine)" ANSI_COLOR_RESET "  | %-12.3f | %-12.3f\n", am_tv, mm_tv);
+    printf("  " ANSI_COLOR_GREEN "Toe-Toe (Mine)" ANSI_COLOR_RESET "  |  %-.3e   |  %-.3e \n", am_tt, mm_tt);
     if (flint)
-      printf("  " ANSI_COLOR_MAGENTA "Toe-Vec (Flint)" ANSI_COLOR_RESET " | %-12.3f | %-12.3f\n", af_tv, mf_tv);
+      printf("  " ANSI_COLOR_YELLOW "Toe-Toe (Flint)" ANSI_COLOR_RESET " |  %-.3e   |  %-.3e \n", af_tt, mf_tt);
+    printf("  " ANSI_COLOR_BLUE "Toe-Vec (Mine)" ANSI_COLOR_RESET "  |  %-.3e   |  %-.3e \n", am_tv, mm_tv);
+    if (flint)
+      printf("  " ANSI_COLOR_MAGENTA "Toe-Vec (Flint)" ANSI_COLOR_RESET " |  %-.3e   |  %-.3e \n", af_tv, mf_tv);
   }
 
   fclose(csv);
@@ -311,7 +312,7 @@ int benchmark_displacement() {
     t_gh /= iterations;
     t_rec /= iterations;
     printf("\r" ANSI_CLEAR_LINE);
-    printf("  %-12.3f | %-12.3f | %-12.3f\n", t_disp, t_gh, t_rec);
+    printf("  %-.3e    |  %-.3e   |  %-.3e \n", t_disp, t_gh, t_rec);
     fprintf(csv, "%ld,%.4f,%.4f,%.4f\n", cur_n, t_disp, t_gh, t_rec);
   }
 
@@ -411,9 +412,9 @@ int benchmark_addition() {
     if (flint) compute_stats(flint_times, iterations, &avg_flint, &med_flint);
 
     printf("\r" ANSI_CLEAR_LINE);
-    printf(ANSI_COLOR_GREEN " Generators" ANSI_COLOR_RESET "   | %-12.3f | %-12.3f\n", avg_gen, med_gen);
+    printf(ANSI_COLOR_GREEN " Generators" ANSI_COLOR_RESET "   |  %-.3e   |  %-.3e \n", avg_gen, med_gen);
     if (flint)
-      printf(ANSI_COLOR_YELLOW " Flint Dense" ANSI_COLOR_RESET "  | %-12.3f | %-12.3f\n", "", avg_flint, med_flint);
+      printf(ANSI_COLOR_YELLOW " Flint Dense" ANSI_COLOR_RESET "  |  %-.3e   |  %-.3e \n", "", avg_flint, med_flint);
   }
 
   fclose(csv);
@@ -442,6 +443,8 @@ void usage(char *argv[]) {
           "  " ANSI_COLOR_GREEN "benchmark_displacement" ANSI_COLOR_RESET "    - Run displacement matrix benchmark\n");
   fprintf(stderr, "  " ANSI_COLOR_GREEN "-n (integer)" ANSI_COLOR_RESET
                   "    - Run matrix of nxm or nxn (if m not define) with the integer (needs to be positive > 0)\n");
+  fprintf(stderr, "  " ANSI_COLOR_GREEN "-k (integer)" ANSI_COLOR_RESET
+                  "    - Run matrix of mxk (if m not define) with the integer (needs to be positive > 0)\n");
   fprintf(stderr, "  " ANSI_COLOR_GREEN "-m (integer)" ANSI_COLOR_RESET
                   "    - Run matrix of nxm or mxm (if n not define) with the integer (needs to be positive > 0)\n");
   fprintf(stderr, "  " ANSI_COLOR_GREEN "-i (integer)" ANSI_COLOR_RESET
