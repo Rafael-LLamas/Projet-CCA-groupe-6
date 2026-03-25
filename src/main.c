@@ -157,13 +157,6 @@ int benchmark_multiplication() {
       gr_mat_init(X, mtemp, 1, ctx);
       gr_mat_init(Res_V, ntemp, 1, ctx);
 
-      gr_mat_init(G_a, 0, 0, ctx);
-      gr_mat_init(H_a, 0, 0, ctx);
-      gr_mat_init(G_b, 0, 0, ctx);
-      gr_mat_init(H_b, 0, 0, ctx);
-      gr_mat_init(G_c, 0, 0, ctx);
-      gr_mat_init(H_c, 0, 0, ctx);
-
       if (rank != -1) {
         error = gr_mat_quasi_toeplitz_rank(A, ntemp, mtemp, rank, state, ctx);
         error = gr_mat_quasi_toeplitz_rank(B, mtemp, ktemp, rank, state, ctx);
@@ -199,7 +192,6 @@ int benchmark_multiplication() {
 
       fprintf(csv, "%ld,%ld,ToeToe,%d,%.4f,%.4f\n", ntemp, mtemp, i, toe_toe_mine[i], toe_toe_flint[i]);
       fprintf(csv, "%ld,%ld,ToeVec,%d,%.4f,%.4f\n", ntemp, mtemp, i, toe_vec_mine[i], toe_vec_flint[i]);
-      fprintf(csv, "%ld,%ld,MatVec,%d,%.4f,%.4f\n", ntemp, mtemp, i, rand_vec_mine[i], rand_vec_flint[i]);
 
       printf("\rSize %ldx%ld... [%d/%d]", ntemp, mtemp, i + 1, iterations);
       fflush(stdout);
@@ -270,6 +262,7 @@ int benchmark_displacement() {
   for (int s = 0; s < num_sizes; s++) {
     slong cur_n = sizes[s];
     double t_disp = 0, t_gh = 0, t_rec = 0;
+    double t_cur_disp = 0, t_cur_gh = 0, t_cur_rec = 0;
     printf(ANSI_COLOR_CYAN "Size %ldx%ld :\n" ANSI_COLOR_RESET, cur_n, cur_n);
     printf(" %-12s | %-12s | %-12s\n", "Displace (ms)", "GH (ms)", "Reconst (ms)");
     printf(" --------------|--------------|--------------\n");
@@ -289,23 +282,27 @@ int benchmark_displacement() {
 
       double start = get_time_ms();
       error = gr_mat_displacement(D, A, DISP_PLUS, ctx);
-      t_disp += (get_time_ms() - start);
+      t_cur_disp = (get_time_ms() - start);
 
       start = get_time_ms();
       error = gr_mat_G_H(G, H, A, DISP_PLUS, ctx);
-      t_gh += (get_time_ms() - start);
+      t_cur_gh = (get_time_ms() - start);
 
       start = get_time_ms();
       error = gr_mat_reconstruct_A(A_rec, G, H, DISP_PLUS, ctx);
-      t_rec += (get_time_ms() - start);
+      t_cur_rec = (get_time_ms() - start);
 
       gr_mat_clear(A, ctx);
       gr_mat_clear(D, ctx);
       gr_mat_clear(G, ctx);
       gr_mat_clear(H, ctx);
       gr_mat_clear(A_rec, ctx);
+      fprintf(csv, "%ld,%.4f,%.4f,%.4f\n", cur_n, t_cur_disp, t_cur_gh, t_cur_rec);
       printf("\rSize %ldx%ld... [%d/%d]", cur_n, cur_n, i + 1, iterations);
       fflush(stdout);
+      t_disp += t_cur_disp;
+      t_gh += t_cur_gh;
+      t_rec += t_cur_rec;
     }
 
     t_disp /= iterations;
@@ -313,7 +310,6 @@ int benchmark_displacement() {
     t_rec /= iterations;
     printf("\r" ANSI_CLEAR_LINE);
     printf("  %-.3e    |  %-.3e   |  %-.3e \n", t_disp, t_gh, t_rec);
-    fprintf(csv, "%ld,%.4f,%.4f,%.4f\n", cur_n, t_disp, t_gh, t_rec);
   }
 
   fclose(csv);
@@ -321,6 +317,7 @@ int benchmark_displacement() {
   flint_rand_clear(state);
   return error;
 }
+
 int benchmark_addition() {
   FILE *csv = fopen("bench_addition.csv", "w");
   slong sizesn[] = {128, 1024, 4096};

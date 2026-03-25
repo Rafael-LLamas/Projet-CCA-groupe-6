@@ -152,9 +152,9 @@ int gr_mat_mul_generator(gr_mat_t G_c, gr_mat_t H_c, gr_mat_t G_a, gr_mat_t H_a,
   if (error != 0) { return error; }
 
   // On remplace les anciennes matrices par les nouvelles
-  error = gr_mat_set(G_c, G_res, ctx);
+  error = gr_mat_init_set(G_c, G_res, ctx);
   if (error != 0) return error;
-  error = gr_mat_set(H_c, H_res, ctx);
+  error = gr_mat_init_set(H_c, H_res, ctx);
   if (error != 0) return error;
 
   gr_mat_clear(W, ctx);
