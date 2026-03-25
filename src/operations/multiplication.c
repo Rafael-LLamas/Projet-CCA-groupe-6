@@ -1,4 +1,5 @@
-#include "displacement_matrices.h"
+#include "matrix_aux.h"
+
 #include "flint/flint.h"
 #include "flint/gr.h"
 #include "flint/gr_mat.h"
@@ -83,65 +84,7 @@ int gr_mat_mul_vector(gr_mat_t Res, gr_mat_t G, gr_mat_t H, gr_mat_t X, gr_ctx_t
   gr_poly_clear(u_v, ctx);
   return GR_SUCCESS;
 }
-int gr_mat_apply_Z(gr_mat_t Res, gr_mat_t M, gr_ctx_t ctx) {
 
-  int error;
-
-  slong n = gr_mat_nrows(M, ctx);
-
-  slong m = gr_mat_ncols(M, ctx);
-
-  for (slong j = 0; j < m; j++) {
-
-    // On part du bas vers le haut pour ne pas écraser
-
-    // les données avant qu'elles ne soient déplacées
-
-    for (slong i = n - 1; i > 0; i--) {
-
-      error = gr_set(gr_mat_entry_ptr(Res, i, j, ctx), gr_mat_entry_srcptr(M, i - 1, j, ctx), ctx);
-
-      if (error != 0) { return error; }
-    }
-
-    // La ligne 0 devient 0
-
-    error = gr_zero(gr_mat_entry_ptr(Res, 0, j, ctx), ctx);
-
-    if (error != 0) { return error; }
-  }
-
-  return GR_SUCCESS;
-}
-
-int gr_mat_apply_Zt(gr_mat_t Res, gr_mat_t M, gr_ctx_t ctx) {
-
-  int error;
-
-  slong n = gr_mat_nrows(M, ctx);
-
-  slong m = gr_mat_ncols(M, ctx);
-
-  for (slong j = 0; j < m; j++) {
-
-    // Pour Zt (vers le haut), on part du haut vers le bas
-
-    for (slong i = 0; i < n - 1; i++) {
-
-      error = gr_set(gr_mat_entry_ptr(Res, i, j, ctx), gr_mat_entry_srcptr(M, i + 1, j, ctx), ctx);
-
-      if (error != 0) { return error; }
-    }
-
-    // La dernière ligne devient 0
-
-    error = gr_zero(gr_mat_entry_ptr(Res, n - 1, j, ctx), ctx);
-
-    if (error != 0) { return error; }
-  }
-
-  return GR_SUCCESS;
-}
 int gr_mat_mul_generator(gr_mat_t G_c, gr_mat_t H_c, gr_mat_t G_a, gr_mat_t H_a, gr_mat_t G_b, gr_mat_t H_b,
                          gr_ctx_t ctx) {
   slong n = gr_mat_nrows(G_a, ctx); // Lignes de A

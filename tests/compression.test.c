@@ -30,9 +30,10 @@ int check_compress_correctness(gr_mat_t ref, gr_mat_t G_c, gr_mat_t H_c, slong o
   return status;
 }
 
-int test_compress_toeplitz() {
+int test_compress_toeplitz(int nb_iter) {
   int status = GR_SUCCESS;
   int n = 20;
+  int i = 0;
 
   flint_rand_t state;
   flint_rand_init(state);
@@ -40,7 +41,7 @@ int test_compress_toeplitz() {
   gr_ctx_t ctx;
   gr_ctx_init_nmod(ctx, n_randprime(state, 61, 1));
 
-  for (int i = 0; i < 30; i++) {
+  while (i < nb_iter) {
     gr_mat_t A, G, H;
     gr_mat_init(A, n, n, ctx);
     status |= gr_mat_random_toeplitz(A, n, n, state, ctx);
@@ -55,6 +56,7 @@ int test_compress_toeplitz() {
     gr_mat_clear(A, ctx);
     gr_mat_clear(G, ctx);
     gr_mat_clear(H, ctx);
+    i++;
   }
 
   flint_rand_clear(state);
@@ -62,9 +64,10 @@ int test_compress_toeplitz() {
   return status;
 }
 
-int test_compress_after_addition() {
+int test_compress_after_addition(int nb_iter) {
   int status = GR_SUCCESS;
   int n = 20;
+  int i = 0;
 
   flint_rand_t state;
   flint_rand_init(state);
@@ -72,7 +75,7 @@ int test_compress_after_addition() {
   gr_ctx_t ctx;
   gr_ctx_init_nmod(ctx, n_randprime(state, 61, 1));
 
-  for (int i = 0; i < 30; i++) {
+  while (i < nb_iter) {
     gr_mat_t A, I, Ref, G_a, H_a, G_i, H_i, G_c, H_c;
     gr_mat_init(A, n, n, ctx);
     gr_mat_init(I, n, n, ctx);
@@ -99,6 +102,7 @@ int test_compress_after_addition() {
     gr_mat_clear(H_i, ctx);
     gr_mat_clear(G_c, ctx);
     gr_mat_clear(H_c, ctx);
+    i++;
   }
 
   flint_rand_clear(state);
@@ -106,16 +110,17 @@ int test_compress_after_addition() {
   return status;
 }
 
-int test_compress_after_multiplication() {
+int test_compress_after_multiplication(int nb_iter) {
   int status = GR_SUCCESS;
   int n = 20;
+  int i = 0;
 
   flint_rand_t state;
   flint_rand_init(state);
   gr_ctx_t ctx;
   gr_ctx_init_nmod(ctx, n_randprime(state, 61, 1));
 
-  for (int i = 0; i < 30; i++) {
+  while (i < nb_iter) {
     gr_mat_t A, I, G_a, H_a, G_i, H_i, G_c, H_c;
     gr_mat_init(A, n, n, ctx);
     gr_mat_init(I, n, n, ctx);
@@ -139,6 +144,7 @@ int test_compress_after_multiplication() {
     gr_mat_clear(H_i, ctx);
     gr_mat_clear(G_c, ctx);
     gr_mat_clear(H_c, ctx);
+    i++;
   }
 
   flint_rand_clear(state);
@@ -157,11 +163,11 @@ int main(int argc, char *argv[]) {
   fprintf(stderr, "=> Start test \"%s\"\n", argv[1]);
   int ok = GR_SUCCESS;
   if (strcmp("compress_toeplitz", argv[1]) == 0) {
-    ok = test_compress_toeplitz();
+    ok = test_compress_toeplitz(30);
   } else if (strcmp("compress_after_addition", argv[1]) == 0) {
-    ok = test_compress_after_addition();
+    ok = test_compress_after_addition(30);
   } else if (strcmp("compress_after_multiplication", argv[1]) == 0) {
-    ok = test_compress_after_multiplication();
+    ok = test_compress_after_multiplication(30);
   } else {
     fprintf(stderr, "Error: test \"%s\" not found!\n", argv[1]);
     exit(EXIT_FAILURE);
