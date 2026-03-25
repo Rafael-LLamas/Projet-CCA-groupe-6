@@ -112,7 +112,6 @@ int benchmark_multiplication() {
   int num_sizes = 3;
   int error = GR_SUCCESS;
   if (!csv) return GR_UNABLE;
-  if (m == -1 && k != -1 && n != -1 && k != n) { return 1; }
   if (n != -1 || m != -1) {
     num_sizes = 2;
     slong base_n = (n != -1) ? n : m;
@@ -123,6 +122,7 @@ int benchmark_multiplication() {
     sizesm[1] = base_m;
   }
   if (k != -1) {
+    num_sizes = 2;
     sizesk[0] = k / 2;
     sizesk[1] = k;
   }
@@ -166,10 +166,10 @@ int benchmark_multiplication() {
 
       if (rank != -1) {
         error = gr_mat_quasi_toeplitz_rank(A, ntemp, mtemp, rank, state, ctx);
-        error = gr_mat_quasi_toeplitz_rank(B, mtemp, ntemp, rank, state, ctx);
+        error = gr_mat_quasi_toeplitz_rank(B, mtemp, ktemp, rank, state, ctx);
       } else {
         error = gr_mat_random_toeplitz(A, ntemp, mtemp, state, ctx);
-        error = gr_mat_random_toeplitz(B, mtemp, ntemp, state, ctx);
+        error = gr_mat_random_toeplitz(B, mtemp, ktemp, state, ctx);
       }
 
       error = gr_mat_G_H(G_a, H_a, A, DISP_PLUS, ctx);
@@ -303,12 +303,14 @@ int benchmark_displacement() {
       gr_mat_clear(G, ctx);
       gr_mat_clear(H, ctx);
       gr_mat_clear(A_rec, ctx);
+      printf("\rSize %ldx%ld... [%d/%d]", cur_n, cur_n, i + 1, iterations);
+      fflush(stdout);
     }
 
     t_disp /= iterations;
     t_gh /= iterations;
     t_rec /= iterations;
-
+    printf("\r" ANSI_CLEAR_LINE);
     printf("  %-12.3f | %-12.3f | %-12.3f\n", t_disp, t_gh, t_rec);
     fprintf(csv, "%ld,%.4f,%.4f,%.4f\n", cur_n, t_disp, t_gh, t_rec);
   }
@@ -411,8 +413,7 @@ int benchmark_addition() {
     printf("\r" ANSI_CLEAR_LINE);
     printf(ANSI_COLOR_GREEN " Generators" ANSI_COLOR_RESET "   | %-12.3f | %-12.3f\n", avg_gen, med_gen);
     if (flint)
-      printf("%-10s | " ANSI_COLOR_YELLOW "Flint Dense" ANSI_COLOR_RESET "  | %-12.3f | %-12.3f\n", "", avg_flint,
-             med_flint);
+      printf(ANSI_COLOR_YELLOW " Flint Dense" ANSI_COLOR_RESET "  | %-12.3f | %-12.3f\n", "", avg_flint, med_flint);
   }
 
   fclose(csv);
