@@ -33,8 +33,6 @@ int gr_toeplitz_inverse(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, 
   }
 
   // 2: calculate the generators a b c d for n/2
-  // a: Gtop Htop | b: Gtop Hbottom
-  // c: Gbottom Htop | d: (Gbottom Hbottom) + a
   slong n1 = (n + 1) / 2;
   slong n2 = n / 2;
 
