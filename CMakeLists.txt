@@ -90,7 +90,8 @@ add_test(NAME Random.gr_mat_random_toeplitz                         COMMAND test
 
 add_executable(test_operations_multiplication tests/multiplication.test.c)
 target_link_libraries(test_operations_multiplication PRIVATE project_lib)
-add_test(NAME Operations.multiplication_generators                  COMMAND test_operations_multiplication multiplication_generators)
+add_test(NAME Operations.multiplication_toeplitz                 COMMAND test_operations_multiplication multiplication_toeplitz)
+add_test(NAME Operations.multiplication_quasi_toeplitz                 COMMAND test_operations_multiplication multiplication_quasi_toeplitz)
 
 add_executable(test_operations_addition tests/addition.test.c)
 target_link_libraries(test_operations_addition PRIVATE project_lib)
