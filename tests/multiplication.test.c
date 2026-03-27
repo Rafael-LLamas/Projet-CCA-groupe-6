@@ -23,7 +23,7 @@ int test_multiplication_generateurs() {
     gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
     gr_mat_init(A, 5, 5, ctx);
     gr_mat_init(B, 5, 5, ctx);
-    error = gr_mat_random_toeplitz(A, 5, 5, state, ctx);
+    error = gr_mat_random_toeplitz(A, state, ctx);
     if (error != 0) {
       gr_mat_clear(A, ctx);
       gr_mat_clear(B, ctx);
@@ -31,7 +31,7 @@ int test_multiplication_generateurs() {
       flint_rand_clear(state);
       return error;
     }
-    error = gr_mat_random_toeplitz(B, 5, 5, state, ctx);
+    error = gr_mat_random_toeplitz(B, state, ctx);
     if (error != 0) {
 
       gr_mat_clear(A, ctx);

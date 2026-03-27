@@ -3,7 +3,7 @@
 #include "flint/gr_mat.h"
 #include <stdlib.h>
 
-int gr_mat_random_quasi_toepitz(gr_mat_t A, int n, int m, flint_rand_t state, gr_ctx_t ctx) {
+int gr_mat_random_quasi_toepitz(gr_mat_t A, flint_rand_t state, gr_ctx_t ctx) {
   /*
   Mon sommeil va en patir ......
   Donc apres avoir compris mon problème ici je génère des quasi toeplitz en suivant la logique que mets matrices auront
@@ -11,26 +11,26 @@ int gr_mat_random_quasi_toepitz(gr_mat_t A, int n, int m, flint_rand_t state, gr
   */
   gr_mat_t L, U, colL, rowU;
   int error;
-  gr_mat_init(L, n, m, ctx);
-  gr_mat_init(U, m, m, ctx);
-  gr_mat_init(colL, n, 1, ctx);
-  gr_mat_init(rowU, 1, m, ctx);
+  gr_mat_init(L, gr_mat_nrows(A, ctx), gr_mat_ncols(A, ctx), ctx);
+  gr_mat_init(U, gr_mat_ncols(A, ctx), gr_mat_ncols(A, ctx), ctx);
+  gr_mat_init(colL, gr_mat_nrows(A, ctx), 1, ctx);
+  gr_mat_init(rowU, 1, gr_mat_ncols(A, ctx), ctx);
   error = gr_mat_zero(L, ctx);
   if (error != 0) { return error; }
   error = gr_mat_zero(U, ctx);
   if (error != 0) { return error; }
 
-  for (int i = 0; i < n; i++) {
+  for (int i = 0; i < gr_mat_nrows(A, ctx); i++) {
     error = gr_randtest_not_zero(gr_mat_entry_ptr(colL, i, 0, ctx), state, ctx);
     if (error != 0) { return error; }
   }
-  for (int j = 0; j < m; j++) {
+  for (int j = 0; j < gr_mat_ncols(A, ctx); j++) {
     error = gr_randtest_not_zero(gr_mat_entry_ptr(rowU, 0, j, ctx), state, ctx);
     if (error != 0) { return error; }
   }
 
-  for (int i = 0; i < n; i++) {
-    for (int j = 0; j < m; j++) {
+  for (int i = 0; i < gr_mat_nrows(A, ctx); i++) {
+    for (int j = 0; j < gr_mat_ncols(A, ctx); j++) {
       if (i >= j) {
         error = gr_set(gr_mat_entry_ptr(L, i, j, ctx), gr_mat_entry_srcptr(colL, i - j, 0, ctx), ctx);
         if (error != 0) { return error; }
@@ -50,13 +50,13 @@ int gr_mat_random_quasi_toepitz(gr_mat_t A, int n, int m, flint_rand_t state, gr
   return 0;
 }
 
-int gr_mat_random_toeplitz(gr_mat_t A, int n, int m, flint_rand_t state, gr_ctx_t ctx) {
+int gr_mat_random_toeplitz(gr_mat_t A, flint_rand_t state, gr_ctx_t ctx) {
   /*Ici je génère de façon non-chalante une matrice toeplitz en prenant 2 vecteur aléatoire que j'utilise pour def la
    * matrice*/
   gr_mat_t col, row;
   int error;
-  gr_mat_init(col, n, 1, ctx);
-  gr_mat_init(row, 1, m, ctx);
+  gr_mat_init(col, gr_mat_nrows(A, ctx), 1, ctx);
+  gr_mat_init(row, 1, gr_mat_ncols(A, ctx), ctx);
 
   error = gr_mat_randtest(col, state, ctx);
   if (error != 0) { return error; }
@@ -64,8 +64,8 @@ int gr_mat_random_toeplitz(gr_mat_t A, int n, int m, flint_rand_t state, gr_ctx_
   if (error != 0) { return error; }
   error = gr_set(gr_mat_entry_ptr(row, 0, 0, ctx), gr_mat_entry_srcptr(col, 0, 0, ctx), ctx);
   if (error != 0) { return error; }
-  for (int i = 0; i < n; i++) {
-    for (int j = 0; j < m; j++) {
+  for (int i = 0; i < gr_mat_nrows(A, ctx); i++) {
+    for (int j = 0; j < gr_mat_ncols(A, ctx); j++) {
       if (i >= j) {
         error = gr_set(gr_mat_entry_ptr(A, i, j, ctx), gr_mat_entry_srcptr(col, i - j, 0, ctx), ctx);
         if (error != 0) { return error; }
@@ -81,16 +81,16 @@ int gr_mat_random_toeplitz(gr_mat_t A, int n, int m, flint_rand_t state, gr_ctx_
   return 0;
 }
 
-int gr_mat_quasi_toeplitz_rank(gr_mat_t A, int n, int m, int nb_rand, flint_rand_t state, gr_ctx_t ctx) {
+int gr_mat_quasi_toeplitz_rank(gr_mat_t A, int nb_rand, flint_rand_t state, gr_ctx_t ctx) {
   gr_mat_t temp;
   int error;
   if (nb_rand < 0) { return 1; }
 
-  error = gr_mat_random_quasi_toepitz(A, n, m, state, ctx);
+  error = gr_mat_random_quasi_toepitz(A, state, ctx);
   if (error != 0) { return error; }
-  for (int i = 0; i < nb_rand; i++) {
-    gr_mat_init(temp, n, m, ctx);
-    error = gr_mat_random_quasi_toepitz(temp, n, m, state, ctx);
+  for (int i = 1; i < nb_rand; i++) {
+    gr_mat_init(temp, gr_mat_nrows(A, ctx), gr_mat_ncols(A, ctx), ctx);
+    error = gr_mat_random_quasi_toepitz(temp, state, ctx);
     if (error != 0) {
       gr_mat_clear(temp, ctx);
       return error;

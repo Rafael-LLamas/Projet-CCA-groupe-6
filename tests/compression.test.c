@@ -44,7 +44,7 @@ int test_compress_toeplitz(int nb_iter) {
   while (i < nb_iter) {
     gr_mat_t A, G, H;
     gr_mat_init(A, n, n, ctx);
-    status |= gr_mat_random_toeplitz(A, n, n, state, ctx);
+    status |= gr_mat_random_toeplitz(A, state, ctx);
     status |= gr_mat_G_H(G, H, A, DISP_PLUS, ctx);
 
     slong old_rank = gr_mat_ncols(G, ctx);
@@ -81,7 +81,7 @@ int test_compress_after_addition(int nb_iter) {
     gr_mat_init(I, n, n, ctx);
     gr_mat_init(Ref, n, n, ctx);
 
-    status |= gr_mat_random_toeplitz(A, n, n, state, ctx);
+    status |= gr_mat_random_toeplitz(A, state, ctx);
     status |= gr_mat_one(I, ctx);
     status |= gr_mat_add(Ref, A, I, ctx);
 
@@ -125,7 +125,7 @@ int test_compress_after_multiplication(int nb_iter) {
     gr_mat_init(A, n, n, ctx);
     gr_mat_init(I, n, n, ctx);
 
-    status |= gr_mat_random_toeplitz(A, n, n, state, ctx);
+    status |= gr_mat_random_toeplitz(A, state, ctx);
     status |= gr_mat_one(I, ctx);
 
     status |= gr_mat_G_H(G_a, H_a, A, DISP_PLUS, ctx);
