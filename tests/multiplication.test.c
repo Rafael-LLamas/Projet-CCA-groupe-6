@@ -17,12 +17,12 @@ int test_multiplication_toeplitz() {
   flint_rand_init(state);
   flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
   while (i < 10) {
-    gr_mat_t A, B, C, G_a, H_a, G_b, H_b, G_c, H_c;
+    gr_mat_t A, B, C, D, G_a, H_a, G_b, H_b, G_c, H_c;
     gr_ctx_t ctx;
 
-    gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
-    gr_mat_init(A, 5, 5, ctx);
-    gr_mat_init(B, 5, 5, ctx);
+    gr_ctx_init_nmod(ctx, 13);
+    gr_mat_init(A, 2, 2, ctx);
+    gr_mat_init(B, 2, 3, ctx);
     error = gr_mat_random_toeplitz(A, state, ctx);
     if (error != 0) {
       gr_mat_clear(A, ctx);
@@ -47,6 +47,7 @@ int test_multiplication_toeplitz() {
     gr_mat_print(B, ctx);
     flint_printf("\n\n");
     gr_mat_init(C, gr_mat_nrows(A, ctx), gr_mat_ncols(B, ctx), ctx);
+    gr_mat_init(D, gr_mat_nrows(A, ctx), gr_mat_ncols(B, ctx), ctx);
     error = gr_mat_G_H(G_a, H_a, A, DISP_PLUS, ctx);
     if (error != 0) {
       gr_mat_clear(C, ctx);
@@ -104,7 +105,7 @@ int test_multiplication_toeplitz() {
       flint_rand_clear(state);
       return error;
     }
-    error = gr_mat_reconstruct_A(C, G_c, H_c, DISP_PLUS, ctx);
+    error = gr_mat_reconstruct_A(D, G_c, H_c, DISP_PLUS, ctx);
     if (error != 0) {
       gr_mat_clear(C, ctx);
       gr_mat_clear(A, ctx);
@@ -119,10 +120,11 @@ int test_multiplication_toeplitz() {
       flint_rand_clear(state);
       return error;
     }
-    flint_printf("Matrice C = \n");
-    gr_mat_print(C, ctx);
+    flint_printf("Matrice D = \n");
+    gr_mat_print(D, ctx);
     flint_printf("\n");
-
+    flint_printf("\nSont egaux = ");
+    truth_println(gr_mat_equal(D, C, ctx));
     gr_mat_clear(C, ctx);
     gr_mat_clear(A, ctx);
     gr_mat_clear(B, ctx);
@@ -146,14 +148,15 @@ int test_multiplication_quasi_toeplitz() {
   flint_rand_init(state);
   flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
   while (i < 10) {
-    gr_mat_t A, B, C, G_a, H_a, G_b, H_b, G_c, H_c;
+    gr_mat_t A, B, C, D, G_a, H_a, G_b, H_b, G_c, H_c;
     gr_ctx_t ctx;
 
-    gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
-    gr_mat_init(A, 5, 5, ctx);
-    gr_mat_init(B, 5, 5, ctx);
+    gr_ctx_init_nmod(ctx, 13);
+    gr_mat_init(A, 12, 5, ctx);
+    gr_mat_init(B, 5, 13, ctx);
     error = gr_mat_random_quasi_toepitz(A, state, ctx);
     if (error != 0) {
+      flint_printf("1");
       gr_mat_clear(A, ctx);
       gr_mat_clear(B, ctx);
       gr_ctx_clear(ctx);
@@ -162,7 +165,7 @@ int test_multiplication_quasi_toeplitz() {
     }
     error = gr_mat_random_quasi_toepitz(B, state, ctx);
     if (error != 0) {
-
+      flint_printf("2");
       gr_mat_clear(A, ctx);
       gr_mat_clear(B, ctx);
       gr_ctx_clear(ctx);
@@ -176,6 +179,7 @@ int test_multiplication_quasi_toeplitz() {
     gr_mat_print(B, ctx);
     flint_printf("\n\n");
     gr_mat_init(C, gr_mat_nrows(A, ctx), gr_mat_ncols(B, ctx), ctx);
+    gr_mat_init(D, gr_mat_nrows(A, ctx), gr_mat_ncols(B, ctx), ctx);
     error = gr_mat_G_H(G_a, H_a, A, DISP_PLUS, ctx);
     if (error != 0) {
       gr_mat_clear(C, ctx);
@@ -233,7 +237,7 @@ int test_multiplication_quasi_toeplitz() {
       flint_rand_clear(state);
       return error;
     }
-    error = gr_mat_reconstruct_A(C, G_c, H_c, DISP_PLUS, ctx);
+    error = gr_mat_reconstruct_A(D, G_c, H_c, DISP_PLUS, ctx);
     if (error != 0) {
       gr_mat_clear(C, ctx);
       gr_mat_clear(A, ctx);
@@ -248,11 +252,14 @@ int test_multiplication_quasi_toeplitz() {
       flint_rand_clear(state);
       return error;
     }
-    flint_printf("Matrice C = \n");
-    gr_mat_print(C, ctx);
+    flint_printf("Matrice D = \n");
+    gr_mat_print(D, ctx);
     flint_printf("\n");
+    flint_printf("\nSont egaux = ");
+    truth_println(gr_mat_equal(D, C, ctx));
 
     gr_mat_clear(C, ctx);
+    gr_mat_clear(D, ctx);
     gr_mat_clear(A, ctx);
     gr_mat_clear(B, ctx);
     gr_mat_clear(G_a, ctx);
