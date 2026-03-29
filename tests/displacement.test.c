@@ -288,7 +288,7 @@ int test_G_H_2x2_execution() {
   gr_mat_t TEMP, t1, t2;
   gr_mat_init(TEMP, 2, 2, ctx);
   status |= gr_mat_zero(TEMP, ctx);
-  if (status == GR_UNABLE) status = GR_TEST_FAIL;
+  if (status != GR_UNABLE) status = GR_TEST_FAIL;
   status |= gr_mat_G_H(t1, t2, TEMP, DISP_PLUS, ctx);
   if (status == GR_UNABLE) status = GR_SUCCESS;
   
