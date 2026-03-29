@@ -168,26 +168,28 @@ int gr_mat_G_H(gr_mat_t G, gr_mat_t H, gr_mat_t A, disp_type_t type, gr_ctx_t ct
   gr_mat_init(U, m, n, ctx);
 
   status |= gr_mat_lu(&rank, P, LU, D, 0, ctx); // LU decomposition
-  
+
   if (rank < 1) {
-      rank = 1;
-      status = GR_UNABLE;
+    rank = 1;
+    status = GR_UNABLE;
   }
 
   gr_mat_init(G, m, rank, ctx);
   gr_mat_init(H, n, rank, ctx);
 
-  status |= gr_mat_lu_detach(L, U, LU, ctx); // detach the LU format to L and U
+  if (status == GR_SUCCESS) {
+    status |= gr_mat_lu_detach(L, U, LU, ctx); // detach the LU format to L and U
 
-  // copy the values from L to G with correct permutation
-  for (slong i = 0; i < m; i++)
-    for (slong j = 0; j < rank; j++)
-      status |= gr_set(gr_mat_entry_ptr(G, P[i], j, ctx), gr_mat_entry_srcptr(L, i, j, ctx), ctx);
+    // copy the values from L to G with correct permutation
+    for (slong i = 0; i < m; i++)
+      for (slong j = 0; j < rank; j++)
+        status |= gr_set(gr_mat_entry_ptr(G, P[i], j, ctx), gr_mat_entry_srcptr(L, i, j, ctx), ctx);
 
-  // copy the values from U to H
-  for (slong i = 0; i < rank; i++)
-    for (slong j = 0; j < n; j++)
-      status |= gr_set(gr_mat_entry_ptr(H, j, i, ctx), gr_mat_entry_srcptr(U, i, j, ctx), ctx);
+    // copy the values from U to H
+    for (slong i = 0; i < rank; i++)
+      for (slong j = 0; j < n; j++)
+        status |= gr_set(gr_mat_entry_ptr(H, j, i, ctx), gr_mat_entry_srcptr(U, i, j, ctx), ctx);
+  }
 
   flint_free(P);
   gr_mat_clear(D, ctx);

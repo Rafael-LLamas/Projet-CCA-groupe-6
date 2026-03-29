@@ -279,7 +279,7 @@ int test_quasi_toeplitz_to_G_H() {
   return res;
 }
 
-int test_displacement_2x2_execution() {
+int test_G_H_2x2_execution() {
   int status = GR_SUCCESS;
   gr_ctx_t ctx;
   gr_ctx_init_nmod(ctx, 65537);
@@ -566,8 +566,8 @@ int main(int argc, char *argv[]) {
     ok = test_toeplitz_reconstruction();
   } else if (strcmp("quasi_toeplitz_reconstruction", argv[1]) == 0) {
     ok = test_quasi_toeplitz_reconstruction();
-  } else if (strcmp("temp", argv[1]) == 0) {
-    ok = test_displacement_2x2_execution();
+  } else if (strcmp("G_H_2x2_execution", argv[1]) == 0) {
+    ok = test_G_H_2x2_execution();
   } else {
     fprintf(stderr, "Error: test \"%s\" not found!\n", argv[1]);
     exit(EXIT_FAILURE);
