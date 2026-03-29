@@ -168,6 +168,15 @@ int gr_mat_G_H(gr_mat_t G, gr_mat_t H, gr_mat_t A, disp_type_t type, gr_ctx_t ct
   gr_mat_init(U, m, n, ctx);
 
   status |= gr_mat_lu(&rank, P, LU, D, 0, ctx); // LU decomposition
+  
+  if (rank < 1) {
+      flint_free(P);
+      gr_mat_clear(D, ctx);
+      gr_mat_clear(LU, ctx);
+      gr_mat_clear(L, ctx);
+      gr_mat_clear(U, ctx);
+      return GR_UNABLE;
+  }
 
   gr_mat_init(G, m, rank, ctx);
   gr_mat_init(H, n, rank, ctx);
