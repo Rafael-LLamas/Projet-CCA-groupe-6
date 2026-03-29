@@ -5,10 +5,7 @@
 -Toeplitz Inverse
 
 ++ Implementation ++
--Inverse
-
-++ Corrections ++
--Multiplication
+-Inverse (rang(G*H^T) = nb_cols(G'), rang(G*H^T) = nb_cols(H'),G*H^t = G'*H^T')
 
 ++ Documents ++
 https://theses.hal.science/tel-00688388v1/document

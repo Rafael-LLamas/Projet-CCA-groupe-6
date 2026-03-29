@@ -105,69 +105,192 @@ int gr_mat_mul_generator(gr_mat_t G_c, gr_mat_t H_c, gr_mat_t G_a, gr_mat_t H_a,
 
   // 1. W = Z * A * Z^T * G_b
   error = gr_mat_apply_Zt(Tmp, G_b, ctx);
-  if (error != 0) { return error; }
+  if (error != 0) {
+    gr_mat_clear(W, ctx);
+    gr_mat_clear(V, ctx);
+    gr_mat_clear(a, ctx);
+    gr_mat_clear(b, ctx);
+    gr_mat_clear(Tmp, ctx);
+    gr_mat_clear(LastCol_m, ctx);
+    gr_mat_clear(LastCol_k, ctx);
+    return error;
+  }
   error = gr_mat_mul_vector(W, G_a, H_a, Tmp, ctx);
-  if (error != 0) { return error; }
+  if (error != 0) {
+    gr_mat_clear(W, ctx);
+    gr_mat_clear(V, ctx);
+    gr_mat_clear(a, ctx);
+    gr_mat_clear(b, ctx);
+    gr_mat_clear(Tmp, ctx);
+    gr_mat_clear(LastCol_m, ctx);
+    gr_mat_clear(LastCol_k, ctx);
+    return error;
+  }
   error = gr_mat_apply_Z(W, W, ctx);
-  if (error != 0) { return error; }
+  if (error != 0) {
+    gr_mat_clear(W, ctx);
+    gr_mat_clear(V, ctx);
+    gr_mat_clear(a, ctx);
+    gr_mat_clear(b, ctx);
+    gr_mat_clear(Tmp, ctx);
+    gr_mat_clear(LastCol_m, ctx);
+    gr_mat_clear(LastCol_k, ctx);
+    return error;
+  }
 
   // 2. V = B^T * H_a (Le générateur de B^T est {H_b, G_b})
   error = gr_mat_mul_vector(V, H_b, G_b, H_a, ctx);
-  if (error != 0) { return error; }
+  if (error != 0) {
+    gr_mat_clear(W, ctx);
+    gr_mat_clear(V, ctx);
+    gr_mat_clear(a, ctx);
+    gr_mat_clear(b, ctx);
+    gr_mat_clear(Tmp, ctx);
+    gr_mat_clear(LastCol_m, ctx);
+    gr_mat_clear(LastCol_k, ctx);
+    return error;
+  }
 
   // 3. Correction colonnes
   // Vecteur e_{m-1} pour la dimension de A
   error = gr_one(gr_mat_entry_ptr(LastCol_m, m - 1, 0, ctx), ctx);
-  if (error != 0) { return error; }
+  if (error != 0) {
+    gr_mat_clear(W, ctx);
+    gr_mat_clear(V, ctx);
+    gr_mat_clear(a, ctx);
+    gr_mat_clear(b, ctx);
+    gr_mat_clear(Tmp, ctx);
+    gr_mat_clear(LastCol_m, ctx);
+    gr_mat_clear(LastCol_k, ctx);
+    return error;
+  }
   error = gr_mat_mul_vector(a, G_a, H_a, LastCol_m, ctx);
-  if (error != 0) { return error; }
+  if (error != 0) {
+    gr_mat_clear(W, ctx);
+    gr_mat_clear(V, ctx);
+    gr_mat_clear(a, ctx);
+    gr_mat_clear(b, ctx);
+    gr_mat_clear(Tmp, ctx);
+    gr_mat_clear(LastCol_m, ctx);
+    gr_mat_clear(LastCol_k, ctx);
+    return error;
+  }
   error = gr_mat_apply_Z(a, a, ctx);
-  if (error != 0) { return error; }
+  if (error != 0) {
+    gr_mat_clear(W, ctx);
+    gr_mat_clear(V, ctx);
+    gr_mat_clear(a, ctx);
+    gr_mat_clear(b, ctx);
+    gr_mat_clear(Tmp, ctx);
+    gr_mat_clear(LastCol_m, ctx);
+    gr_mat_clear(LastCol_k, ctx);
+    return error;
+  }
 
   // Vecteur e_{k-1} pour la dimension de B^T
   error = gr_one(gr_mat_entry_ptr(LastCol_k, k - 1, 0, ctx), ctx);
-  if (error != 0) { return error; }
+  if (error != 0) {
+    gr_mat_clear(W, ctx);
+    gr_mat_clear(V, ctx);
+    gr_mat_clear(a, ctx);
+    gr_mat_clear(b, ctx);
+    gr_mat_clear(Tmp, ctx);
+    gr_mat_clear(LastCol_m, ctx);
+    gr_mat_clear(LastCol_k, ctx);
+    return error;
+  }
   error = gr_mat_mul_vector(b, H_b, G_b, LastCol_k, ctx);
-  if (error != 0) { return error; }
+  if (error != 0) {
+    gr_mat_clear(W, ctx);
+    gr_mat_clear(V, ctx);
+    gr_mat_clear(a, ctx);
+    gr_mat_clear(b, ctx);
+    gr_mat_clear(Tmp, ctx);
+    gr_mat_clear(LastCol_m, ctx);
+    gr_mat_clear(LastCol_k, ctx);
+    return error;
+  }
   error = gr_mat_apply_Z(b, b, ctx);
-  if (error != 0) { return error; }
+  if (error != 0) {
+    gr_mat_clear(W, ctx);
+    gr_mat_clear(V, ctx);
+    gr_mat_clear(a, ctx);
+    gr_mat_clear(b, ctx);
+    gr_mat_clear(Tmp, ctx);
+    gr_mat_clear(LastCol_m, ctx);
+    gr_mat_clear(LastCol_k, ctx);
+    return error;
+  }
+
+  gr_mat_clear(Tmp, ctx);
+  gr_mat_clear(LastCol_m, ctx);
+  gr_mat_clear(LastCol_k, ctx);
 
   // 4. Concaténation (G_c: n x (ra+rb+1), H_c: k x (ra+rb+1))
-  gr_mat_t G_res, H_res, G_temp, H_temp;
-  gr_mat_init(G_res, n, gr_mat_ncols(G_a, ctx) + gr_mat_ncols(W, ctx) + 1, ctx);
+  gr_mat_t G_temp, H_temp;
+  gr_mat_init(G_c, n, gr_mat_ncols(G_a, ctx) + gr_mat_ncols(W, ctx) + 1, ctx);
   gr_mat_init(G_temp, n, gr_mat_ncols(G_a, ctx) + gr_mat_ncols(W, ctx), ctx);
-  gr_mat_init(H_res, k, gr_mat_ncols(V, ctx) + gr_mat_ncols(H_b, ctx) + 1, ctx);
+  gr_mat_init(H_c, k, gr_mat_ncols(V, ctx) + gr_mat_ncols(H_b, ctx) + 1, ctx);
   gr_mat_init(H_temp, k, gr_mat_ncols(V, ctx) + gr_mat_ncols(H_b, ctx), ctx);
 
   error = gr_mat_concat_horizontal(G_temp, G_a, W, ctx);
-  if (error != 0) { return error; }
-  error = gr_mat_concat_horizontal(G_res, G_temp, a, ctx);
-  if (error != 0) { return error; }
+  if (error != 0) {
+    gr_mat_clear(W, ctx);
+    gr_mat_clear(V, ctx);
+    gr_mat_clear(a, ctx);
+    gr_mat_clear(b, ctx);
+    gr_mat_clear(G_temp, ctx);
+    gr_mat_clear(H_temp, ctx);
+    return error;
+  }
+  error = gr_mat_concat_horizontal(G_c, G_temp, a, ctx);
+  if (error != 0) {
+    gr_mat_clear(W, ctx);
+    gr_mat_clear(V, ctx);
+    gr_mat_clear(a, ctx);
+    gr_mat_clear(b, ctx);
+    gr_mat_clear(G_temp, ctx);
+    gr_mat_clear(H_temp, ctx);
+    return error;
+  }
 
   error = gr_mat_neg(b, b, ctx);
-  if (error != 0) { return error; }
+  if (error != 0) {
+    gr_mat_clear(W, ctx);
+    gr_mat_clear(V, ctx);
+    gr_mat_clear(a, ctx);
+    gr_mat_clear(b, ctx);
+    gr_mat_clear(G_temp, ctx);
+    gr_mat_clear(H_temp, ctx);
+    return error;
+  }
   error = gr_mat_concat_horizontal(H_temp, V, H_b, ctx);
-  if (error != 0) { return error; }
-  error = gr_mat_concat_horizontal(H_res, H_temp, b, ctx);
-  if (error != 0) { return error; }
-
-  // On remplace les anciennes matrices par les nouvelles
-  error = gr_mat_init_set(G_c, G_res, ctx);
-  if (error != 0) return error;
-  error = gr_mat_init_set(H_c, H_res, ctx);
-  if (error != 0) return error;
+  if (error != 0) {
+    gr_mat_clear(W, ctx);
+    gr_mat_clear(V, ctx);
+    gr_mat_clear(a, ctx);
+    gr_mat_clear(b, ctx);
+    gr_mat_clear(G_temp, ctx);
+    gr_mat_clear(H_temp, ctx);
+    return error;
+  }
+  error = gr_mat_concat_horizontal(H_c, H_temp, b, ctx);
+  if (error != 0) {
+    gr_mat_clear(W, ctx);
+    gr_mat_clear(V, ctx);
+    gr_mat_clear(a, ctx);
+    gr_mat_clear(b, ctx);
+    gr_mat_clear(G_temp, ctx);
+    gr_mat_clear(H_temp, ctx);
+    return error;
+  }
 
   gr_mat_clear(W, ctx);
   gr_mat_clear(V, ctx);
   gr_mat_clear(a, ctx);
   gr_mat_clear(b, ctx);
-  gr_mat_clear(Tmp, ctx);
-  gr_mat_clear(LastCol_m, ctx);
-  gr_mat_clear(LastCol_k, ctx);
   gr_mat_clear(G_temp, ctx);
   gr_mat_clear(H_temp, ctx);
-  gr_mat_clear(G_res, ctx);
-  gr_mat_clear(H_res, ctx);
 
   return GR_SUCCESS;
 }

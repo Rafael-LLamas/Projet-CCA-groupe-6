@@ -25,8 +25,8 @@ int test_addition_generateurs_toeplitz_square() {
     gr_mat_init(A1, N, N, ctx);
     gr_mat_init(B1, N, N, ctx);
     gr_mat_init(C1, N, N, ctx);
-    FLINT_CHECK(gr_mat_random_toeplitz(A1, gr_mat_nrows(A1, ctx), gr_mat_ncols(A1, ctx), state, ctx));
-    FLINT_CHECK(gr_mat_random_toeplitz(B1, gr_mat_nrows(B1, ctx), gr_mat_ncols(B1, ctx), state, ctx));
+    FLINT_CHECK(gr_mat_random_toeplitz(A1, state, ctx));
+    FLINT_CHECK(gr_mat_random_toeplitz(B1, state, ctx));
     FLINT_CHECK(gr_mat_add(C1, A1, B1, ctx));
     flint_printf("A1 = \n");
     gr_mat_print(A1, ctx);

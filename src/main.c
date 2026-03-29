@@ -12,6 +12,7 @@
 #include "displacement_matrices.h"
 #include "multiplication.h"
 #include "random_toeplitz.h"
+#include "toeplitz_inverse.h"
 
 // --- GESTION DU TEMPS ---
 #ifdef _WIN32
@@ -146,7 +147,6 @@ int benchmark_multiplication() {
 
     double toe_toe_mine[iterations], toe_toe_flint[iterations];
     double toe_vec_mine[iterations], toe_vec_flint[iterations];
-    double rand_vec_mine[iterations], rand_vec_flint[iterations];
 
     for (int i = 0; i < iterations; i++) {
       gr_mat_t A, B, C, X, Res_V, G_a, H_a, G_b, H_b, G_c, H_c;
@@ -158,11 +158,11 @@ int benchmark_multiplication() {
       gr_mat_init(Res_V, ntemp, 1, ctx);
 
       if (rank != -1) {
-        error = gr_mat_quasi_toeplitz_rank(A, ntemp, mtemp, rank, state, ctx);
-        error = gr_mat_quasi_toeplitz_rank(B, mtemp, ktemp, rank, state, ctx);
+        error = gr_mat_quasi_toeplitz_rank(A, rank, state, ctx);
+        error = gr_mat_quasi_toeplitz_rank(B, rank, state, ctx);
       } else {
-        error = gr_mat_random_toeplitz(A, ntemp, mtemp, state, ctx);
-        error = gr_mat_random_toeplitz(B, mtemp, ktemp, state, ctx);
+        error = gr_mat_random_toeplitz(A, state, ctx);
+        error = gr_mat_random_toeplitz(B, state, ctx);
       }
 
       error = gr_mat_G_H(G_a, H_a, A, DISP_PLUS, ctx);
@@ -275,9 +275,9 @@ int benchmark_displacement() {
       gr_mat_init(A_rec, cur_n, cur_n, ctx);
 
       if (rank != -1) {
-        error = gr_mat_quasi_toeplitz_rank(A, cur_n, cur_n, rank, state, ctx);
+        error = gr_mat_quasi_toeplitz_rank(A, rank, state, ctx);
       } else {
-        error = gr_mat_random_toeplitz(A, cur_n, cur_n, state, ctx);
+        error = gr_mat_random_toeplitz(A, state, ctx);
       }
 
       double start = get_time_ms();
@@ -368,12 +368,12 @@ int benchmark_addition() {
       gr_mat_init(G_c, 0, 0, ctx);
       gr_mat_init(H_c, 0, 0, ctx);
       if (rank != -1) {
-        error = gr_mat_quasi_toeplitz_rank(A, cur_n, cur_m, rank, state, ctx);
-        error = gr_mat_quasi_toeplitz_rank(B, cur_n, cur_m, rank, state, ctx);
+        error = gr_mat_quasi_toeplitz_rank(A, rank, state, ctx);
+        error = gr_mat_quasi_toeplitz_rank(B, rank, state, ctx);
 
       } else {
-        error = gr_mat_random_toeplitz(A, cur_n, cur_m, state, ctx);
-        error = gr_mat_random_toeplitz(B, cur_n, cur_m, state, ctx);
+        error = gr_mat_random_toeplitz(A, state, ctx);
+        error = gr_mat_random_toeplitz(B, state, ctx);
       }
       error = gr_mat_G_H(G_a, H_a, A, DISP_PLUS, ctx);
       error = gr_mat_G_H(G_b, H_b, B, DISP_PLUS, ctx);
@@ -420,8 +420,6 @@ int benchmark_addition() {
   return error;
 }
 int benchmark_inversion() {
-  /*TODO : faire la comparaison entre inversion flint et inversion avec les générateur + la compression, a voir si il
-   * faut rajouter avec arda*/
   FILE *csv = fopen("bench_inversion.csv", "w");
   slong sizesn[] = {128, 1024, 4096};
   slong sizesm[] = {128, 1024, 4096};
@@ -440,7 +438,7 @@ int benchmark_inversion() {
 
   int iterations = (iteration != -1) ? iteration : 10;
   int error = GR_SUCCESS;
-  fprintf(csv, "N,M,Iteration,Gen_Time_ms,Flint_Dense_Time_ms\n");
+  fprintf(csv, "N,M,Iteration,Gen_Time_ms,Flint_Time_ms\n");
 
   gr_ctx_t ctx;
   flint_rand_t state;
@@ -448,7 +446,7 @@ int benchmark_inversion() {
   flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
   gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
 
-  printf("\n" ANSI_COLOR_BOLD ANSI_COLOR_MAGENTA "=== BENCHMARK ADDITION (%d runs) ===" ANSI_COLOR_RESET "\n",
+  printf("\n" ANSI_COLOR_BOLD ANSI_COLOR_MAGENTA "=== BENCHMARK INVERSSION (%d runs) ===" ANSI_COLOR_RESET "\n",
          iterations);
 
   for (int s = 0; s < num_sizes; s++) {
@@ -460,35 +458,28 @@ int benchmark_inversion() {
     printf("--------------|--------------|--------------\n");
 
     for (int i = 0; i < iterations; i++) {
-      gr_mat_t C, A, B, G_a, G_b, H_a, H_b, G_c, H_c;
+      gr_mat_t A, B, G_a, G_b, H_a, H_b;
       gr_mat_init(A, cur_n, cur_m, ctx);
       gr_mat_init(B, cur_n, cur_m, ctx);
-      gr_mat_init(C, cur_n, cur_m, ctx);
       gr_mat_init(G_a, 0, 0, ctx);
       gr_mat_init(H_a, 0, 0, ctx);
-      gr_mat_init(G_b, 0, 0, ctx);
-      gr_mat_init(H_b, 0, 0, ctx);
-      gr_mat_init(G_c, 0, 0, ctx);
-      gr_mat_init(H_c, 0, 0, ctx);
       if (rank != -1) {
-        error = gr_mat_quasi_toeplitz_rank(A, cur_n, cur_m, rank, state, ctx);
-        error = gr_mat_quasi_toeplitz_rank(B, cur_n, cur_m, rank, state, ctx);
-
+        error = gr_mat_quasi_toeplitz_rank(A, rank, state, ctx);
       } else {
-        error = gr_mat_random_toeplitz(A, cur_n, cur_m, state, ctx);
-        error = gr_mat_random_toeplitz(B, cur_n, cur_m, state, ctx);
+        error = gr_mat_random_toeplitz(A, state, ctx);
       }
       error = gr_mat_G_H(G_a, H_a, A, DISP_PLUS, ctx);
-      error = gr_mat_G_H(G_b, H_b, B, DISP_PLUS, ctx);
+      error = gr_mat_init_set(G_b, G_a, ctx);
+      error = gr_mat_init_set(H_b, H_a, ctx);
 
       double t1 = get_time_ms();
-      error = gr_mat_addition_generateur(G_c, H_c, G_a, H_a, G_b, H_b, ctx);
+      error = gr_toeplitz_inverse(G_b, H_b, G_a, H_a, ctx);
       gen_times[i] = get_time_ms() - t1;
 
       flint_times[i] = 0;
       if (flint) {
         double t3 = get_time_ms();
-        error = gr_mat_add(C, A, B, ctx);
+        error = gr_mat_inv(B, A, ctx);
         flint_times[i] = get_time_ms() - t3;
       }
 
@@ -498,13 +489,10 @@ int benchmark_inversion() {
 
       gr_mat_clear(A, ctx);
       gr_mat_clear(B, ctx);
-      gr_mat_clear(C, ctx);
       gr_mat_clear(G_a, ctx);
       gr_mat_clear(H_a, ctx);
       gr_mat_clear(G_b, ctx);
       gr_mat_clear(H_b, ctx);
-      gr_mat_clear(G_c, ctx);
-      gr_mat_clear(H_c, ctx);
     }
 
     double avg_gen, med_gen, avg_flint = 0, med_flint = 0;
@@ -512,9 +500,9 @@ int benchmark_inversion() {
     if (flint) compute_stats(flint_times, iterations, &avg_flint, &med_flint);
 
     printf("\r" ANSI_CLEAR_LINE);
-    printf(ANSI_COLOR_GREEN " Generators" ANSI_COLOR_RESET "   |  %-.3e   |  %-.3e \n", avg_gen, med_gen);
+    printf(ANSI_COLOR_GREEN " Generators Invert" ANSI_COLOR_RESET "   |  %-.3e   |  %-.3e \n", avg_gen, med_gen);
     if (flint)
-      printf(ANSI_COLOR_YELLOW " Flint Dense" ANSI_COLOR_RESET "  |  %-.3e   |  %-.3e \n", "", avg_flint, med_flint);
+      printf(ANSI_COLOR_YELLOW " Flint invert" ANSI_COLOR_RESET "  |  %-.3e   |  %-.3e \n", "", avg_flint, med_flint);
   }
 
   fclose(csv);
