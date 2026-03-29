@@ -84,9 +84,10 @@ target_link_libraries(test_utility PRIVATE project_lib)
 add_test(NAME Utility.LU_detatch                                    COMMAND test_utility LU_detatch)
 add_test(NAME Utility.LU_detatch2                                   COMMAND test_utility LU_detatch2)
 
-add_executable(test_random_toeplitz tests/random_toeplitz.test.c)
-target_link_libraries(test_random_toeplitz PRIVATE project_lib)
+add_executable(test_random tests/random_toeplitz.test.c)
+target_link_libraries(test_random PRIVATE project_lib)
 add_test(NAME Random.gr_mat_random_toeplitz                         COMMAND test_random_toeplitz gr_mat_random_toeplitz)
+add_test(NAME Random.gr_mat_random_quasi_toepitz                         COMMAND test_random_toeplitz gr_mat_random_quasi_toepitz)
 
 add_executable(test_operations_multiplication tests/multiplication.test.c)
 target_link_libraries(test_operations_multiplication PRIVATE project_lib)

@@ -103,6 +103,5 @@ int gr_mat_quasi_toeplitz_rank(gr_mat_t A, int nb_rand, flint_rand_t state, gr_c
     gr_mat_clear(temp, ctx);
   }
 
-  flint_rand_clear(state);
   return 0;
 }

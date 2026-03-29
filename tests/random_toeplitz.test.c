@@ -19,9 +19,9 @@ int test_random_toepltiz() {
     int error;
     gr_mat_t ran;
 
-    gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
+    gr_ctx_init_nmod(ctx, 13);
     slong *rank = flint_malloc(sizeof(slong));
-    gr_mat_init(ran, 5, 5, ctx);
+    gr_mat_init(ran, 1, 2, ctx);
     error = gr_mat_random_toeplitz(ran, state, ctx);
     if (error != 0) {
       gr_mat_clear(ran, ctx);
@@ -41,8 +41,6 @@ int test_random_toepltiz() {
     flint_printf("----------------------------------------------\nResultat toeplitz = \n");
     gr_mat_print(ran, ctx);
     flint_printf("\n");
-    flint_printf("rank = %wd \n", *rank);
-    gr_mat_clear(ran, ctx);
     gr_ctx_clear(ctx);
     flint_free(rank);
     i++;
@@ -60,10 +58,10 @@ int test_random_quasi_toeplitz() {
     gr_ctx_t ctx;
     int error;
     gr_mat_t ran, D;
-
-    gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
+    // n_randprime(state, 64, 1)
+    gr_ctx_init_nmod(ctx, 13);
     slong *rank = flint_malloc(sizeof(slong));
-    gr_mat_init(ran, 5, 5, ctx);
+    gr_mat_init(ran, 2, 5, ctx);
     error = gr_mat_quasi_toeplitz_rank(ran, 1, state, ctx);
     if (error != 0) {
       gr_mat_clear(ran, ctx);
@@ -86,7 +84,7 @@ int test_random_quasi_toeplitz() {
     flint_printf("\n");
     flint_printf("rank = %wd \n", *rank);
     gr_mat_clear(ran, ctx);
-    gr_mat_init(ran, 5, 5, ctx);
+    gr_mat_init(ran, 5, 2, ctx);
     error = gr_mat_quasi_toeplitz_rank(ran, 4, state, ctx);
     if (error != 0) {
       gr_mat_clear(ran, ctx);
@@ -113,7 +111,7 @@ int test_random_quasi_toeplitz() {
     gr_mat_print(ran, ctx);
     flint_printf("\n");
     gr_mat_clear(ran, ctx);
-    gr_mat_init(ran, 5, 5, ctx);
+    gr_mat_init(ran, 20, 5, ctx);
     error = gr_mat_quasi_toeplitz_rank(ran, 3, state, ctx);
     if (error != 0) {
       gr_mat_clear(ran, ctx);
@@ -127,7 +125,7 @@ int test_random_quasi_toeplitz() {
     gr_mat_print(ran, ctx);
     flint_printf("\n");
     gr_mat_clear(ran, ctx);
-    gr_mat_init(ran, 15, 15, ctx);
+    gr_mat_init(ran, 15, 1, ctx);
     error = gr_mat_quasi_toeplitz_rank(ran, 0, state, ctx);
     if (error != 0) {
       gr_mat_clear(ran, ctx);
@@ -136,8 +134,8 @@ int test_random_quasi_toeplitz() {
       flint_rand_clear(state);
       return error;
     }
-    gr_mat_init(D, 15, 15, ctx);
-    error = gr_mat_displacement_square_safe(D, ran, ctx);
+    gr_mat_init(D, 15, 1, ctx);
+    error = gr_mat_displacement(D, ran, DISP_PLUS, ctx);
     if (error != 0) {
       gr_mat_clear(ran, ctx);
       gr_mat_clear(D, ctx);
