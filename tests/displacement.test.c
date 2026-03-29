@@ -6,6 +6,7 @@
 #include "flint/flint.h"
 #include "flint/gr.h"
 #include "flint/gr_mat.h"
+#include "flint/gr_types.h"
 #include "flint/ulong_extras.h"
 #include "matrix_aux.h"
 #include "random_toeplitz.h"
@@ -278,6 +279,36 @@ int test_quasi_toeplitz_to_G_H() {
   return res;
 }
 
+int test_displacement_2x2_execution() {
+  int status = GR_SUCCESS;
+  gr_ctx_t ctx;
+  gr_ctx_init_nmod(ctx, 65537);
+  
+  // invalid case
+  gr_mat_t TEMP, t1, t2;
+  gr_mat_init(TEMP, 2, 2, ctx);
+  status |= gr_mat_zero(TEMP, ctx);
+  if (status == GR_UNABLE) status = GR_TEST_FAIL;
+  status |= gr_mat_G_H(t1, t2, TEMP, DISP_PLUS, ctx);
+  if (status == GR_UNABLE) status = GR_SUCCESS;
+  
+  // valid case
+  gr_mat_t A, G, H;
+  gr_mat_init(A, 2, 2, ctx);
+  status |= gr_mat_one(A, ctx);
+  status |= gr_set_ui(gr_mat_entry_ptr(A, 0, 1, ctx), 5, ctx);
+  status |= gr_mat_G_H(G, H, A, DISP_PLUS, ctx);
+  
+  gr_mat_clear(A, ctx);
+  gr_mat_clear(G, ctx);
+  gr_mat_clear(H, ctx);
+  gr_mat_clear(TEMP, ctx);
+  gr_mat_clear(t1, ctx);
+  gr_mat_clear(t2, ctx);
+  gr_ctx_clear(ctx);
+  return status;
+}
+
 int test_toeplitz_reconstruction() {
   int i = 0;
   int res = GR_SUCCESS;
@@ -535,6 +566,8 @@ int main(int argc, char *argv[]) {
     ok = test_toeplitz_reconstruction();
   } else if (strcmp("quasi_toeplitz_reconstruction", argv[1]) == 0) {
     ok = test_quasi_toeplitz_reconstruction();
+  } else if (strcmp("temp", argv[1]) == 0) {
+    ok = test_displacement_2x2_execution();
   } else {
     fprintf(stderr, "Error: test \"%s\" not found!\n", argv[1]);
     exit(EXIT_FAILURE);

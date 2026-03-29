@@ -4,7 +4,7 @@ project(model_project VERSION 0.1.0 LANGUAGES C)
 include(CTest)
 enable_testing()
 
-add_compile_options(-g -O3 -Wall)
+add_compile_options(-g -O2 -Wall)
 set(CMAKE_C_STANDARD 99)
 
 # Setting path location
@@ -78,6 +78,7 @@ add_test(NAME Displacement.toeplitz_G_H                             COMMAND test
 add_test(NAME Displacement.quasi_toeplitz_G_H                       COMMAND test_displacement quasi_toeplitz_G_H)
 add_test(NAME Displacement.toeplitz_reconstruction                  COMMAND test_displacement toeplitz_reconstruction)
 add_test(NAME Displacement.quasi_toeplitz_reconstruction            COMMAND test_displacement quasi_toeplitz_reconstruction)
+add_test(NAME Displacement.G_H_2x2_execution                        COMMAND test_displacement G_H_2x2_execution)
 
 add_executable(test_utility tests/utility.test.c)
 target_link_libraries(test_utility PRIVATE project_lib)
