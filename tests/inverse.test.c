@@ -57,75 +57,76 @@ int test_inverse_base_case() {
 }
 
 int test_inverse_2x2() {
-  int i = 0;
-  int status = GR_SUCCESS;
-  flint_rand_t state;
-  flint_rand_init(state);
-  gr_ctx_t ctx;
-  gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
-  gr_mat_t A, A_inv, G_A, H_A, G_D, H_D, Check;
-  gr_mat_init(A, 2, 2, ctx);
-  gr_mat_init(A_inv, 2, 2, ctx);
-  gr_mat_init(Check, 2, 2, ctx);
-  gr_ptr d = gr_heap_init(ctx);
-  while (i < 20) {
-    do {
-      status |= gr_mat_randtest(A, state, ctx);
-      status |= gr_mat_det(d, A, ctx);
-    } while (gr_is_zero(d, ctx) == T_TRUE);
+  // int i = 0;
+  // int status = GR_SUCCESS;
+  // flint_rand_t state;
+  // flint_rand_init(state);
+  // gr_ctx_t ctx;
+  // gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
+  // gr_mat_t A, A_inv, G_A, H_A, G_D, H_D, Check;
+  // gr_mat_init(A, 2, 2, ctx);
+  // gr_mat_init(A_inv, 2, 2, ctx);
+  // gr_mat_init(Check, 2, 2, ctx);
+  // gr_ptr d = gr_heap_init(ctx);
+  // while (i < 20) {
+  //   do {
+  //     status |= gr_mat_randtest(A, state, ctx);
+  //     status |= gr_mat_det(d, A, ctx);
+  //   } while (gr_is_zero(d, ctx) == T_TRUE);
 
-    printf("A:\n");
-    gr_mat_print(A, ctx);
-    printf("\n");
+  //   printf("A:\n");
+  //   gr_mat_print(A, ctx);
+  //   printf("\n");
 
-    status |= gr_mat_G_H(G_A, H_A, A, DISP_PLUS, ctx);
-    printf("G_A:\n");
-    gr_mat_print(G_A, ctx);
-    printf("\n");
-    printf("H_A:\n");
-    gr_mat_print(H_A, ctx);
-    printf("\n");
+  //   status |= gr_mat_G_H(G_A, H_A, A, DISP_PLUS, ctx);
+  //   printf("G_A:\n");
+  //   gr_mat_print(G_A, ctx);
+  //   printf("\n");
+  //   printf("H_A:\n");
+  //   gr_mat_print(H_A, ctx);
+  //   printf("\n");
 
-    status |= gr_toeplitz_inverse(G_D, H_D, G_A, H_A, ctx);
-    printf("G_D (generators of A_inv):\n");
-    gr_mat_print(G_D, ctx);
-    printf("\n");
-    printf("H_D (generators of A_inv):\n");
-    gr_mat_print(H_D, ctx);
-    printf("\n");
+  //   status |= gr_toeplitz_inverse(G_D, H_D, G_A, H_A, ctx);
+  //   printf("G_D (generators of A_inv):\n");
+  //   gr_mat_print(G_D, ctx);
+  //   printf("\n");
+  //   printf("H_D (generators of A_inv):\n");
+  //   gr_mat_print(H_D, ctx);
+  //   printf("\n");
 
-    status |= gr_mat_reconstruct_A(A_inv, G_D, H_D, DISP_PLUS, ctx);
-    printf("A_inv (reconstructed):\n");
-    gr_mat_print(A_inv, ctx);
-    printf("\n");
+  //   status |= gr_mat_reconstruct_A(A_inv, G_D, H_D, DISP_PLUS, ctx);
+  //   printf("A_inv (reconstructed):\n");
+  //   gr_mat_print(A_inv, ctx);
+  //   printf("\n");
 
-    status |= gr_mat_mul(Check, A, A_inv, ctx);
-    printf("Check = A * A_inv (should be I):\n");
-    gr_mat_print(Check, ctx);
-    printf("\n");
+  //   status |= gr_mat_mul(Check, A, A_inv, ctx);
+  //   printf("Check = A * A_inv (should be I):\n");
+  //   gr_mat_print(Check, ctx);
+  //   printf("\n");
 
-    if (gr_mat_is_one(Check, ctx) != T_TRUE) {
-      status = GR_TEST_FAIL;
-      gr_mat_clear(G_A, ctx);
-      gr_mat_clear(H_A, ctx);
-      gr_mat_clear(G_D, ctx);
-      gr_mat_clear(H_D, ctx);
-      break;
-    }
+  //   if (gr_mat_is_one(Check, ctx) != T_TRUE) {
+  //     status = GR_TEST_FAIL;
+  //     gr_mat_clear(G_A, ctx);
+  //     gr_mat_clear(H_A, ctx);
+  //     gr_mat_clear(G_D, ctx);
+  //     gr_mat_clear(H_D, ctx);
+  //     break;
+  //   }
 
-    gr_mat_clear(G_A, ctx);
-    gr_mat_clear(H_A, ctx);
-    gr_mat_clear(G_D, ctx);
-    gr_mat_clear(H_D, ctx);
-    i++;
-  }
-  gr_heap_clear(d, ctx);
-  gr_mat_clear(A, ctx);
-  gr_mat_clear(A_inv, ctx);
-  gr_mat_clear(Check, ctx);
-  gr_ctx_clear(ctx);
-  flint_rand_clear(state);
-  return status;
+  //   gr_mat_clear(G_A, ctx);
+  //   gr_mat_clear(H_A, ctx);
+  //   gr_mat_clear(G_D, ctx);
+  //   gr_mat_clear(H_D, ctx);
+  //   i++;
+  // }
+  // gr_heap_clear(d, ctx);
+  // gr_mat_clear(A, ctx);
+  // gr_mat_clear(A_inv, ctx);
+  // gr_mat_clear(Check, ctx);
+  // gr_ctx_clear(ctx);
+  // flint_rand_clear(state);
+  // return status;
+  return GR_TEST_FAIL;
 }
 void usage(char *argv[]) { fprintf(stderr, "Usage: %s <test_name>\n", argv[0]); }
 
