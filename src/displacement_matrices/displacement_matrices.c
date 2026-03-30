@@ -235,11 +235,11 @@ int gr_mat_reconstruct_A(gr_mat_t A, gr_mat_t G, gr_mat_t H, disp_type_t type, g
 
   if (type == DISP_MINUS) {
 
-    for (slong i = 0; i < gr_mat_ncols(A, ctx); i++) {
-      for (slong j = 0; j < gr_mat_nrows(A, ctx); j++) {
+    for (slong i = 0; i < gr_mat_ncols(G, ctx); i++) {
+      for (slong j = 0; j < gr_mat_nrows(H, ctx); j++) {
         status |= gr_zero(sum_res, ctx);
         for (slong k = 0; k < rank; k++) {
-          slong max_x = FLINT_MIN(gr_mat_ncols(A, ctx) - 1 - i, gr_mat_nrows(A, ctx) - 1 - j);
+          slong max_x = FLINT_MIN(gr_mat_ncols(G, ctx) - 1 - i, gr_mat_nrows(H, ctx) - 1 - j);
           for (slong x = 0; x <= max_x; x++) {
             status |= gr_mul(temp, gr_mat_entry_ptr(G, i + x, k, ctx), gr_mat_entry_ptr(H, j + x, k, ctx), ctx);
             status |= gr_add(sum_res, sum_res, temp, ctx);
@@ -251,21 +251,21 @@ int gr_mat_reconstruct_A(gr_mat_t A, gr_mat_t G, gr_mat_t H, disp_type_t type, g
 
   } else { // DISP_PLUS
 
-    for (slong i = 0; i < gr_mat_ncols(A, ctx); i++) {
-      for (slong j = 0; j < gr_mat_nrows(A, ctx); j++) {
-        status |= gr_zero(sum_res, ctx);
-        for (slong k = 0; k < rank; k++) {
-          slong max_x = FLINT_MIN(i, j);
-          for (slong x = 0; x <= max_x; x++) {
-            status |= gr_mul(temp, gr_mat_entry_ptr(G, i - x, k, ctx), gr_mat_entry_ptr(H, j - x, k, ctx), ctx);
-            status |= gr_add(sum_res, sum_res, temp, ctx);
+      for (slong i = 0; i < gr_mat_nrows(G, ctx); i++) { // for every element of A
+        for (slong j = 0; j < gr_mat_nrows(H, ctx); j++) {
+          status |= gr_zero(sum_res, ctx);
+          for (slong k = 0; k < rank; k++) { // Sigma - calculate this directly (L_k * U_k)[i,j]
+            slong minij = FLINT_MIN(i, j);
+            for (slong x = 0; x <= minij; x++) {
+              status |= gr_mul(temp, gr_mat_entry_ptr(G, i - x, k, ctx), gr_mat_entry_ptr(H, j - x, k, ctx), ctx);
+              status |= gr_add(sum_res, sum_res, temp, ctx);
+            }
           }
+          status |= gr_set(gr_mat_entry_ptr(A, i, j, ctx), sum_res, ctx);
         }
-        status |= gr_set(gr_mat_entry_ptr(A, i, j, ctx), sum_res, ctx);
       }
-    }
   }
-
+  
   gr_heap_clear(sum_res, ctx);
   gr_heap_clear(temp, ctx);
   return status;
