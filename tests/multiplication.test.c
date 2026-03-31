@@ -19,12 +19,15 @@ int test_multiplication_toeplitz() {
   while (i < 10) {
     gr_mat_t A, B, C, D, G_a, H_a, G_b, H_b, G_c, H_c;
     gr_ctx_t ctx;
-
-    gr_ctx_init_nmod(ctx, 13);
-    gr_mat_init(A, 2, 2, ctx);
-    gr_mat_init(B, 2, 3, ctx);
+    slong n = n_randint(state, 1000);
+    slong m = n_randint(state, 1000);
+    slong k = n_randint(state, 1000);
+    gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
+    gr_mat_init(A, n, m, ctx);
+    gr_mat_init(B, m, k, ctx);
     error = gr_mat_random_toeplitz(A, state, ctx);
     if (error != 0) {
+      flint_printf("Failed to create a Toeplitz A, FIX IT FAST\n");
       gr_mat_clear(A, ctx);
       gr_mat_clear(B, ctx);
       gr_ctx_clear(ctx);
@@ -33,29 +36,20 @@ int test_multiplication_toeplitz() {
     }
     error = gr_mat_random_toeplitz(B, state, ctx);
     if (error != 0) {
-
+      flint_printf("Failed to create a Toeplitz A, FIX IT FAST\n");
       gr_mat_clear(A, ctx);
       gr_mat_clear(B, ctx);
       gr_ctx_clear(ctx);
       flint_rand_clear(state);
       return error;
     }
-    flint_printf("A = \n");
-    gr_mat_print(A, ctx);
-    flint_printf("\n\n");
-    flint_printf("B = \n");
-    gr_mat_print(B, ctx);
-    flint_printf("\n\n");
+
     gr_mat_init(C, gr_mat_nrows(A, ctx), gr_mat_ncols(B, ctx), ctx);
     gr_mat_init(D, gr_mat_nrows(A, ctx), gr_mat_ncols(B, ctx), ctx);
     error = gr_mat_G_H(G_a, H_a, A, DISP_PLUS, ctx);
-    flint_printf("Matrice G_a = \n");
-    gr_mat_print(G_a, ctx);
-    flint_printf("\n");
-    flint_printf("Matrice H_a = \n");
-    gr_mat_print(H_a, ctx);
-    flint_printf("\n");
+
     if (error != 0) {
+      flint_printf("Failed to generate G and H of A, FIX IT FAST\n");
       gr_mat_clear(C, ctx);
       gr_mat_clear(A, ctx);
       gr_mat_clear(B, ctx);
@@ -67,13 +61,8 @@ int test_multiplication_toeplitz() {
     }
 
     error = gr_mat_G_H(G_b, H_b, B, DISP_PLUS, ctx);
-    flint_printf("Matrice G_b = \n");
-    gr_mat_print(G_a, ctx);
-    flint_printf("\n");
-    flint_printf("Matrice H_b = \n");
-    gr_mat_print(H_a, ctx);
-    flint_printf("\n");
     if (error != 0) {
+      flint_printf("Failed to generate G and H of B, FIX IT FAST\n");
       gr_mat_clear(C, ctx);
       gr_mat_clear(A, ctx);
       gr_mat_clear(B, ctx);
@@ -87,6 +76,7 @@ int test_multiplication_toeplitz() {
     }
     error = gr_mat_mul(C, A, B, ctx);
     if (error != 0) {
+      flint_printf("Failed to multiply with flint, size ??\n");
       gr_mat_clear(C, ctx);
       gr_mat_clear(A, ctx);
       gr_mat_clear(B, ctx);
@@ -98,13 +88,9 @@ int test_multiplication_toeplitz() {
       flint_rand_clear(state);
       return error;
     }
-    flint_printf(":------------------------Matrices C faite sans les générateurs---------------------------------:\n");
-    flint_printf("Matrice C = \n");
-    gr_mat_print(C, ctx);
-    flint_printf("\n");
-    flint_printf(":------------------------Matrices C faite avec les générateurs---------------------------------:\n");
     error = gr_mat_mul_generator(G_c, H_c, G_a, H_a, G_b, H_b, ctx);
     if (error != 0) {
+      flint_printf("Failed to multiply, FIX IT FAST\n");
       gr_mat_clear(C, ctx);
       gr_mat_clear(A, ctx);
       gr_mat_clear(B, ctx);
@@ -120,6 +106,7 @@ int test_multiplication_toeplitz() {
     }
     error = gr_mat_reconstruct_A(D, G_c, H_c, DISP_PLUS, ctx);
     if (error != 0) {
+      flint_printf("Failed to reconstruct D, FIX IT FAST\n");
       gr_mat_clear(C, ctx);
       gr_mat_clear(A, ctx);
       gr_mat_clear(B, ctx);
@@ -133,11 +120,41 @@ int test_multiplication_toeplitz() {
       flint_rand_clear(state);
       return error;
     }
-    flint_printf("Matrice D = \n");
-    gr_mat_print(D, ctx);
-    flint_printf("\n");
-    flint_printf("\nSont egaux = ");
-    truth_println(gr_mat_equal(D, C, ctx));
+    if (gr_mat_equal(D, C, ctx) != T_TRUE) {
+      flint_printf("C != D\n");
+      flint_printf("Matrice A = \n");
+      gr_mat_print(A, ctx);
+      flint_printf("\n");
+      flint_printf("Matrice B = \n");
+      gr_mat_print(B, ctx);
+      flint_printf("\n");
+      flint_printf("Matrice C = \n");
+      gr_mat_print(C, ctx);
+      flint_printf("\n");
+      flint_printf("Matrice G_a = \n");
+      gr_mat_print(G_a, ctx);
+      flint_printf("\n");
+      flint_printf("Matrice H_a = \n");
+      gr_mat_print(H_a, ctx);
+      flint_printf("\n");
+      flint_printf("Matrice G_b = \n");
+      gr_mat_print(G_b, ctx);
+      flint_printf("\n");
+      flint_printf("Matrice H_b = \n");
+      gr_mat_print(H_b, ctx);
+      flint_printf("\n");
+      flint_printf("Matrice G_c = \n");
+      gr_mat_print(G_c, ctx);
+      flint_printf("\n");
+      flint_printf("Matrice H_c = \n");
+      gr_mat_print(H_c, ctx);
+      flint_printf("\n");
+      flint_printf("Matrice D = \n");
+      gr_mat_print(D, ctx);
+      flint_printf("\n");
+      error = 1;
+      i = 9998;
+    }
     gr_mat_clear(C, ctx);
     gr_mat_clear(A, ctx);
     gr_mat_clear(B, ctx);
@@ -163,12 +180,15 @@ int test_multiplication_quasi_toeplitz() {
   while (i < 10) {
     gr_mat_t A, B, C, D, G_a, H_a, G_b, H_b, G_c, H_c;
     gr_ctx_t ctx;
-
-    gr_ctx_init_nmod(ctx, 13);
-    gr_mat_init(A, 12, 5, ctx);
-    gr_mat_init(B, 5, 13, ctx);
+    slong n = n_randint(state, 1000);
+    slong m = n_randint(state, 1000);
+    slong k = n_randint(state, 1000);
+    gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
+    gr_mat_init(A, n, m, ctx);
+    gr_mat_init(B, m, k, ctx);
     error = gr_mat_random_quasi_toepitz(A, state, ctx);
     if (error != 0) {
+      flint_printf("Failed to create a quasi Toeplitz A, FIX IT FAST\n");
       gr_mat_clear(A, ctx);
       gr_mat_clear(B, ctx);
       gr_ctx_clear(ctx);
@@ -177,22 +197,18 @@ int test_multiplication_quasi_toeplitz() {
     }
     error = gr_mat_random_quasi_toepitz(B, state, ctx);
     if (error != 0) {
+      flint_printf("Failed to create a quasi Toeplitz B, FIX IT FAST\n");
       gr_mat_clear(A, ctx);
       gr_mat_clear(B, ctx);
       gr_ctx_clear(ctx);
       flint_rand_clear(state);
       return error;
     }
-    flint_printf("A = \n");
-    gr_mat_print(A, ctx);
-    flint_printf("\n\n");
-    flint_printf("B = \n");
-    gr_mat_print(B, ctx);
-    flint_printf("\n\n");
     gr_mat_init(C, gr_mat_nrows(A, ctx), gr_mat_ncols(B, ctx), ctx);
     gr_mat_init(D, gr_mat_nrows(A, ctx), gr_mat_ncols(B, ctx), ctx);
     error = gr_mat_G_H(G_a, H_a, A, DISP_PLUS, ctx);
     if (error != 0) {
+      flint_printf("Failed to generate G and H of A, FIX IT FAST\n");
       gr_mat_clear(C, ctx);
       gr_mat_clear(A, ctx);
       gr_mat_clear(B, ctx);
@@ -204,6 +220,7 @@ int test_multiplication_quasi_toeplitz() {
     }
     error = gr_mat_G_H(G_b, H_b, B, DISP_PLUS, ctx);
     if (error != 0) {
+      flint_printf("Failed to generate G and H of B, FIX IT FAST\n");
       gr_mat_clear(C, ctx);
       gr_mat_clear(A, ctx);
       gr_mat_clear(B, ctx);
@@ -217,6 +234,7 @@ int test_multiplication_quasi_toeplitz() {
     }
     error = gr_mat_mul(C, A, B, ctx);
     if (error != 0) {
+      flint_printf("Failed to multiply with flint, size ??\n");
       gr_mat_clear(C, ctx);
       gr_mat_clear(A, ctx);
       gr_mat_clear(B, ctx);
@@ -228,13 +246,9 @@ int test_multiplication_quasi_toeplitz() {
       flint_rand_clear(state);
       return error;
     }
-    flint_printf(":------------------------Matrices C faite sans les générateurs---------------------------------:\n");
-    flint_printf("Matrice C = \n");
-    gr_mat_print(C, ctx);
-    flint_printf("\n");
-    flint_printf(":------------------------Matrices C faite avec les générateurs---------------------------------:\n");
     error = gr_mat_mul_generator(G_c, H_c, G_a, H_a, G_b, H_b, ctx);
     if (error != 0) {
+      flint_printf("Failed to multiply, FIX IT FAST\n");
       gr_mat_clear(C, ctx);
       gr_mat_clear(A, ctx);
       gr_mat_clear(B, ctx);
@@ -250,6 +264,7 @@ int test_multiplication_quasi_toeplitz() {
     }
     error = gr_mat_reconstruct_A(D, G_c, H_c, DISP_PLUS, ctx);
     if (error != 0) {
+      flint_printf("Failed to reconstruct D, FIX IT FAST\n");
       gr_mat_clear(C, ctx);
       gr_mat_clear(A, ctx);
       gr_mat_clear(B, ctx);
@@ -263,11 +278,41 @@ int test_multiplication_quasi_toeplitz() {
       flint_rand_clear(state);
       return error;
     }
-    flint_printf("Matrice D = \n");
-    gr_mat_print(D, ctx);
-    flint_printf("\n");
-    flint_printf("\nSont egaux = ");
-    truth_println(gr_mat_equal(D, C, ctx));
+    if (gr_mat_equal(D, C, ctx) != T_TRUE) {
+      flint_printf("C != D\n");
+      flint_printf("Matrice A = \n");
+      gr_mat_print(A, ctx);
+      flint_printf("\n");
+      flint_printf("Matrice B = \n");
+      gr_mat_print(B, ctx);
+      flint_printf("\n");
+      flint_printf("Matrice C = \n");
+      gr_mat_print(C, ctx);
+      flint_printf("\n");
+      flint_printf("Matrice G_a = \n");
+      gr_mat_print(G_a, ctx);
+      flint_printf("\n");
+      flint_printf("Matrice H_a = \n");
+      gr_mat_print(H_a, ctx);
+      flint_printf("\n");
+      flint_printf("Matrice G_b = \n");
+      gr_mat_print(G_b, ctx);
+      flint_printf("\n");
+      flint_printf("Matrice H_b = \n");
+      gr_mat_print(H_b, ctx);
+      flint_printf("\n");
+      flint_printf("Matrice G_c = \n");
+      gr_mat_print(G_c, ctx);
+      flint_printf("\n");
+      flint_printf("Matrice H_c = \n");
+      gr_mat_print(H_c, ctx);
+      flint_printf("\n");
+      flint_printf("Matrice D = \n");
+      gr_mat_print(D, ctx);
+      flint_printf("\n");
+      error = 1;
+      i = 9998;
+    }
 
     gr_mat_clear(C, ctx);
     gr_mat_clear(D, ctx);
@@ -295,40 +340,101 @@ int test_multiplication_vector() {
   while (i < 10) {
     gr_mat_t A, X, C, D, G_a, H_a;
     gr_ctx_t ctx;
-
-    gr_ctx_init_nmod(ctx, 13);
-    gr_mat_init(A, 3, 5, ctx);
-    gr_mat_init(X, 5, 1, ctx);
-    gr_mat_init(C, 3, 1, ctx);
-    gr_mat_init(D, 3, 1, ctx);
+    slong n = n_randint(state, 1000);
+    slong m = n_randint(state, 1000);
+    gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
+    gr_mat_init(A, n, m, ctx);
+    gr_mat_init(X, m, 1, ctx);
+    gr_mat_init(C, n, 1, ctx);
+    gr_mat_init(D, n, 1, ctx);
     error = gr_mat_random_toeplitz(A, state, ctx);
-    flint_printf("Matrice A = \n");
-    gr_mat_print(A, ctx);
-    flint_printf("\n");
+    if (error != 0) {
+      flint_printf("Failed to create to create a Toeplitz, FIX IT FAST\n");
+      gr_mat_clear(C, ctx);
+      gr_mat_clear(D, ctx);
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(X, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return error;
+    }
+
     for (int j = 0; j < gr_mat_ncols(A, ctx); j++) {
       error = gr_randtest_not_zero(gr_mat_entry_ptr(X, j, 0, ctx), state, ctx);
-      if (error != 0) { return error; }
+      if (error != 0) {
+        flint_printf("Failed to create X, make sure you put the right size\n");
+        gr_mat_clear(C, ctx);
+        gr_mat_clear(D, ctx);
+        gr_mat_clear(A, ctx);
+        gr_mat_clear(X, ctx);
+        gr_ctx_clear(ctx);
+        flint_rand_clear(state);
+        return error;
+      }
     }
-    flint_printf("Matrice X = \n");
-    gr_mat_print(X, ctx);
-    flint_printf("\n");
+
     error = gr_mat_mul(C, A, X, ctx);
-    flint_printf("Matrice C = \n");
-    gr_mat_print(C, ctx);
-    flint_printf("\n");
+    if (error != 0) {
+      flint_printf("Failed to do the multiplication flint, make sur you give the right size\n");
+      gr_mat_clear(C, ctx);
+      gr_mat_clear(D, ctx);
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(X, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return error;
+    }
+
     error = gr_mat_G_H(G_a, H_a, A, DISP_PLUS, ctx);
-    flint_printf("Matrice G_a = \n");
-    gr_mat_print(G_a, ctx);
-    flint_printf("\n");
-    flint_printf("Matrice H_a = \n");
-    gr_mat_print(H_a, ctx);
-    flint_printf("\n");
+    if (error != 0) {
+      flint_printf("Failed to get the generators of A, FIX IT FAST !\n");
+      gr_mat_clear(C, ctx);
+      gr_mat_clear(D, ctx);
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(X, ctx);
+      gr_mat_clear(G_a, ctx);
+      gr_mat_clear(H_a, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return error;
+    }
+
     error = gr_mat_mul_vector(D, G_a, H_a, X, ctx);
-    flint_printf("Matrice D = \n");
-    gr_mat_print(D, ctx);
-    flint_printf("\n");
-    flint_printf("\nSont egaux = ");
-    truth_println(gr_mat_equal(D, C, ctx));
+    if (error != 0) {
+      flint_printf("Failed to do the multiplication, FIX IT FAST !\n");
+      gr_mat_clear(C, ctx);
+      gr_mat_clear(D, ctx);
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(X, ctx);
+      gr_mat_clear(G_a, ctx);
+      gr_mat_clear(H_a, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return error;
+    }
+    if (gr_mat_equal(D, C, ctx) != T_TRUE) {
+      flint_printf("C != D\n");
+      flint_printf("Matrice A = \n");
+      gr_mat_print(A, ctx);
+      flint_printf("\n");
+      flint_printf("Matrice X = \n");
+      gr_mat_print(X, ctx);
+      flint_printf("\n");
+      flint_printf("Matrice C = \n");
+      gr_mat_print(C, ctx);
+      flint_printf("\n");
+      flint_printf("Matrice G_a = \n");
+      gr_mat_print(G_a, ctx);
+      flint_printf("\n");
+      flint_printf("Matrice H_a = \n");
+      gr_mat_print(H_a, ctx);
+      flint_printf("\n");
+      flint_printf("Matrice D = \n");
+      gr_mat_print(D, ctx);
+      flint_printf("\n");
+      error = 1;
+      i = 9998;
+    }
     gr_mat_clear(C, ctx);
     gr_mat_clear(D, ctx);
     gr_mat_clear(A, ctx);

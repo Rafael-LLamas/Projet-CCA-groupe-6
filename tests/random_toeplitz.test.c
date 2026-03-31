@@ -58,8 +58,7 @@ int test_random_quasi_toeplitz() {
     gr_ctx_t ctx;
     int error;
     gr_mat_t ran, D;
-    // n_randprime(state, 64, 1)
-    gr_ctx_init_nmod(ctx, 13);
+    gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
     slong *rank = flint_malloc(sizeof(slong));
     gr_mat_init(ran, 2, 5, ctx);
     error = gr_mat_quasi_toeplitz_rank(ran, 1, state, ctx);
