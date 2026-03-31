@@ -17,32 +17,55 @@ int test_random_toepltiz() {
   while (i < 10) {
     gr_ctx_t ctx;
     int error;
-    gr_mat_t ran;
-
-    gr_ctx_init_nmod(ctx, 13);
-    slong *rank = flint_malloc(sizeof(slong));
-    gr_mat_init(ran, 1, 2, ctx);
+    gr_mat_t ran, D;
+    slong n = n_randint(state, 1000);
+    slong m = n_randint(state, 1000);
+    gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
+    gr_mat_init(ran, n, m, ctx);
+    gr_mat_init(D, n, m, ctx);
     error = gr_mat_random_toeplitz(ran, state, ctx);
     if (error != 0) {
+      flint_printf("Failed to create a toeplitz, FIX IT FAST !\n");
       gr_mat_clear(ran, ctx);
+      gr_mat_clear(D, ctx);
       gr_ctx_clear(ctx);
-      flint_free(rank);
       flint_rand_clear(state);
       return error;
     }
-    error = gr_mat_rank(rank, ran, ctx);
+    error = gr_mat_displacement(D, ran, DISP_PLUS, ctx);
     if (error != 0) {
+      flint_printf("Failed to do the displacement, FIX IT FAST !\n");
       gr_mat_clear(ran, ctx);
+      gr_mat_clear(D, ctx);
       gr_ctx_clear(ctx);
-      flint_free(rank);
       flint_rand_clear(state);
       return error;
     }
-    flint_printf("----------------------------------------------\nResultat toeplitz = \n");
-    gr_mat_print(ran, ctx);
-    flint_printf("\n");
+    slong r;
+    error = gr_mat_rank(&r, D, ctx);
+    if (error != 0) {
+      flint_printf("Failed to get the rank, dunno why FLINT WHY FLINT\n");
+      gr_mat_clear(ran, ctx);
+      gr_mat_clear(D, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return error;
+    }
+    if (r != 2) {
+      flint_printf("BAD RANK !!!!!\n");
+      flint_printf("Matrice RAN = \n");
+      gr_mat_print(ran, ctx);
+      flint_printf("\n");
+      flint_printf("Matrice D = \n");
+      gr_mat_print(D, ctx);
+      flint_printf("\n");
+      flint_printf("rank displacement = %d\n", r);
+      i = 9998;
+      error = 1;
+    }
+    gr_mat_clear(D, ctx);
+    gr_mat_clear(ran, ctx);
     gr_ctx_clear(ctx);
-    flint_free(rank);
     i++;
   }
 
@@ -59,111 +82,55 @@ int test_random_quasi_toeplitz() {
     int error;
     gr_mat_t ran, D;
     gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
-    slong *rank = flint_malloc(sizeof(slong));
-    gr_mat_init(ran, 2, 5, ctx);
-    error = gr_mat_quasi_toeplitz_rank(ran, 1, state, ctx);
+    slong n = n_randint(state, 1000);
+    slong m = n_randint(state, 1000);
+    slong rank = n_randint(state, 5);
+    gr_mat_init(ran, n, m, ctx);
+    gr_mat_init(D, n, m, ctx);
+    error = gr_mat_quasi_toeplitz_rank(ran, rank, state, ctx);
     if (error != 0) {
+      flint_printf("Failed to create a quasi toeplitz, FIX IT FAST !\n");
       gr_mat_clear(ran, ctx);
+      gr_mat_clear(D, ctx);
       gr_ctx_clear(ctx);
-      flint_free(rank);
       flint_rand_clear(state);
       return error;
     }
-    error = gr_mat_rank(rank, ran, ctx);
-    if (error != 0) {
-      flint_printf("%d\n", error);
-      gr_mat_clear(ran, ctx);
-      gr_ctx_clear(ctx);
-      flint_free(rank);
-      flint_rand_clear(state);
-      return error;
-    }
-    flint_printf("----------------------------------------------\nResultat quasi 1 = \n");
-    gr_mat_print(ran, ctx);
-    flint_printf("\n");
-    flint_printf("rank = %wd \n", *rank);
-    gr_mat_clear(ran, ctx);
-    gr_mat_init(ran, 5, 2, ctx);
-    error = gr_mat_quasi_toeplitz_rank(ran, 4, state, ctx);
-    if (error != 0) {
-      gr_mat_clear(ran, ctx);
-      gr_ctx_clear(ctx);
-      flint_free(rank);
-      flint_rand_clear(state);
-      return error;
-    }
-
-    flint_printf("----------------------------------------------\nResultat quasi 4 = \n");
-    gr_mat_print(ran, ctx);
-    flint_printf("\n");
-    gr_mat_clear(ran, ctx);
-    gr_mat_init(ran, 5, 5, ctx);
-    error = gr_mat_quasi_toeplitz_rank(ran, 2, state, ctx);
-    if (error != 0) {
-      gr_mat_clear(ran, ctx);
-      gr_ctx_clear(ctx);
-      flint_free(rank);
-      flint_rand_clear(state);
-      return error;
-    }
-    flint_printf("----------------------------------------------\nResultat quasi 2 = \n");
-    gr_mat_print(ran, ctx);
-    flint_printf("\n");
-    gr_mat_clear(ran, ctx);
-    gr_mat_init(ran, 20, 5, ctx);
-    error = gr_mat_quasi_toeplitz_rank(ran, 3, state, ctx);
-    if (error != 0) {
-      gr_mat_clear(ran, ctx);
-      gr_ctx_clear(ctx);
-      flint_free(rank);
-      flint_rand_clear(state);
-      return error;
-    }
-
-    flint_printf("----------------------------------------------\nResultat quasi 3 = \n");
-    gr_mat_print(ran, ctx);
-    flint_printf("\n");
-    gr_mat_clear(ran, ctx);
-    gr_mat_init(ran, 15, 1, ctx);
-    error = gr_mat_quasi_toeplitz_rank(ran, 0, state, ctx);
-    if (error != 0) {
-      gr_mat_clear(ran, ctx);
-      gr_ctx_clear(ctx);
-      flint_free(rank);
-      flint_rand_clear(state);
-      return error;
-    }
-    gr_mat_init(D, 15, 1, ctx);
     error = gr_mat_displacement(D, ran, DISP_PLUS, ctx);
     if (error != 0) {
+      flint_printf("Failed to do the displacement, FIX IT FAST !\n");
       gr_mat_clear(ran, ctx);
       gr_mat_clear(D, ctx);
       gr_ctx_clear(ctx);
-      flint_free(rank);
       flint_rand_clear(state);
       return error;
     }
-    error = gr_mat_rank(rank, D, ctx);
+    slong r;
+    error = gr_mat_rank(&r, D, ctx);
     if (error != 0) {
+      flint_printf("Failed to get the rank, dunno why FLINT WHY FLINT\n");
       gr_mat_clear(ran, ctx);
       gr_mat_clear(D, ctx);
       gr_ctx_clear(ctx);
-      flint_free(rank);
       flint_rand_clear(state);
       return error;
     }
-    flint_printf("----------------------------------------------\nResultat quasi 0 = \n");
-    gr_mat_print(ran, ctx);
-    flint_printf("\n\n\n");
-    flint_printf(" deplacement =  ");
-    gr_mat_print(D, ctx);
-    flint_printf("\n");
-    flint_printf("rank de déplcement = %wd \n", *rank);
-
+    if (rank > 1 && r != rank) {
+      flint_printf("BAD RANK !!!!!\n");
+      flint_printf("Matrice RAN = \n");
+      gr_mat_print(ran, ctx);
+      flint_printf("\n");
+      flint_printf("Matrice D = \n");
+      gr_mat_print(D, ctx);
+      flint_printf("\n");
+      flint_printf("starting rank = %d\n", rank);
+      flint_printf("rank displacement = %d\n", r);
+      i = 9998;
+      error = 1;
+    }
     gr_mat_clear(D, ctx);
     gr_mat_clear(ran, ctx);
     gr_ctx_clear(ctx);
-    flint_free(rank);
     i++;
   }
 
@@ -188,7 +155,7 @@ int main(int argc, char *argv[]) {
   int ok = GR_SUCCESS;
   if (strcmp("gr_mat_random_toeplitz", argv[1]) == 0) {
     ok = test_random_toepltiz();
-  } else if (strcmp("gr_mat_random_quasi_toepitz", argv[1]) == 0) {
+  } else if (strcmp("gr_mat_random_quasi_toeplitz", argv[1]) == 0) {
     ok = test_random_quasi_toeplitz();
   } else {
     fprintf(stderr, "Error: test \"%s\" not found!\n", argv[1]);
