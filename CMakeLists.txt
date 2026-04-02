@@ -79,6 +79,7 @@ add_test(NAME Displacement.quasi_toeplitz_G_H                       COMMAND test
 add_test(NAME Displacement.toeplitz_reconstruction                  COMMAND test_displacement toeplitz_reconstruction)
 add_test(NAME Displacement.quasi_toeplitz_reconstruction            COMMAND test_displacement quasi_toeplitz_reconstruction)
 add_test(NAME Displacement.G_H_2x2_execution                        COMMAND test_displacement G_H_2x2_execution)
+add_test(NAME Displacement.G_H_zero_matrix                          COMMAND test_displacement G_H_zero_matrix)
 
 add_executable(test_utility tests/utility.test.c)
 target_link_libraries(test_utility PRIVATE project_lib)

@@ -283,7 +283,7 @@ int test_G_H_2x2_execution() {
   int status = GR_SUCCESS;
   gr_ctx_t ctx;
   gr_ctx_init_nmod(ctx, 65537);
-  
+
   // invalid case
   gr_mat_t TEMP, t1, t2;
   gr_mat_init(TEMP, 2, 2, ctx);
@@ -291,14 +291,14 @@ int test_G_H_2x2_execution() {
   if (status != GR_SUCCESS) status = GR_TEST_FAIL;
   status |= gr_mat_G_H(t1, t2, TEMP, DISP_PLUS, ctx);
   if (status == GR_UNABLE) status = GR_SUCCESS;
-  
+
   // valid case
   gr_mat_t A, G, H;
   gr_mat_init(A, 2, 2, ctx);
   status |= gr_mat_one(A, ctx);
   status |= gr_set_ui(gr_mat_entry_ptr(A, 0, 1, ctx), 5, ctx);
   status |= gr_mat_G_H(G, H, A, DISP_PLUS, ctx);
-  
+
   gr_mat_clear(A, ctx);
   gr_mat_clear(G, ctx);
   gr_mat_clear(H, ctx);
@@ -533,6 +533,65 @@ int test_quasi_toeplitz_reconstruction() {
   return res;
 }
 
+int test_G_H_zero_matrix() {
+  int status = GR_SUCCESS;
+  gr_ctx_t ctx;
+  gr_ctx_init_nmod(ctx, 65537);
+
+  slong dimensions[][2] = {{1, 1}, {2, 2}, {5, 5}, {10, 10}, {3, 5}, {5, 3}, {1, 7}, {7, 1}, {4, 9}, {9, 4}};
+  slong nb_dimensions = 10;
+
+  for (slong s = 0; s < nb_dimensions; s++) {
+    if (status != GR_SUCCESS) break;
+
+    slong rows = dimensions[s][0];
+    slong cols = dimensions[s][1];
+
+    gr_mat_t A, G, H, Reconstructed;
+    gr_mat_init(A, rows, cols, ctx);
+    gr_mat_init(Reconstructed, rows, cols, ctx);
+    status |= gr_mat_zero(A, ctx);
+
+    int gh_status = gr_mat_G_H(G, H, A, DISP_PLUS, ctx);
+    if (gh_status != GR_SUCCESS) {
+      status = GR_TEST_FAIL;
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(Reconstructed, ctx);
+      continue;
+    }
+
+    if (gr_mat_ncols(G, ctx) < 1 || gr_mat_ncols(H, ctx) < 1) {
+      status = GR_TEST_FAIL;
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(G, ctx);
+      gr_mat_clear(H, ctx);
+      gr_mat_clear(Reconstructed, ctx);
+      continue;
+    }
+
+    // G should be rows x rank and H should be cols x rank
+    if (gr_mat_nrows(G, ctx) != rows) status = GR_TEST_FAIL;
+    if (gr_mat_nrows(H, ctx) != cols) status = GR_TEST_FAIL;
+
+    if (gr_mat_is_zero(G, ctx) == T_FALSE) status = GR_TEST_FAIL;
+    if (gr_mat_is_zero(H, ctx) == T_FALSE) status = GR_TEST_FAIL;
+
+    // big verification
+    int rec_status = gr_mat_reconstruct_A(Reconstructed, G, H, DISP_PLUS, ctx);
+    if (rec_status != GR_SUCCESS)
+      status = GR_TEST_FAIL;
+    else if (gr_mat_equal(Reconstructed, A, ctx) == T_FALSE) // A = disp(A)
+      status = GR_TEST_FAIL;
+
+    gr_mat_clear(A, ctx);
+    gr_mat_clear(G, ctx);
+    gr_mat_clear(H, ctx);
+    gr_mat_clear(Reconstructed, ctx);
+  }
+  gr_ctx_clear(ctx);
+  return status;
+}
+
 void usage(char *argv[]) {
   fprintf(stderr, "Usage: %s <test_name>\n", argv[0]);
   fprintf(stderr, "Available tests:\n");
@@ -568,6 +627,8 @@ int main(int argc, char *argv[]) {
     ok = test_quasi_toeplitz_reconstruction();
   } else if (strcmp("G_H_2x2_execution", argv[1]) == 0) {
     ok = test_G_H_2x2_execution();
+  } else if (strcmp("G_H_zero_matrix", argv[1]) == 0) {
+    ok = test_G_H_zero_matrix();
   } else {
     fprintf(stderr, "Error: test \"%s\" not found!\n", argv[1]);
     exit(EXIT_FAILURE);
