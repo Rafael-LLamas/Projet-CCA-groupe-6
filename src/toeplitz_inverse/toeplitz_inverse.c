@@ -1,7 +1,7 @@
 #include "addition.h"
+#include "compression.h"
 #include "matrix_aux.h"
 #include "multiplication.h"
-#include "compression.h"
 
 #include "flint/flint.h"
 #include "flint/gr.h"
@@ -56,10 +56,26 @@ int gr_toeplitz_inverse(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, 
   slong n2 = n / 2;
 
   gr_mat_t G_top, H_top, G_bottom, H_bottom;
-  gr_mat_window_init(G_top, G_A, 0, 0, n1, rank, ctx);
-  gr_mat_window_init(H_top, H_A, 0, 0, n1, rank, ctx);
-  gr_mat_window_init(G_bottom, G_A, n1, 0, n, rank, ctx);
-  gr_mat_window_init(H_bottom, H_A, n1, 0, n, rank, ctx);
+  // gr_mat_window_init(G_top, G_A, 0, 0, n1, rank, ctx);
+  // gr_mat_window_init(H_top, H_A, 0, 0, n1, rank, ctx);
+  // gr_mat_window_init(G_bottom, G_A, n1, 0, n, rank, ctx);
+  // gr_mat_window_init(H_bottom, H_A, n1, 0, n, rank, ctx);
+  gr_mat_init(G_top, n1, rank, ctx);
+  gr_mat_init(H_top, n1, rank, ctx);
+  gr_mat_init(G_bottom, n2, rank, ctx);
+  gr_mat_init(H_bottom, n2, rank, ctx);
+  for (slong r = 0; r < n1; r++) {
+    for (slong c = 0; c < rank; c++) {
+      status |= gr_set(gr_mat_entry_ptr(G_top, r, c, ctx), gr_mat_entry_srcptr(G_A, r, c, ctx), ctx);
+      status |= gr_set(gr_mat_entry_ptr(H_top, r, c, ctx), gr_mat_entry_srcptr(H_A, r, c, ctx), ctx);
+    }
+  }
+  for (slong r = 0; r < n2; r++) {
+    for (slong c = 0; c < rank; c++) {
+      status |= gr_set(gr_mat_entry_ptr(G_bottom, r, c, ctx), gr_mat_entry_srcptr(G_A, n1 + r, c, ctx), ctx);
+      status |= gr_set(gr_mat_entry_ptr(H_bottom, r, c, ctx), gr_mat_entry_srcptr(H_A, n1 + r, c, ctx), ctx);
+    }
+  }
 
   // 2.1: build correction vectors for b and c
 
@@ -110,35 +126,28 @@ int gr_toeplitz_inverse(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, 
 
   // 2.2: b : Gb = [Gtop | Za_elast],  Hb = [Hbottom | e0_n1]
   gr_mat_t G_b, H_b;
-  status |= gr_mat_addition_generateur(G_top, Za_elast, H_bottom, e0_n1, G_b, H_b, ctx);
+  slong rank_b = gr_mat_ncols(G_top, ctx) + gr_mat_ncols(Za_elast, ctx);
+  gr_mat_init(G_b, n1, rank_b, ctx);
+  gr_mat_init(H_b, n1, rank_b, ctx); // note: both have n1 rows
+  status |= gr_mat_concat_horizontal(G_b, G_top, Za_elast, ctx);
+  status |= gr_mat_concat_horizontal(H_b, H_bottom, e0_n1, ctx);
   gr_mat_clear(Za_elast, ctx);
   gr_mat_clear(e0_n1, ctx);
-  if (status != GR_SUCCESS) {
-    gr_mat_clear(G_b, ctx);
-    gr_mat_clear(H_b, ctx);
-    gr_mat_clear(e_last, ctx);
-    gr_mat_clear(ZaT_elast, ctx);
-    gr_mat_clear(e0_n2, ctx);
-    goto free_windows;
-  }
 
   // 2.3: c : Gc = [Gbottom | e0_n2],  Hc = [Htop | ZaT_elast]
   gr_mat_t G_c, H_c;
-  status |= gr_mat_addition_generateur(G_bottom, e0_n2, H_top, ZaT_elast, G_c, H_c, ctx);
+  slong rank_c = gr_mat_ncols(G_bottom, ctx) + gr_mat_ncols(e0_n2, ctx);
+  gr_mat_init(G_c, n2, rank_c, ctx);
+  gr_mat_init(H_c, n2, rank_c, ctx);
+  status |= gr_mat_concat_horizontal(G_c, G_bottom, e0_n2, ctx);
+  status |= gr_mat_concat_horizontal(H_c, H_top, ZaT_elast, ctx);
   gr_mat_clear(ZaT_elast, ctx);
   gr_mat_clear(e0_n2, ctx);
   gr_mat_clear(e_last, ctx);
-  if (status != GR_SUCCESS) {
-    gr_mat_clear(G_c, ctx);
-    gr_mat_clear(H_c, ctx);
-    gr_mat_clear(G_b, ctx);
-    gr_mat_clear(H_b, ctx);
-    goto free_windows;
-  }
 
   // 2.4: d : Gd = [Gbottom | Gtop],  Hd = [Hbottom | Htop]
   gr_mat_t G_d, H_d;
-  status |= gr_mat_addition_generateur(G_bottom, G_top, H_bottom, H_top, G_d, H_d, ctx);
+  status |= gr_mat_addition_generateur(G_bottom, H_bottom, G_top, H_top, G_d, H_d, ctx);
   if (status != GR_SUCCESS) {
     gr_mat_clear(G_d, ctx);
     gr_mat_clear(H_d, ctx);
@@ -380,14 +389,10 @@ free_t:
 free_e_top_bottom:
   gr_mat_clear(G_e, ctx);
   gr_mat_clear(H_e, ctx);
-  gr_mat_clear(G_d, ctx);
-  gr_mat_clear(H_d, ctx);
-  gr_mat_clear(G_b, ctx);
-  gr_mat_clear(H_b, ctx);
 free_windows:
-  gr_mat_window_clear(G_top, ctx);
-  gr_mat_window_clear(H_top, ctx);
-  gr_mat_window_clear(G_bottom, ctx);
-  gr_mat_window_clear(H_bottom, ctx);
+  gr_mat_clear(G_top, ctx);
+  gr_mat_clear(H_top, ctx);
+  gr_mat_clear(G_bottom, ctx);
+  gr_mat_clear(H_bottom, ctx);
   return status;
 }

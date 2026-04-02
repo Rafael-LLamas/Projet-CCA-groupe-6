@@ -5,7 +5,7 @@
 
 /**
  * @brief Strassen algorithm to inverse a Toeplitz matrix.
- * @warning Matrix A must be square and non singular.
+ * @warning Matrix A must be square and non singular and G_D and H_D must be initialized *for now*.
  * @param[out] D Destination matrix represented by its G and H.
  * @param[in] A Input Toeplitz matrix represented by its G and H.
  */
