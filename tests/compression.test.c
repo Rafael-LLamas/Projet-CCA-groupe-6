@@ -21,12 +21,21 @@ int check_compress_correctness(gr_mat_t ref, gr_mat_t G_c, gr_mat_t H_c, slong o
   slong n = gr_mat_nrows(ref, ctx);
   slong m = gr_mat_ncols(ref, ctx);
   slong new_rank = gr_mat_ncols(G_c, ctx);
+  
   gr_mat_t Check;
   gr_mat_init(Check, n, m, ctx);
   status |= gr_mat_reconstruct_A(Check, G_c, H_c, DISP_PLUS, ctx);
   if (gr_mat_equal(Check, ref, ctx) == T_FALSE) status = GR_TEST_FAIL;
-  if (new_rank > old_rank) status = GR_TEST_FAIL;
   gr_mat_clear(Check, ctx);
+  if (new_rank > old_rank) status = GR_TEST_FAIL;
+  
+  gr_mat_t D;
+  gr_mat_init(D, n, m, ctx);
+  status |= gr_mat_displacement(D, ref, DISP_PLUS, ctx);
+  slong disp_rank;
+  status |= gr_mat_rank(&disp_rank, D, ctx);
+  gr_mat_clear(D, ctx);
+  if (new_rank != disp_rank) status = GR_TEST_FAIL;
   return status;
 }
 
@@ -50,8 +59,6 @@ int test_compress_toeplitz(int nb_iter) {
     slong old_rank = gr_mat_ncols(G, ctx);
     status |= gr_mat_generator_compress(G, H, ctx);
     status |= check_compress_correctness(A, G, H, old_rank, ctx);
-
-    if (gr_mat_ncols(G, ctx) > 2) status = GR_TEST_FAIL;
 
     gr_mat_clear(A, ctx);
     gr_mat_clear(G, ctx);

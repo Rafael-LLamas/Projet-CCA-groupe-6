@@ -10,7 +10,7 @@
 
 def compress_matrices(G, H):
     # main logic
-    E, T = H.T.echelon_form(transformation=True)
+    E, T = (H.T).echelon_form(transformation=True)
     G_COMP = G * T.inverse()
     H_COMP = E.T
     
@@ -25,21 +25,16 @@ def compress_matrices(G, H):
 G_EX = matrix(ZZ, 2, 3, [2,3,1,5,4,6])
 H_EX = matrix(ZZ, 2, 3, [2,3,1,5,4,6])
 
-print("Matrix G_EX")
-print(G_EX)
-print("Matrix H_EX")
-print(H_EX)
+print("Matrix G_EX"); print(G_EX)
+print("Matrix H_EX"); print(H_EX)
 
 check = G_EX * H_EX.T
 
 G_EX_COMP, H_EX_COMP = compress_matrices(G_EX, H_EX)
 
-print("Matrix G_EX_COMP")
-print(G_EX_COMP)
-print("Matrix H_EX_COMP")
-print(H_EX_COMP)
-print("Matrix check")
-print(check)
+print("Matrix G_EX_COMP"); print(G_EX_COMP)
+print("Matrix H_EX_COMP"); print(H_EX_COMP)
+print("Matrix check"); print(check)
 
 verify = True
 verify &= (check == G_EX_COMP * H_EX_COMP.T)
@@ -61,11 +56,6 @@ print("-" * 50)
 # This identity matrix will have every linear operation done
 # multiplied by 1, thus I can simply retrieve the matrix of
 # transformation then invert it using FLINT, multiply to G.
-# 
-# Complexity vise, I put for a matrix nxm a matrix that is the size of nxn
-# to its left essentially, (I have n^2 plus elements on a nxm matrix to 
-# do gaussian elimination.) that is what I am going to use until I find a better
-# way to get the transformation matrix via FLINT
 # 
 # p.s. also known as augmented matrix method (functions name is augment in sage)
 
@@ -89,24 +79,19 @@ def compress_matrices_project(G, H):
     
     return G_COMP, H_COMP
     
-G_EX = matrix(QQ, 2, 3, [2,3,1,5,4,6])
-H_EX = matrix(QQ, 2, 3, [2,3,1,8,4,6])
+G_EX = matrix(QQ, 2, 3, [2,2,1,5,4,3])
+H_EX = matrix(QQ, 2, 3, [1,8,1,9,4,0])    
     
-print("Matrix G_EX")
-print(G_EX)
-print("Matrix H_EX")
-print(H_EX)
+print("Matrix G_EX"); print(G_EX)
+print("Matrix H_EX"); print(H_EX)   
     
-check = G_EX * H_EX.T
+check = G_EX * H_EX.T   
     
-G_EX_COMP, H_EX_COMP = compress_matrices_project(G_EX, H_EX)
+G_EX_COMP, H_EX_COMP = compress_matrices_project(G_EX, H_EX)   
     
-print("Matrix G_EX_COMP")
-print(G_EX_COMP)
-print("Matrix H_EX_COMP")
-print(H_EX_COMP)
-print("Matrix check")
-print(check)
+print("Matrix G_EX_COMP");print(G_EX_COMP)
+print("Matrix H_EX_COMP");print(H_EX_COMP)
+print("Matrix check");print(check)
     
 verify = True
 verify &= (check == G_EX_COMP * H_EX_COMP.T)
