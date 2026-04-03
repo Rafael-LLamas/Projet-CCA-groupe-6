@@ -40,12 +40,11 @@ int gr_toeplitz_inverse(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, 
 
   // TODO: can maybe add a check of its determinant once implemented the toeplitz version (det must not be zero)
 
-  status |= gr_mat_zero(G_D, ctx);
-  status |= gr_mat_zero(H_D, ctx);
-
   // base case n = 1
   if (n == 1) {
     if (rank == 0) { return GR_UNABLE; }
+    status |= gr_mat_zero(G_D, ctx);
+    status |= gr_mat_zero(H_D, ctx);
     status |= gr_inv(gr_mat_entry_ptr(G_D, 0, 0, ctx), gr_mat_entry_ptr(G_A, 0, 0, ctx), ctx);
     status |= gr_inv(gr_mat_entry_ptr(H_D, 0, 0, ctx), gr_mat_entry_ptr(H_A, 0, 0, ctx), ctx);
     return status;
@@ -373,6 +372,8 @@ int gr_toeplitz_inverse(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, 
       }
     }
   }
+
+  status |= gr_mat_generator_compress(G_D, H_D, ctx);
 
 free_x:
   gr_mat_clear(G_x, ctx);
