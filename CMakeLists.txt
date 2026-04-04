@@ -100,6 +100,7 @@ add_test(NAME Operations.multiplication_vector                      COMMAND test
 add_executable(test_operations_addition tests/addition.test.c)
 target_link_libraries(test_operations_addition PRIVATE project_lib)
 add_test(NAME Operations.addition_generators_toepltiz               COMMAND test_operations_addition addition_generators_toeplitz)
+add_test(NAME Operations.addition_generators_quasi_toepltiz               COMMAND test_operations_addition addition_generators_quasi_toeplitz)
 
 add_executable(test_inversion tests/inverse.test.c)
 target_link_libraries(test_inversion PRIVATE project_lib)

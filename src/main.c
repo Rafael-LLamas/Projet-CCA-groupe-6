@@ -270,8 +270,6 @@ int benchmark_displacement() {
       gr_mat_t A, D, G, H, A_rec;
       gr_mat_init(A, cur_n, cur_n, ctx);
       gr_mat_init(D, cur_n, cur_n, ctx);
-      gr_mat_init(G, 0, 0, ctx);
-      gr_mat_init(H, 0, 0, ctx);
       gr_mat_init(A_rec, cur_n, cur_n, ctx);
 
       if (rank != -1) {
@@ -361,12 +359,6 @@ int benchmark_addition() {
       gr_mat_init(A, cur_n, cur_m, ctx);
       gr_mat_init(B, cur_n, cur_m, ctx);
       gr_mat_init(C, cur_n, cur_m, ctx);
-      gr_mat_init(G_a, 0, 0, ctx);
-      gr_mat_init(H_a, 0, 0, ctx);
-      gr_mat_init(G_b, 0, 0, ctx);
-      gr_mat_init(H_b, 0, 0, ctx);
-      gr_mat_init(G_c, 0, 0, ctx);
-      gr_mat_init(H_c, 0, 0, ctx);
       if (rank != -1) {
         error = gr_mat_quasi_toeplitz_rank(A, rank, state, ctx);
         error = gr_mat_quasi_toeplitz_rank(B, rank, state, ctx);
@@ -461,16 +453,12 @@ int benchmark_inversion() {
       gr_mat_t A, B, G_a, G_b, H_a, H_b;
       gr_mat_init(A, cur_n, cur_m, ctx);
       gr_mat_init(B, cur_n, cur_m, ctx);
-      gr_mat_init(G_a, 0, 0, ctx);
-      gr_mat_init(H_a, 0, 0, ctx);
       if (rank != -1) {
         error = gr_mat_quasi_toeplitz_rank(A, rank, state, ctx);
       } else {
         error = gr_mat_random_toeplitz(A, state, ctx);
       }
       error = gr_mat_G_H(G_a, H_a, A, DISP_PLUS, ctx);
-      error = gr_mat_init_set(G_b, G_a, ctx);
-      error = gr_mat_init_set(H_b, H_a, ctx);
 
       double t1 = get_time_ms();
       error = gr_toeplitz_inverse(G_b, H_b, G_a, H_a, ctx);

@@ -452,6 +452,8 @@ void usage(char *argv[]) {
   fprintf(stderr, "Usage: %s <test_name>\n", argv[0]);
   fprintf(stderr, "Available tests:\n");
   fprintf(stderr, "  - multiplication_generators\n");
+  fprintf(stderr, "  - multiplication_quasi_toeplitz\n");
+  fprintf(stderr, "  - multiplication_vector\n");
 }
 
 int main(int argc, char *argv[]) {
