@@ -140,6 +140,106 @@ cleanup:
   return status;
 }
 
+int test_inverse_3x3() {
+  int status = GR_SUCCESS;
+  flint_rand_t state;
+  flint_rand_init(state);
+  gr_ctx_t ctx;
+  gr_ctx_init_nmod(ctx, 11);
+
+  gr_mat_t A, A_inv, A_inv_ref, Check;
+  gr_mat_t G_A, H_A, G_D, H_D;
+
+  gr_mat_init(A, 3, 3, ctx);
+  gr_mat_init(A_inv, 3, 3, ctx);
+  gr_mat_init(A_inv_ref, 3, 3, ctx);
+  gr_mat_init(Check, 3, 3, ctx);
+  gr_mat_init(G_A, 3, 6, ctx);
+  gr_mat_init(H_A, 3, 6, ctx);
+  gr_mat_init(G_D, 1, 1, ctx);
+  gr_mat_init(H_D, 1, 1, ctx);
+
+  status |= gr_set_ui(gr_mat_entry_ptr(A, 0, 0, ctx), 1, ctx);
+  status |= gr_set_ui(gr_mat_entry_ptr(A, 0, 1, ctx), 2, ctx);
+  status |= gr_set_ui(gr_mat_entry_ptr(A, 0, 2, ctx), 3, ctx);
+  status |= gr_set_ui(gr_mat_entry_ptr(A, 1, 0, ctx), 4, ctx);
+  status |= gr_set_ui(gr_mat_entry_ptr(A, 1, 1, ctx), 5, ctx);
+  status |= gr_set_ui(gr_mat_entry_ptr(A, 1, 2, ctx), 6, ctx);
+  status |= gr_set_ui(gr_mat_entry_ptr(A, 2, 0, ctx), 7, ctx);
+  status |= gr_set_ui(gr_mat_entry_ptr(A, 2, 1, ctx), 8, ctx);
+  status |= gr_set_ui(gr_mat_entry_ptr(A, 2, 2, ctx), 10, ctx);
+
+  printf("A =\n");
+  gr_mat_print(A, ctx);
+  printf("\n");
+
+  if (status == GR_SUCCESS) {
+    status = gr_mat_G_H(G_A, H_A, A, DISP_PLUS, ctx);
+    printf("G_A:\n"); gr_mat_print(G_A, ctx);
+    printf("\nH_A:\n"); gr_mat_print(H_A, ctx);
+    printf("\n");
+  }
+
+  if (status == GR_SUCCESS) {
+    status = gr_toeplitz_inverse(G_D, H_D, G_A, H_A, ctx);
+    if (status != GR_SUCCESS)
+      printf("gr_toeplitz_inverse failed with status = %d\n", status);
+  }
+
+  if (status == GR_SUCCESS) {
+    printf("G_D (generators of A^-1):\n"); gr_mat_print(G_D, ctx);
+    printf("\nH_D (generators of A^-1):\n"); gr_mat_print(H_D, ctx);
+    printf("\n");
+
+    status = gr_mat_reconstruct_A(A_inv, G_D, H_D, DISP_PLUS, ctx);
+    if (status != GR_SUCCESS)
+      printf("reconstruct failed\n");
+  }
+
+  if (status == GR_SUCCESS) {
+    printf("A_inv (reconstructed):\n");
+    gr_mat_print(A_inv, ctx);
+    printf("\n");
+
+    status = gr_mat_inv(A_inv_ref, A, ctx);
+    if (status != GR_SUCCESS)
+      printf("gr_mat_inv reference failed (singular?)\n");
+  }
+
+  if (status == GR_SUCCESS) {
+    printf("A_inv reference (gr_mat_inv):\n");
+    gr_mat_print(A_inv_ref, ctx);
+    printf("\n");
+
+    status = gr_mat_mul(Check, A, A_inv, ctx);
+  }
+
+  if (status == GR_SUCCESS) {
+    printf("Check = A * A_inv =\n");
+    gr_mat_print(Check, ctx);
+    printf("\n");
+
+    if (gr_mat_is_one(Check, ctx) != T_TRUE) {
+      printf("Product is not identity\n");
+      status = GR_TEST_FAIL;
+    } else {
+      printf("SUCCESS: A * A_inv = I\n");
+    }
+  }
+
+  gr_mat_clear(A, ctx);
+  gr_mat_clear(A_inv, ctx);
+  gr_mat_clear(A_inv_ref, ctx);
+  gr_mat_clear(Check, ctx);
+  gr_mat_clear(G_A, ctx);
+  gr_mat_clear(H_A, ctx);
+  gr_mat_clear(G_D, ctx);
+  gr_mat_clear(H_D, ctx);
+  gr_ctx_clear(ctx);
+  flint_rand_clear(state);
+  return status;
+}
+
 void usage(char *argv[]) { fprintf(stderr, "Usage: %s <test_name>\n", argv[0]); }
 
 int main(int argc, char *argv[]) {
@@ -154,6 +254,8 @@ int main(int argc, char *argv[]) {
     ok = test_inverse_base_case();
   } else if (strcmp("inverse_2x2", argv[1]) == 0) {
     ok = test_inverse_2x2();
+  } else if (strcmp("inverse_3x3", argv[1]) == 0) {
+    ok = test_inverse_3x3();
   } else {
     fprintf(stderr, "Error: test \"%s\" not found!\n", argv[1]);
     exit(EXIT_FAILURE);

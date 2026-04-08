@@ -25,7 +25,7 @@ find_path(FLINT_INCLUDE flint/flint.h HINTS ${FLINT_SEARCH_PATHS} PATH_SUFFIXES 
 
 #check
 if(NOT GMP_LIB OR NOT FLINT_LIB OR NOT MPFR_LIB)
-    message(FATAL_ERROR "Could not find one of the required libraries (GMP, MPFR, FLINT). Check your paths!!!")
+  message(FATAL_ERROR "Could not find one of the required libraries (GMP, MPFR, FLINT). Check your paths!!!")
 endif()
 
 # interface
@@ -100,12 +100,13 @@ add_test(NAME Operations.multiplication_vector                      COMMAND test
 add_executable(test_operations_addition tests/addition.test.c)
 target_link_libraries(test_operations_addition PRIVATE project_lib)
 add_test(NAME Operations.addition_generators_toepltiz               COMMAND test_operations_addition addition_generators_toeplitz)
-add_test(NAME Operations.addition_generators_quasi_toepltiz               COMMAND test_operations_addition addition_generators_quasi_toeplitz)
+add_test(NAME Operations.addition_generators_quasi_toepltiz         COMMAND test_operations_addition addition_generators_quasi_toeplitz)
 
 add_executable(test_inversion tests/inverse.test.c)
 target_link_libraries(test_inversion PRIVATE project_lib)
 add_test(NAME Inverse.base_case                                     COMMAND test_inversion inverse_base_case)
 add_test(NAME Inverse.2x2                                           COMMAND test_inversion inverse_2x2)
+add_test(NAME Inverse.3x3                                           COMMAND test_inversion inverse_3x3)
 
 add_executable(test_compression tests/compression.test.c)
 target_link_libraries(test_compression PRIVATE project_lib)

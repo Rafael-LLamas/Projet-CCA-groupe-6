@@ -178,14 +178,6 @@ int gr_toeplitz_inverse(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, 
   gr_mat_init(H_b, n2, rank_b, ctx);
   status |= gr_mat_concat_horizontal(G_b, G_top, Za_elast, ctx);
   status |= gr_mat_concat_horizontal(H_b, H_bottom, e0_n2_Hb, ctx);
-  if (status != GR_SUCCESS)
-    printf("[inv] FAILED: building G_b/H_b\n");
-  else {
-    printf("[inv] G_b:\n");
-    gr_mat_print(G_b, ctx);
-    printf("[inv] H_b:\n");
-    gr_mat_print(H_b, ctx);
-  }
   gr_mat_clear(Za_elast, ctx);
   gr_mat_clear(e0_n2_Hb, ctx);
 
@@ -196,23 +188,29 @@ int gr_toeplitz_inverse(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, 
   gr_mat_init(H_c, n1, rank_c, ctx);
   status |= gr_mat_concat_horizontal(G_c, G_bottom, e0_n2_Gc, ctx);
   status |= gr_mat_concat_horizontal(H_c, H_top, ZaT_elast, ctx);
-  if (status != GR_SUCCESS)
-    printf("[inv] FAILED: building G_c/H_c\n");
-  else {
-    printf("[inv] G_c:\n");
-    gr_mat_print(G_c, ctx);
-    printf("[inv] H_c:\n");
-    gr_mat_print(H_c, ctx);
-  }
   gr_mat_clear(ZaT_elast, ctx);
   gr_mat_clear(e0_n2_Gc, ctx);
   gr_mat_clear(e_last, ctx);
 
-  // 2.4: d : Gd = [Gbottom | Gtop],  Hd = [Hbottom | Htop]
+  // 2.4: d : Gd = [Gbottom | Gtop_truncated],  Hd = [Hbottom | Htop_truncated]
+  gr_mat_t G_top_trunc, H_top_trunc;
+  gr_mat_init(G_top_trunc, n2, rank, ctx);
+  gr_mat_init(H_top_trunc, n2, rank, ctx);
+
+  for (slong r = 0; r < n2; r++) {
+    for (slong c = 0; c < rank; c++) {
+      status |= gr_set(gr_mat_entry_ptr(G_top_trunc, r, c, ctx), gr_mat_entry_srcptr(G_top, r, c, ctx), ctx);
+      status |= gr_set(gr_mat_entry_ptr(H_top_trunc, r, c, ctx), gr_mat_entry_srcptr(H_top, r, c, ctx), ctx);
+    }
+  }
+
   gr_mat_t G_d, H_d;
-  status |= gr_mat_addition_generateur(G_bottom, H_bottom, G_top, H_top, G_d, H_d, ctx);
+  status |= gr_mat_addition_generateur(G_bottom, H_bottom, G_top_trunc, H_top_trunc, G_d, H_d, ctx);
+
+  gr_mat_clear(G_top_trunc, ctx);
+  gr_mat_clear(H_top_trunc, ctx);
+
   if (status != GR_SUCCESS) {
-    printf("[inv] FAILED: building G_d/H_d\n");
     gr_mat_clear(G_d, ctx);
     gr_mat_clear(H_d, ctx);
     gr_mat_clear(G_c, ctx);
@@ -221,10 +219,10 @@ int gr_toeplitz_inverse(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, 
     gr_mat_clear(H_b, ctx);
     goto free_windows;
   }
-  printf("[inv] G_d:\n");
-  gr_mat_print(G_d, ctx);
-  printf("[inv] H_d:\n");
-  gr_mat_print(H_d, ctx);
+  // printf("[inv] G_d:\n");
+  // gr_mat_print(G_d, ctx);
+  // printf("[inv] H_d:\n");
+  // gr_mat_print(H_d, ctx);
 
   /* RECURSION #1 - INVERT BLOCK a -------------------------------------------
    * To apply the strassen's block inversion we need the inverse of the block a.
@@ -235,16 +233,13 @@ int gr_toeplitz_inverse(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, 
   gr_mat_t G_e, H_e;
   gr_mat_init(G_e, n1, rank, ctx);
   gr_mat_init(H_e, n1, rank, ctx);
-  printf("[inv] --- recursive call for e=a^{-1} ---\n");
+  // printf("[inv] --- recursive call for e=a^{-1} ---\n");
   status |= gr_toeplitz_inverse(G_e, H_e, G_top, H_top, ctx);
-  if (status != GR_SUCCESS) {
-    printf("[inv] FAILED: recursive inverse of a\n");
-    goto free_e_top_bottom;
-  }
-  printf("[inv] G_e:\n");
-  gr_mat_print(G_e, ctx);
-  printf("[inv] H_e:\n");
-  gr_mat_print(H_e, ctx);
+  if (status != GR_SUCCESS) { goto free_e_top_bottom; }
+  // printf("[inv] G_e:\n");
+  // gr_mat_print(G_e, ctx);
+  // printf("[inv] H_e:\n");
+  // gr_mat_print(H_e, ctx);
 
   /* SHUR COMPLEMENT S=d−c*e*b -------------------------------------------
    * As we multiply these generators their ranks explose.
@@ -263,13 +258,12 @@ int gr_toeplitz_inverse(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, 
   gr_mat_clear(G_c, ctx);
   gr_mat_clear(H_c, ctx);
   if (status != GR_SUCCESS) {
-    printf("[inv] FAILED: computing ce = c*e\n");
     gr_mat_clear(G_ce, ctx);
     gr_mat_clear(H_ce, ctx);
     goto free_e_top_bottom;
   }
-  printf("[inv] G_ce (rank=%ld):\n", gr_mat_ncols(G_ce, ctx));
-  gr_mat_print(G_ce, ctx);
+  // printf("[inv] G_ce (rank=%ld):\n", gr_mat_ncols(G_ce, ctx));
+  // gr_mat_print(G_ce, ctx);
 
   // 4.2 eb = e * b
   gr_mat_t G_eb, H_eb;
@@ -278,15 +272,14 @@ int gr_toeplitz_inverse(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, 
   gr_mat_clear(G_b, ctx);
   gr_mat_clear(H_b, ctx);
   if (status != GR_SUCCESS) {
-    printf("[inv] FAILED: computing eb = e*b\n");
     gr_mat_clear(G_eb, ctx);
     gr_mat_clear(H_eb, ctx);
     gr_mat_clear(G_ce, ctx);
     gr_mat_clear(H_ce, ctx);
     goto free_e_top_bottom;
   }
-  printf("[inv] G_eb (rank=%ld):\n", gr_mat_ncols(G_eb, ctx));
-  gr_mat_print(G_eb, ctx);
+  // printf("[inv] G_eb (rank=%ld):\n", gr_mat_ncols(G_eb, ctx));
+  // gr_mat_print(G_eb, ctx);
 
   // 4.3 ceb = ce * eb, then negate G in-place
   gr_mat_t G_ceb, H_ceb;
@@ -294,7 +287,6 @@ int gr_toeplitz_inverse(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, 
   status |= gr_mat_neg(G_ceb, G_ceb, ctx); // Negate to get -ceb
   status |= gr_mat_generator_compress(G_ceb, H_ceb, ctx);
   if (status != GR_SUCCESS) {
-    printf("[inv] FAILED: computing ceb = ce*eb\n");
     gr_mat_clear(G_ceb, ctx);
     gr_mat_clear(H_ceb, ctx);
     gr_mat_clear(G_eb, ctx);
@@ -303,8 +295,8 @@ int gr_toeplitz_inverse(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, 
     gr_mat_clear(H_ce, ctx);
     goto free_e_top_bottom;
   }
-  printf("[inv] G_ceb (rank=%ld):\n", gr_mat_ncols(G_ceb, ctx));
-  gr_mat_print(G_ceb, ctx);
+  // printf("[inv] G_ceb (rank=%ld):\n", gr_mat_ncols(G_ceb, ctx));
+  // gr_mat_print(G_ceb, ctx);
 
   // 4.4 S = d + (-ceb)
   gr_mat_t G_S, H_S;
@@ -315,7 +307,6 @@ int gr_toeplitz_inverse(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, 
   gr_mat_clear(G_d, ctx);
   gr_mat_clear(H_d, ctx);
   if (status != GR_SUCCESS) {
-    printf("[inv] FAILED: computing S = d - ceb\n");
     gr_mat_clear(G_S, ctx);
     gr_mat_clear(H_S, ctx);
     gr_mat_clear(G_eb, ctx);
@@ -324,10 +315,10 @@ int gr_toeplitz_inverse(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, 
     gr_mat_clear(H_ce, ctx);
     goto free_e_top_bottom;
   }
-  printf("[inv] G_S (rank=%ld):\n", gr_mat_ncols(G_S, ctx));
-  gr_mat_print(G_S, ctx);
-  printf("[inv] H_S:\n");
-  gr_mat_print(H_S, ctx);
+  // printf("[inv] G_S (rank=%ld):\n", gr_mat_ncols(G_S, ctx));
+  // gr_mat_print(G_S, ctx);
+  // printf("[inv] H_S:\n");
+  // gr_mat_print(H_S, ctx);
 
   /* RECURSION #2 - INVERT SHUR COMPLEMENT -------------------------------------------
    * Algoritm calls the inversion of the S.
@@ -338,7 +329,7 @@ int gr_toeplitz_inverse(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, 
   gr_mat_t G_t, H_t;
   gr_mat_init(G_t, n2, gr_mat_ncols(G_S, ctx), ctx);
   gr_mat_init(H_t, n2, gr_mat_ncols(H_S, ctx), ctx);
-  printf("[inv] --- recursive call for t=S^{-1} ---\n");
+  // printf("[inv] --- recursive call for t=S^{-1} ---\n");
   status |= gr_toeplitz_inverse(G_t, H_t, G_S, H_S, ctx);
   gr_mat_clear(G_S, ctx);
   gr_mat_clear(H_S, ctx);
@@ -350,10 +341,10 @@ int gr_toeplitz_inverse(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, 
     gr_mat_clear(H_ce, ctx);
     goto free_t;
   }
-  printf("[inv] G_t:\n");
-  gr_mat_print(G_t, ctx);
-  printf("[inv] H_t:\n");
-  gr_mat_print(H_t, ctx);
+  // printf("[inv] G_t:\n");
+  // gr_mat_print(G_t, ctx);
+  // printf("[inv] H_t:\n");
+  // gr_mat_print(H_t, ctx);
 
   /* FINAL STRASSEN ASSEMBLY -------------------------------------------
    * We have all our base components (e,eb,ce,t). We now assemble the four
@@ -369,7 +360,6 @@ int gr_toeplitz_inverse(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, 
   gr_mat_clear(G_eb, ctx);
   gr_mat_clear(H_eb, ctx);
   if (status != GR_SUCCESS) {
-    printf("[inv] FAILED: computing ebt = eb*t\n");
     gr_mat_clear(G_ce, ctx);
     gr_mat_clear(H_ce, ctx);
     goto free_ebt;
@@ -380,7 +370,6 @@ int gr_toeplitz_inverse(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, 
   status |= gr_mat_mul_generator(G_tce, H_tce, G_t, H_t, G_ce, H_ce, ctx);
   status |= gr_mat_generator_compress(G_tce, H_tce, ctx);
   if (status != GR_SUCCESS) {
-    printf("[inv] FAILED: computing tce = t*ce\n");
     gr_mat_clear(G_ce, ctx);
     gr_mat_clear(H_ce, ctx);
     goto free_tce;
@@ -393,7 +382,6 @@ int gr_toeplitz_inverse(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, 
   gr_mat_clear(G_ce, ctx);
   gr_mat_clear(H_ce, ctx);
   if (status != GR_SUCCESS) {
-    printf("[inv] FAILED: computing ebtce = ebt*ce\n");
     gr_mat_clear(G_ebtce, ctx);
     gr_mat_clear(H_ebtce, ctx);
     goto free_tce;
@@ -405,45 +393,45 @@ int gr_toeplitz_inverse(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, 
   status |= gr_mat_generator_compress(G_x, H_x, ctx);
   gr_mat_clear(G_ebtce, ctx);
   gr_mat_clear(H_ebtce, ctx);
-  if (status != GR_SUCCESS) {
-    printf("[inv] FAILED: computing x = e + ebtce\n");
-    goto free_x;
-  }
-  printf("[inv] G_x:\n");
+  if (status != GR_SUCCESS) { goto free_x; }
+  // printf("[inv] G_x:\n");
   gr_mat_print(G_x, ctx);
 
   // y = -ebt (negate G in-place)
   status |= gr_mat_neg(G_ebt, G_ebt, ctx);
-  if (status != GR_SUCCESS) {
-    printf("[inv] FAILED: negate G_ebt\n");
-    goto free_x;
-  }
+  if (status != GR_SUCCESS) { goto free_x; }
 
   // z = -tce (negate G in-place)
   status |= gr_mat_neg(G_tce, G_tce, ctx);
-  if (status != GR_SUCCESS) {
-    printf("[inv] FAILED: negate G_tce\n");
-    goto free_x;
-  }
-  
+  if (status != GR_SUCCESS) { goto free_x; }
+
   /* PACKING THE OUTPUT -------------------------------------------
    * We have now our generators for x, y, z and t.
    * Since they represent blocks in a larger nxn matrix, their global generators
    * are just these individual generators placed in thier correct row offsets.
-   * 
-   * We create an empty n x total_rank matrices of G_D and H_D. We loop through 
-   * x, y, z and t into their correct rows (top half for n1 or bottom half for n2) 
+   *
+   * We create an empty n x total_rank matrices of G_D and H_D. We loop through
+   * x, y, z and t into their correct rows (top half for n1 or bottom half for n2)
    * Then we compress one last time.
+   * G_D =                      H_D^T =
+   * [ G_x  G_y   0    0  ]     [ H_x^T   0   ]
+   * [  0    0   G_z  G_t ]     [  0    H_y^T ]
+   *                            [ H_z^T   0   ]
+   *                            [  0    H_t^T ]
+   *
+   * G_D * H_D^T =
+   * [ (G_x*H_x^T)  (G_y*H_y^T) ]  =  [ x  y ]
+   * [ (G_z*H_z^T)  (G_t*H_t^T) ]     [ z  t ]
    */
 
   // pack [x y; z t] into G_D / H_D
   {
-    slong rx = gr_mat_ncols(G_x, ctx);
+    slong rx = gr_mat_ncols(G_x, ctx); // get ranks
     slong ry = gr_mat_ncols(G_ebt, ctx);
     slong rz = gr_mat_ncols(G_tce, ctx);
     slong rt = gr_mat_ncols(G_t, ctx);
     slong total_rank = rx + ry + rz + rt;
-    printf("[inv] packing: rx=%ld ry=%ld rz=%ld rt=%ld\n", rx, ry, rz, rt);
+    // printf("[inv] packing: rx=%ld ry=%ld rz=%ld rt=%ld\n", rx, ry, rz, rt);
 
     gr_mat_clear(G_D, ctx);
     gr_mat_clear(H_D, ctx);
@@ -454,33 +442,146 @@ int gr_toeplitz_inverse(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, 
 
     const gr_mat_struct *G_blk[4] = {G_x, G_ebt, G_tce, G_t};
     const gr_mat_struct *H_blk[4] = {H_x, H_ebt, H_tce, H_t};
-    const slong G_rs[4] = {0, 0, n1, n1};
-    const slong H_rs[4] = {0, n1, 0, n1};
-    const slong blk_rows[4] = {n1, n1, n2, n2};
-    const slong col_off[4] = {0, rx, rx + ry, rx + ry + rz};
+
+    const slong G_rs[4] = {0, 0, n1, n1};     // row start
+    const slong G_rows[4] = {n1, n1, n2, n2}; // nb of rows
+
+    const slong H_rs[4] = {0, n1, 0, n1};     // row start
+    const slong H_rows[4] = {n1, n2, n1, n2}; // nb of rows
+
+    const slong col_off[4] = {0, rx, rx + ry, rx + ry + rz}; // column offset
 
     for (slong b = 0; b < 4; b++) {
       slong rk = gr_mat_ncols(G_blk[b], ctx);
       for (slong k = 0; k < rk; k++) {
         slong col = col_off[b] + k;
-        for (slong i = 0; i < blk_rows[b]; i++) {
+        for (slong i = 0; i < G_rows[b]; i++) {
           status |= gr_set(gr_mat_entry_ptr(G_D, G_rs[b] + i, col, ctx), gr_mat_entry_srcptr(G_blk[b], i, k, ctx), ctx);
-          status |= gr_set(gr_mat_entry_ptr(H_D, H_rs[b] + i, col, ctx), gr_mat_entry_srcptr(H_blk[b], i, k, ctx), ctx);
+        }
+        for (slong j = 0; j < H_rows[b]; j++) {
+          status |= gr_set(gr_mat_entry_ptr(H_D, H_rs[b] + j, col, ctx), gr_mat_entry_srcptr(H_blk[b], j, k, ctx), ctx);
         }
       }
     }
-    if (status != GR_SUCCESS) printf("[inv] FAILED: packing G_D/H_D\n");
+  }
+
+  /* FINAL BLEED FIX -------------------------------------------
+   * In the last step we glued the blocks x, y, z, t to our global
+   * generators that is supposed to return the inverse of the matrix
+   * after the reconstruction.
+   *
+   * During reconstruction, we addition the diagonal values, meaning
+   * that the top and left parts of our blocks will bleed into the corresponding
+   * blocks, corrupting the values.
+   *
+   * We calculate what bleeds and add it to the generators to cancel
+   *
+   * To do that we calculate Phi+(A^-1) = A^-1 - Z * A^-1 * Z^T.
+   * where A^-1 is the [[x y], [z t]]. Which gives us
+   * Phi+(A^-1) =
+   * [ x            | y - v_x*e0^T ]
+   * [ z - e0*r_x^T | t - v_z*e0^T - e0*r_y^T - s_val*e0*e0^T ]
+   */
+  {
+    gr_mat_t v_x, r_x, v_z, r_y, e_last_x, e0_y, tmp_n1, tmp_n2;
+    gr_mat_init(v_x, n1, 1, ctx);    // right border of x
+    gr_mat_init(r_x, n1, 1, ctx);    // bottom border of x
+    gr_mat_init(v_z, n2, 1, ctx);    // right border of z
+    gr_mat_init(r_y, n2, 1, ctx);    // bottom border of z
+    gr_mat_init(tmp_n1, n1, 1, ctx); // temp
+    gr_mat_init(tmp_n2, n2, 1, ctx); // temp
+
+    // construction of e
+
+    // e_last_x is vector [0, 0, ..., 1]^T.
+    // this extracts the last column of matrix
+    gr_mat_init(e_last_x, n1, 1, ctx);
+    status |= gr_mat_zero(e_last_x, ctx);
+    status |= gr_one(gr_mat_entry_ptr(e_last_x, n1 - 1, 0, ctx), ctx);
+
+    // e0_y is vector [1, 0, ..., 0]^T.
+    // this extracts the first column of matrix
+    gr_mat_init(e0_y, n2, 1, ctx);
+    status |= gr_mat_zero(e0_y, ctx);
+    status |= gr_one(gr_mat_entry_ptr(e0_y, 0, 0, ctx), ctx);
+
+    gr_ptr s_val = gr_heap_init(ctx);
+
+    // reconstruct x and multiply by e_last_x to pluck the last column.
+    status |= gr_mat_mul_vector(tmp_n1, G_x, H_x, e_last_x, ctx);
+    // save the very bottom pixel of that column into s_val (the corner)
+    status |= gr_set(s_val, gr_mat_entry_ptr(tmp_n1, n1 - 1, 0, ctx), ctx);
+    // shift it down by 1 (apply_Z) because the displacement pushes it down.
+    status |= gr_mat_apply_Z(v_x, tmp_n1, ctx);
+
+    // catch the bottom border of x spilling into z:
+    status |= gr_mat_mul_vector(tmp_n1, H_x, G_x, e_last_x, ctx);
+    status |= gr_mat_apply_Z(r_x, tmp_n1, ctx);
+
+    // catch the right border of z spilling into t:
+    status |= gr_mat_mul_vector(tmp_n2, G_tce, H_tce, e_last_x, ctx);
+    status |= gr_mat_apply_Z(v_z, tmp_n2, ctx);
+
+    // catch the bottom border of y spilling into t:
+    status |= gr_mat_mul_vector(tmp_n2, H_ebt, G_ebt, e_last_x, ctx);
+    status |= gr_mat_apply_Z(r_y, tmp_n2, ctx);
+
+    gr_mat_t G_corr, H_corr;
+    gr_mat_init(G_corr, n, 2, ctx);
+    gr_mat_init(H_corr, n, 2, ctx);
+    status |= gr_mat_zero(G_corr, ctx);
+    status |= gr_mat_zero(H_corr, ctx);
+
+    gr_ptr temp_calc = gr_heap_init(ctx);
+
+    for (slong i = 0; i < n1; i++) {
+      // -v_x * e0^T
+      status |= gr_neg(temp_calc, gr_mat_entry_ptr(v_x, i, 0, ctx), ctx);
+      status |= gr_set(gr_mat_entry_ptr(G_corr, i, 0, ctx), temp_calc, ctx);
+      // -e0 * r_x^T
+      status |= gr_neg(temp_calc, gr_mat_entry_ptr(r_x, i, 0, ctx), ctx);
+      status |= gr_set(gr_mat_entry_ptr(H_corr, i, 1, ctx), temp_calc, ctx);
+    }
+
+    for (slong i = 0; i < n2; i++) {
+      // -v_z * e0^T
+      status |= gr_neg(temp_calc, gr_mat_entry_ptr(v_z, i, 0, ctx), ctx);
+      if (i == 0) status |= gr_sub(temp_calc, temp_calc, s_val, ctx);
+      status |= gr_set(gr_mat_entry_ptr(G_corr, n1 + i, 0, ctx), temp_calc, ctx);
+
+      // e0
+      if (i == 0) status |= gr_one(gr_mat_entry_ptr(H_corr, n1 + i, 0, ctx), ctx);
+      if (i == 0) status |= gr_one(gr_mat_entry_ptr(G_corr, n1 + i, 1, ctx), ctx);
+
+      // -e0 * r_y^T
+      status |= gr_neg(temp_calc, gr_mat_entry_ptr(r_y, i, 0, ctx), ctx);
+      status |= gr_set(gr_mat_entry_ptr(H_corr, n1 + i, 1, ctx), temp_calc, ctx);
+    }
+
+    gr_mat_t G_final, H_final;
+    status |= gr_mat_addition_generateur(G_D, H_D, G_corr, H_corr, G_final, H_final, ctx);
+    // status |= gr_mat_addition_generateur(G_D, H_D, G_corr, H_corr, G_D, H_D, ctx);
+    gr_mat_swap(G_D, G_final, ctx);
+    gr_mat_swap(H_D, H_final, ctx);
+
+    gr_mat_clear(G_final, ctx);
+    gr_mat_clear(H_final, ctx);
+    gr_mat_clear(G_corr, ctx);
+    gr_mat_clear(H_corr, ctx);
+    gr_mat_clear(v_x, ctx);
+    gr_mat_clear(r_x, ctx);
+    gr_mat_clear(v_z, ctx);
+    gr_mat_clear(r_y, ctx);
+    gr_mat_clear(tmp_n1, ctx);
+    gr_mat_clear(tmp_n2, ctx);
+    gr_mat_clear(e_last_x, ctx);
+    gr_mat_clear(e0_y, ctx);
+    gr_heap_clear(s_val, ctx);
+    gr_heap_clear(temp_calc, ctx);
   }
 
   status |= gr_mat_generator_compress(G_D, H_D, ctx);
-  if (status != GR_SUCCESS)
-    printf("[inv] FAILED: final compress G_D/H_D\n");
-  else {
-    printf("[inv] G_D:\n");
-    gr_mat_print(G_D, ctx);
-    printf("[inv] H_D:\n");
-    gr_mat_print(H_D, ctx);
-  }
+  if (status != GR_SUCCESS) printf("[inv] FAILED: final compress G_D/H_D\n");
 
 free_x:
   gr_mat_clear(G_x, ctx);
