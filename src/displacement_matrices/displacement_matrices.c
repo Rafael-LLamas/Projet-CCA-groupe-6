@@ -242,12 +242,11 @@ int gr_mat_reconstruct_A(gr_mat_t A, gr_mat_t G, gr_mat_t H, disp_type_t type, g
   gr_ptr temp = gr_heap_init(ctx);    // g * h
 
   if (type == DISP_MINUS) {
-
-    for (slong i = 0; i < gr_mat_ncols(G, ctx); i++) {
+    for (slong i = 0; i < gr_mat_nrows(G, ctx); i++) {
       for (slong j = 0; j < gr_mat_nrows(H, ctx); j++) {
         status |= gr_zero(sum_res, ctx);
+        slong max_x = FLINT_MIN(gr_mat_nrows(G, ctx) - 1 - i, gr_mat_nrows(H, ctx) - 1 - j);
         for (slong k = 0; k < rank; k++) {
-          slong max_x = FLINT_MIN(gr_mat_ncols(G, ctx) - 1 - i, gr_mat_nrows(H, ctx) - 1 - j);
           for (slong x = 0; x <= max_x; x++) {
             status |= gr_mul(temp, gr_mat_entry_ptr(G, i + x, k, ctx), gr_mat_entry_ptr(H, j + x, k, ctx), ctx);
             status |= gr_add(sum_res, sum_res, temp, ctx);
