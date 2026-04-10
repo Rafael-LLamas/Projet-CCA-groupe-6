@@ -107,6 +107,7 @@ target_link_libraries(test_inversion PRIVATE project_lib)
 add_test(NAME Inverse.base_case                                     COMMAND test_inversion inverse_base_case)
 add_test(NAME Inverse.2x2                                           COMMAND test_inversion inverse_2x2)
 add_test(NAME Inverse.3x3                                           COMMAND test_inversion inverse_3x3)
+add_test(NAME Inverse.full                                          COMMAND test_inversion inverse_full)
 
 add_executable(test_compression tests/compression.test.c)
 target_link_libraries(test_compression PRIVATE project_lib)

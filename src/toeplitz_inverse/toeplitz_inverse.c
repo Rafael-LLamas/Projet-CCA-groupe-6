@@ -22,7 +22,7 @@ int gr_toeplitz_inverse(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, 
   slong rank = gr_mat_ncols(G_A, ctx);
 
   // TODO: can maybe add a check of its determinant once implemented the toeplitz version (det must not be zero)
-  printf("[inv] n=%ld rank=%ld\n", n, rank);
+  // flint_printf("[inv] n=%ld rank=%ld\n", n, rank);
 
   /* BASE CASE: -------------------------------------------
    * If a matrix is 1x1, its shift operator Z is 0.
@@ -33,14 +33,14 @@ int gr_toeplitz_inverse(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, 
    */
   if (n == 1) {
     if (rank == 0) {
-      printf("[inv] BASE CASE FAILED: rank=0\n");
+      // flint_printf("[inv] BASE CASE FAILED: rank=0\n");
       return GR_UNABLE;
     }
-    printf("[inv] base case G_A[0,0]=");
+    // flint_printf("[inv] base case G_A[0,0]=");
     gr_print(gr_mat_entry_srcptr(G_A, 0, 0, ctx), ctx);
-    printf(" H_A[0,0]=");
+    // flint_printf(" H_A[0,0]=");
     gr_print(gr_mat_entry_srcptr(H_A, 0, 0, ctx), ctx);
-    printf("\n");
+    // flint_printf("\n");
     status |= gr_mat_zero(G_D, ctx);
     status |= gr_mat_zero(H_D, ctx);
     status |= gr_inv(gr_mat_entry_ptr(G_D, 0, 0, ctx), gr_mat_entry_ptr(G_A, 0, 0, ctx), ctx);
@@ -88,13 +88,13 @@ int gr_toeplitz_inverse(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, 
     goto free_windows;
   }
 
-  printf("[inv] G_top:\n");
+  // flint_printf("[inv] G_top:\n");
   gr_mat_print(G_top, ctx);
-  printf("[inv] H_top:\n");
+  // flint_printf("[inv] H_top:\n");
   gr_mat_print(H_top, ctx);
-  printf("[inv] G_bottom:\n");
+  // flint_printf("[inv] G_bottom:\n");
   gr_mat_print(G_bottom, ctx);
-  printf("[inv] H_bottom:\n");
+  // flint_printf("[inv] H_bottom:\n");
   gr_mat_print(H_bottom, ctx);
 
   /* DISPLACEMENT BLEED: -------------------------------------------

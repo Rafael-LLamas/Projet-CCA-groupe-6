@@ -414,18 +414,13 @@ int benchmark_addition() {
 int benchmark_inversion() {
   FILE *csv = fopen("bench_inversion.csv", "w");
   slong sizesn[] = {128, 1024, 4096};
-  slong sizesm[] = {128, 1024, 4096};
   int num_sizes = 3;
   if (!csv) return GR_UNABLE;
 
-  if (n != -1 || m != -1) {
+  if (n != -1) {
     num_sizes = 2;
-    slong base_n = (n != -1) ? n : m;
-    slong base_m = (m != -1) ? m : n;
-    sizesn[0] = base_n / 2;
-    sizesn[1] = base_n;
-    sizesm[0] = base_m / 2;
-    sizesm[1] = base_m;
+    sizesn[0] = n / 2;
+    sizesn[1] = n;
   }
 
   int iterations = (iteration != -1) ? iteration : 10;
@@ -443,22 +438,23 @@ int benchmark_inversion() {
 
   for (int s = 0; s < num_sizes; s++) {
     slong cur_n = sizesn[s];
-    slong cur_m = sizesm[s];
     double gen_times[iterations], flint_times[iterations];
-    printf(ANSI_COLOR_CYAN "Size %ldx%ld :\n" ANSI_COLOR_RESET, cur_n, cur_m);
+    printf(ANSI_COLOR_CYAN "Size %ldx%ld :\n" ANSI_COLOR_RESET, cur_n, cur_n);
     printf(" %-12s | %-12s | %-12s\n", "Operation", "Average (ms)", "Median (ms)");
     printf("--------------|--------------|--------------\n");
 
     for (int i = 0; i < iterations; i++) {
       gr_mat_t A, B, G_a, G_b, H_a, H_b;
-      gr_mat_init(A, cur_n, cur_m, ctx);
-      gr_mat_init(B, cur_n, cur_m, ctx);
+      gr_mat_init(A, cur_n, cur_n, ctx);
+      gr_mat_init(B, cur_n, cur_n, ctx);
       if (rank != -1) {
         error = gr_mat_quasi_toeplitz_rank(A, rank, state, ctx);
       } else {
         error = gr_mat_random_toeplitz(A, state, ctx);
       }
       error = gr_mat_G_H(G_a, H_a, A, DISP_PLUS, ctx);
+      gr_mat_init(G_b, gr_mat_nrows(G_a, ctx), gr_mat_ncols(G_a, ctx), ctx);
+      gr_mat_init(H_b, gr_mat_nrows(H_a, ctx), gr_mat_ncols(H_a, ctx), ctx);
 
       double t1 = get_time_ms();
       error = gr_toeplitz_inverse(G_b, H_b, G_a, H_a, ctx);
@@ -471,8 +467,8 @@ int benchmark_inversion() {
         flint_times[i] = get_time_ms() - t3;
       }
 
-      fprintf(csv, "%ld,%ld,%d,%.4f,%.4f\n", cur_n, cur_m, i, gen_times[i], flint_times[i]);
-      printf("\rSize %ldx%ld... [%d/%d]", cur_n, cur_m, i + 1, iterations);
+      fprintf(csv, "%ld,%ld,%d,%.4f,%.4f\n", cur_n, cur_n, i, gen_times[i], flint_times[i]);
+      printf("\rSize %ldx%ld... [%d/%d]", cur_n, cur_n, i + 1, iterations);
       fflush(stdout);
 
       gr_mat_clear(A, ctx);
