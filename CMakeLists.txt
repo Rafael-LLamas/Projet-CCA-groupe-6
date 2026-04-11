@@ -47,7 +47,8 @@ target_link_libraries(flint_core INTERFACE
 set(PROJECT_SOURCES
     src/displacement_matrices/displacement_matrices.c
     src/random_toeplitz/random_toeplitz.c
-    src/toeplitz_inverse/toeplitz_inverse.c
+    src/inverse_toeplitz/inverse_toeplitz.c
+    src/inverse_toeplitz/inverse_toeplitz_aux.c
     src/utility/matrix_aux.c
     src/operations/multiplication.c
     src/operations/addition.c
@@ -58,7 +59,7 @@ target_link_libraries(project_lib PUBLIC flint_core)
 target_include_directories(project_lib PUBLIC
     src/displacement_matrices
     src/random_toeplitz
-    src/toeplitz_inverse
+    src/inverse_toeplitz
     src/utility
     src/operations
     src/compression

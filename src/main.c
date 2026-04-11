@@ -12,7 +12,7 @@
 #include "displacement_matrices.h"
 #include "multiplication.h"
 #include "random_toeplitz.h"
-#include "toeplitz_inverse.h"
+#include "inverse_toeplitz.h"
 
 // --- GESTION DU TEMPS ---
 #ifdef _WIN32
@@ -457,7 +457,7 @@ int benchmark_inversion() {
       gr_mat_init(H_b, gr_mat_nrows(H_a, ctx), gr_mat_ncols(H_a, ctx), ctx);
 
       double t1 = get_time_ms();
-      error = gr_toeplitz_inverse(G_b, H_b, G_a, H_a, ctx);
+      error = gr_mat_inverse_toeplitz(G_b, H_b, G_a, H_a, ctx);
       gen_times[i] = get_time_ms() - t1;
 
       flint_times[i] = 0;

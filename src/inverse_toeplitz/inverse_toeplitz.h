@@ -1,5 +1,5 @@
-#ifndef TOEPLITZ_INVERSE_H
-#define TOEPLITZ_INVERSE_H
+#ifndef INVERSE_TOEPLITZ_H
+#define INVERSE_TOEPLITZ_H
 
 #include "flint/gr.h"
 
@@ -9,6 +9,6 @@
  * @param[out] D Destination matrix represented by its G and H.
  * @param[in] A Input Toeplitz matrix represented by its G and H.
  */
-int gr_toeplitz_inverse(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, gr_ctx_t ctx);
+int gr_mat_inverse_toeplitz(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, gr_ctx_t ctx);
 
 #endif
