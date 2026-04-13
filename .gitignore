@@ -54,6 +54,7 @@ dkms.conf
 
 # debug information filesuilt
 .vscode/
+/.cache
 
 # Cmake
 CMakeLists.txt.user
@@ -81,6 +82,8 @@ report/main.toc
 report/indent.log
 report/main.blg
 report/main.bbl
+report/q.log
+report/texput.log
 .DS_Store
 
 #Flint 
