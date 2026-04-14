@@ -21,14 +21,29 @@ int gr_mat_inverse_toeplitz(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H
    * H_A and place it to G_D and H_D.
    */
   if (n == 1) {
-    if (rank == 0) return GR_DOMAIN;
-    gr_print(gr_mat_entry_srcptr(G_A, 0, 0, ctx), ctx);
-    gr_print(gr_mat_entry_srcptr(H_A, 0, 0, ctx), ctx);
-    status |= gr_mat_zero(G_D, ctx);
-    status |= gr_mat_zero(H_D, ctx);
-    status |= gr_inv(gr_mat_entry_ptr(G_D, 0, 0, ctx), gr_mat_entry_ptr(G_A, 0, 0, ctx), ctx);
-    status |= gr_inv(gr_mat_entry_ptr(H_D, 0, 0, ctx), gr_mat_entry_ptr(H_A, 0, 0, ctx), ctx);
-    if (status != GR_SUCCESS) printf("[inv] BASE CASE: gr_inv failed\n");
+    gr_ptr val = gr_heap_init(ctx);
+    gr_ptr temp = gr_heap_init(ctx);
+
+    status |= gr_zero(val, ctx);
+    for (slong i = 0; i < rank; i++) { // this loop should not be necessary - return - TODO
+      status |= gr_mul(temp, gr_mat_entry_srcptr(G_A, 0, i, ctx), gr_mat_entry_srcptr(H_A, 0, i, ctx), ctx);
+      status |= gr_add(val, val, temp, ctx);
+    }
+
+    status = gr_inv(val, val, ctx);
+
+    if (status == GR_SUCCESS) {
+      gr_mat_clear(G_D, ctx);
+      gr_mat_clear(H_D, ctx);
+      gr_mat_init(G_D, 1, 1, ctx);
+      gr_mat_init(H_D, 1, 1, ctx);
+
+      status |= gr_set(gr_mat_entry_ptr(G_D, 0, 0, ctx), val, ctx);
+      status |= gr_one(gr_mat_entry_ptr(H_D, 0, 0, ctx), ctx);
+    }
+
+    gr_heap_clear(val, ctx);
+    gr_heap_clear(temp, ctx);
     return status;
   }
 
