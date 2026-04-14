@@ -7,6 +7,7 @@
 #include "flint/gr.h"
 #include "flint/gr_mat.h"
 #include "flint/ulong_extras.h"
+#include "matrix_aux.h"
 #include "multiplication.h"
 #include "random_toeplitz.h"
 
@@ -448,6 +449,58 @@ int test_multiplication_vector() {
   return error;
 }
 
+int test_apply_Z() {
+  int status = GR_SUCCESS;
+  gr_ctx_t ctx;
+  flint_rand_t state;
+
+  gr_ctx_init_nmod(ctx, 11);
+  flint_rand_init(state);
+
+  slong n = 5;
+  gr_mat_t V, ZV, ZtV;
+  gr_mat_init(V, n, 1, ctx);
+  gr_mat_init(ZV, n, 1, ctx);
+  gr_mat_init(ZtV, n, 1, ctx);
+
+  status |= gr_mat_randtest(V, state, ctx);
+
+  status |= gr_mat_apply_Z(ZV, V, ctx);
+  if (gr_is_zero(gr_mat_entry_ptr(ZV, 0, 0, ctx), ctx) != T_TRUE) { status = GR_TEST_FAIL; }
+  for (slong i = 1; i < n; i++) {
+    if (gr_equal(gr_mat_entry_ptr(ZV, i, 0, ctx), gr_mat_entry_ptr(V, i - 1, 0, ctx), ctx) != T_TRUE) {
+      status = GR_TEST_FAIL;
+    }
+  }
+
+  status |= gr_mat_apply_Zt(ZtV, V, ctx);
+
+  // last element should be 0
+  if (gr_is_zero(gr_mat_entry_ptr(ZtV, n - 1, 0, ctx), ctx) != T_TRUE) { status = GR_TEST_FAIL; }
+  // ZtV[i] should be V[i+1]
+  for (slong i = 0; i < n - 1; i++) {
+    if (gr_equal(gr_mat_entry_ptr(ZtV, i, 0, ctx), gr_mat_entry_ptr(V, i + 1, 0, ctx), ctx) != T_TRUE) {
+      printf("Failure: Zt shift-up mismatch at index %ld\n", i);
+      status = GR_TEST_FAIL;
+    }
+  }
+
+  gr_mat_t V_inplace;
+  gr_mat_init(V_inplace, n, 1, ctx);
+  status |= gr_mat_set(V_inplace, V, ctx);
+
+  status |= gr_mat_apply_Zt(V_inplace, V_inplace, ctx);
+  if (gr_mat_equal(V_inplace, ZtV, ctx) != T_TRUE) status = GR_TEST_FAIL;
+
+  gr_mat_clear(V, ctx);
+  gr_mat_clear(ZV, ctx);
+  gr_mat_clear(ZtV, ctx);
+  gr_mat_clear(V_inplace, ctx);
+  flint_rand_clear(state);
+  gr_ctx_clear(ctx);
+  return status;
+}
+
 void usage(char *argv[]) {
   fprintf(stderr, "Usage: %s <test_name>\n", argv[0]);
   fprintf(stderr, "Available tests:\n");
@@ -470,6 +523,8 @@ int main(int argc, char *argv[]) {
     ok = test_multiplication_quasi_toeplitz();
   } else if (strcmp("multiplication_vector", argv[1]) == 0) {
     ok = test_multiplication_vector();
+  } else if (strcmp("apply_Z", argv[1]) == 0) {
+    ok = test_apply_Z();
   } else {
     fprintf(stderr, "Error: test \"%s\" not found!\n", argv[1]);
     exit(EXIT_FAILURE);
