@@ -97,6 +97,7 @@ target_link_libraries(test_operations_multiplication PRIVATE project_lib)
 add_test(NAME Operations.multiplication_toeplitz                    COMMAND test_operations_multiplication multiplication_toeplitz)
 add_test(NAME Operations.multiplication_quasi_toeplitz              COMMAND test_operations_multiplication multiplication_quasi_toeplitz)
 add_test(NAME Operations.multiplication_vector                      COMMAND test_operations_multiplication multiplication_vector)
+add_test(NAME Operations.apply_Z                                    COMMAND test_operations_multiplication apply_Z)
 
 add_executable(test_operations_addition tests/addition.test.c)
 target_link_libraries(test_operations_addition PRIVATE project_lib)
@@ -109,6 +110,8 @@ add_test(NAME Inverse.base_case                                     COMMAND test
 add_test(NAME Inverse.2x2                                           COMMAND test_inversion inverse_2x2)
 add_test(NAME Inverse.3x3                                           COMMAND test_inversion inverse_3x3)
 add_test(NAME Inverse.full                                          COMMAND test_inversion inverse_full)
+add_test(NAME Inverse.split_quadrants                               COMMAND test_inversion inverse_split_quadrants)
+add_test(NAME Inverse.pack_quadrants                                COMMAND test_inversion inverse_pack_quadrants)
 
 add_executable(test_compression tests/compression.test.c)
 target_link_libraries(test_compression PRIVATE project_lib)
