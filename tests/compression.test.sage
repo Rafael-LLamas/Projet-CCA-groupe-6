@@ -10,13 +10,23 @@
 
 def compress_matrices(G, H):
     # main logic
-    E, T = (H.T).echelon_form(transformation=True)
-    G_COMP = G * T.inverse()
-    H_COMP = E.T
+    E_H, T_H = (H.T).echelon_form(transformation=True)
+    G_TEMP = G * T_H.inverse()
+    H_TEMP = E_H.T
     
     # cut down the excess (based on the zeros on last column of H)
-    for i in range(H_COMP.ncols()):
-        if H_COMP.column(i).is_zero():
+    for i in range(H_TEMP.ncols()):
+        if H_TEMP.column(i).is_zero():
+            G_TEMP = G_TEMP.delete_columns([i])
+            H_TEMP = H_TEMP.delete_columns([i])
+    
+    E_G, T_G = (G_TEMP.T).echelon_form(transformation=True)
+    G_COMP = E_G.T
+    H_COMP = H_TEMP * T_G.inverse()
+
+   # cut down the excess (based on the zeros on last column of G)
+    for i in range(G_COMP.ncols()):
+        if G_TEMP.column(i).is_zero():
             G_COMP = G_COMP.delete_columns([i])
             H_COMP = H_COMP.delete_columns([i])
         

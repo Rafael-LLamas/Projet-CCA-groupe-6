@@ -1,44 +1,110 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "displacement_matrices.h"
+#include "matrix_aux.h"
 
 #include "flint/flint.h"
 #include "flint/gr_mat.h"
 #include "flint/gr_types.h"
-#include "flint/gr_types.h"
 
-int gr_mat_generator_compress(gr_mat_t G_d, gr_mat_t H_d, gr_ctx_t ctx) {
-
-  /*
-   * This is an auxilary function to perform compression on Toeplitz generators
-   *
-   * Main goal is to achieve generators of D such that
-   *        reconstruct(D) = reconstruct(A)
-   * meanwhile having the rank of generators D less or equal to A.
-   *
-   * This code actually has no optimizations whatsoever and is only
-   * a naive first implementation to get strassen up and working.
-   */
-
+// Performs compression on G and updates H
+int gr_mat_generator_compress_aux(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H_A, gr_ctx_t ctx) {
   int status = GR_SUCCESS;
-  slong n = gr_mat_nrows(G_d, ctx);
-  slong m = gr_mat_nrows(H_d, ctx); // H is n x rank, so nrows = n too
+  slong n = gr_mat_nrows(G_A, ctx);
+  slong k = gr_mat_ncols(G_A, ctx);
 
-  gr_mat_t A;
-  gr_mat_init(A, n, m, ctx);
+  gr_mat_t G_AT;
+  gr_mat_init(G_AT, k, n, ctx);
+  status |= gr_mat_transpose(G_AT, G_A, ctx);
 
-  status |= gr_mat_reconstruct_A(A, G_d, H_d, DISP_PLUS, ctx);
-  if (status != GR_SUCCESS) {
-    gr_mat_clear(A, ctx);
+  slong *P = flint_malloc(k * sizeof(slong)); // Permutation table
+  slong rank;
+
+  gr_mat_t LU, L, U;
+  gr_mat_init(LU, k, n, ctx);
+  gr_mat_init(L, k, k, ctx);
+  gr_mat_init(U, k, n, ctx);
+
+  // LU decomposition: P * GT = L * U
+  status |= gr_mat_lu(&rank, P, LU, G_AT, 0, ctx);
+
+  if (rank < 1) {
+    gr_mat_init(G_D, n, 1, ctx);
+    gr_mat_init(H_D, n, 1, ctx);
+    status |= gr_mat_zero(G_D, ctx);
+    status |= gr_mat_zero(H_D, ctx);
+
+    flint_free(P);
+    gr_mat_clear(G_AT, ctx);
+    gr_mat_clear(LU, ctx);
+    gr_mat_clear(L, ctx);
+    gr_mat_clear(U, ctx);
     return status;
   }
 
-  gr_mat_clear(G_d, ctx);
-  gr_mat_clear(H_d, ctx);
+  if (status == GR_SUCCESS) { status |= gr_mat_lu_detach(L, U, LU, ctx); }
 
-  status |= gr_mat_G_H(G_d, H_d, A, DISP_PLUS, ctx);
+  gr_mat_init(G_D, n, rank, ctx);
 
-  gr_mat_clear(A, ctx);
+  gr_mat_t H_perm, L_part;
+  gr_mat_init(H_perm, n, k, ctx);
+  gr_mat_init(L_part, k, rank, ctx);
+
+  if (status == GR_SUCCESS) {
+    // G_D = U^T for [0:r-1],*
+    for (slong i = 0; i < rank; i++) {
+      for (slong j = 0; j < n; j++) {
+        status |= gr_set(gr_mat_entry_ptr(G_D, j, i, ctx), gr_mat_entry_srcptr(U, i, j, ctx), ctx);
+      }
+    }
+
+    // permutation to H into H_perm
+    for (slong i = 0; i < k; i++) {
+      for (slong r = 0; r < n; r++) {
+        status |= gr_set(gr_mat_entry_ptr(H_perm, r, i, ctx), gr_mat_entry_srcptr(H_A, r, P[i], ctx), ctx);
+      }
+    }
+
+    // truncate L to L_part ∗,[0:r−1]
+    for (slong i = 0; i < k; i++) {
+      for (slong j = 0; j < rank; j++) {
+        status |= gr_set(gr_mat_entry_ptr(L_part, i, j, ctx), gr_mat_entry_srcptr(L, i, j, ctx), ctx);
+      }
+    }
+
+    // Calculate H_D = H_perm * L_part
+    gr_mat_init(H_D, n, rank, ctx);
+    status |= gr_mat_mul(H_D, H_perm, L_part, ctx);
+  }
+
+  flint_free(P);
+  gr_mat_clear(G_AT, ctx);
+  gr_mat_clear(LU, ctx);
+  gr_mat_clear(L, ctx);
+  gr_mat_clear(U, ctx);
+  gr_mat_clear(H_perm, ctx);
+  gr_mat_clear(L_part, ctx);
+
+  return status;
+}
+
+// Compression
+int gr_mat_generator_compress(gr_mat_t G_D, gr_mat_t H_D, gr_ctx_t ctx) {
+  int status = GR_SUCCESS;
+
+  gr_mat_t G1, H1;
+  status |= gr_mat_generator_compress_aux(G1, H1, G_D, H_D, ctx);
+
+  gr_mat_t G2, H2;
+  status |= gr_mat_generator_compress_aux(H2, G2, H1, G1, ctx);
+
+  gr_mat_swap(G_D, G2, ctx);
+  gr_mat_swap(H_D, H2, ctx);
+
+  gr_mat_clear(G1, ctx);
+  gr_mat_clear(H1, ctx);
+  gr_mat_clear(G2, ctx);
+  gr_mat_clear(H2, ctx);
+
   return status;
 }
