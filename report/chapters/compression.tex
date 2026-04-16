@@ -1,0 +1,47 @@
+\subsection{Generator Compression}
+
+Any operation done on Toeplitz matrices will increase the rank of the generators.
+To maintain the complexity advantage of this structure, we must perform compressions. 
+This will appear more and more on algorithms that require arithmetics.
+
+For any pair of matrices $G_{A}, H_{A} \in \mathbb{K}^{n \times k}$, let $r$ be the rank of their product $G_{A} H_{A}^T$ (where $r \le k$). Our goal is to construct a new pair generators $G_{D}, H_{D} \in \mathbb{K}^{n \times r}$ such these conditions are met:
+\begin{enumerate}
+    \item The displacement product is preserved:$G_{A} H_{A}^T = G_{D} H_{D}^T$
+    \item The number of columns of the matrices $G_{D}$ and $H_{D}$ are equal and is the rank of $G_{A} H_{A}^T$.
+\end{enumerate}
+
+We will achieve this by independently compression both matrices and applying the inverse of the operations done to the other.
+
+\begin{algorithm}[H]
+\caption{Generator Compression}
+\begin{algorithmic}[1]
+\Procedure{generator\_compress}{$G_A, H_A$}
+    \State $G_1, H_1 \gets \Call{generator\_compress\_aux}{G_A, H_A}$
+    \State $H_D, G_D \gets \Call{generator\_compress\_aux}{H_1, G_1}$ 
+    \State \textbf{return} $G_D, H_D$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{Generator Compression Auxilary}
+\begin{algorithmic}[1]
+\Procedure{generator\_compress\_aux}{$G, H$}
+    \State $P, L, U \gets \text{LU\_Decomposition}(G^T)$ \Comment{$P G^T = L U$}
+    \State $r \gets \text{Number of non-zero rows in } U$ \Comment{rank}
+    \If{$r < 1$}
+        \State \textbf{return} $\text{Generators of a 0 matrix}$
+    \EndIf
+    \State $G_{D} \gets (U_{[0:r-1],*})^T$
+    \State $H_{D} \gets H P^T \times  L_{*,[0:r-1]}$
+    \State \textbf{return} $G_{D}, H_{D}$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+Computing the LU factorization of the transposed generator $G^T \in \mathbb{K}^{r \times n}$ requires $\mathcal{O}(r^2 n)$ operations.
+Extracting $U$ and applying the permutation matrix $P^T$ to $H$ is in $\mathcal{O}(r n)$.
+Computing the new right factor $H_{D} = H P^T \times L_{*,[0:r-1]}$ involves multiplying an $n \times k$ matrix by a $k \times r$ matrix. Using standard matrix multiplication, this takes $\mathcal{O}(r^2 n)$ operations.
+Our implementation is using loops to get the selected amount of rows and columns but their complexities are bounded by $\mathcal{O}(r^2 n)$.
+
+We can generalize the complexity by revising for any matrix in $\mathbb{K}^{m \times n}$ the overall time complexity for the generator compression is $\mathcal{O}(r m n)$.
