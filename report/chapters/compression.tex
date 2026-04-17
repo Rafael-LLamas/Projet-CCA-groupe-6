@@ -45,3 +45,14 @@ Computing the new right factor $H_{D} = H P^T \times L_{*,[0:r-1]}$ involves mul
 Our implementation is using loops to get the selected amount of rows and columns but their complexities are bounded by $\mathcal{O}(r^2 n)$.
 
 We can generalize the complexity by revising for any matrix in $\mathbb{K}^{m \times n}$ the overall time complexity for the generator compression is $\mathcal{O}(r m n)$.
+
+Our implementation can be found in:
+\begin{verbatim}
+Project
+\   src
+|   \   compression
+|   |   |   compression.c
+|   |   |   compression.h
+\end{verbatim}
+
+\paragraph{int gr\_mat\_generator\_compress(gr\_mat\_t G\_d, gr\_mat\_t H\_d, gr\_ctx\_t ctx);} Is our function that implements the algorithms talked in this chapter.
