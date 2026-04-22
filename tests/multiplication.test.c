@@ -13,7 +13,7 @@
 
 int test_multiplication_toeplitz() {
   int i = 0;
-  int error = 0;
+  int error = GR_SUCCESS;
   flint_rand_t state;
   flint_rand_init(state);
   flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
@@ -27,7 +27,7 @@ int test_multiplication_toeplitz() {
     gr_mat_init(A, n, m, ctx);
     gr_mat_init(B, m, k, ctx);
     error = gr_mat_random_toeplitz(A, state, ctx);
-    if (error != 0) {
+    if (error != GR_SUCCESS) {
       flint_printf("Failed to create a Toeplitz A, FIX IT FAST\n");
       gr_mat_clear(A, ctx);
       gr_mat_clear(B, ctx);
@@ -36,7 +36,7 @@ int test_multiplication_toeplitz() {
       return error;
     }
     error = gr_mat_random_toeplitz(B, state, ctx);
-    if (error != 0) {
+    if (error != GR_SUCCESS) {
       flint_printf("Failed to create a Toeplitz A, FIX IT FAST\n");
       gr_mat_clear(A, ctx);
       gr_mat_clear(B, ctx);
@@ -49,7 +49,7 @@ int test_multiplication_toeplitz() {
     gr_mat_init(D, gr_mat_nrows(A, ctx), gr_mat_ncols(B, ctx), ctx);
     error = gr_mat_G_H(G_a, H_a, A, DISP_PLUS, ctx);
 
-    if (error != 0) {
+    if (error != GR_SUCCESS) {
       flint_printf("Failed to generate G and H of A, FIX IT FAST\n");
       gr_mat_clear(C, ctx);
       gr_mat_clear(A, ctx);
@@ -62,7 +62,7 @@ int test_multiplication_toeplitz() {
     }
 
     error = gr_mat_G_H(G_b, H_b, B, DISP_PLUS, ctx);
-    if (error != 0) {
+    if (error != GR_SUCCESS) {
       flint_printf("Failed to generate G and H of B, FIX IT FAST\n");
       gr_mat_clear(C, ctx);
       gr_mat_clear(A, ctx);
@@ -76,7 +76,7 @@ int test_multiplication_toeplitz() {
       return error;
     }
     error = gr_mat_mul(C, A, B, ctx);
-    if (error != 0) {
+    if (error != GR_SUCCESS) {
       flint_printf("Failed to multiply with flint, size ??\n");
       gr_mat_clear(C, ctx);
       gr_mat_clear(A, ctx);
@@ -90,7 +90,7 @@ int test_multiplication_toeplitz() {
       return error;
     }
     error = gr_mat_mul_generator(G_c, H_c, G_a, H_a, G_b, H_b, ctx);
-    if (error != 0) {
+    if (error != GR_SUCCESS) {
       flint_printf("Failed to multiply, FIX IT FAST\n");
       gr_mat_clear(C, ctx);
       gr_mat_clear(A, ctx);
@@ -106,7 +106,7 @@ int test_multiplication_toeplitz() {
       return error;
     }
     error = gr_mat_reconstruct_A(D, G_c, H_c, DISP_PLUS, ctx);
-    if (error != 0) {
+    if (error != GR_SUCCESS) {
       flint_printf("Failed to reconstruct D, FIX IT FAST\n");
       gr_mat_clear(C, ctx);
       gr_mat_clear(A, ctx);
@@ -174,7 +174,7 @@ int test_multiplication_toeplitz() {
 
 int test_multiplication_quasi_toeplitz() {
   int i = 0;
-  int error = 0;
+  int error = GR_SUCCESS;
   flint_rand_t state;
   flint_rand_init(state);
   flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
@@ -188,7 +188,7 @@ int test_multiplication_quasi_toeplitz() {
     gr_mat_init(A, n, m, ctx);
     gr_mat_init(B, m, k, ctx);
     error = gr_mat_random_quasi_toepitz(A, state, ctx);
-    if (error != 0) {
+    if (error != GR_SUCCESS) {
       flint_printf("Failed to create a quasi Toeplitz A, FIX IT FAST\n");
       gr_mat_clear(A, ctx);
       gr_mat_clear(B, ctx);
@@ -197,7 +197,7 @@ int test_multiplication_quasi_toeplitz() {
       return error;
     }
     error = gr_mat_random_quasi_toepitz(B, state, ctx);
-    if (error != 0) {
+    if (error != GR_SUCCESS) {
       flint_printf("Failed to create a quasi Toeplitz B, FIX IT FAST\n");
       gr_mat_clear(A, ctx);
       gr_mat_clear(B, ctx);
@@ -208,7 +208,7 @@ int test_multiplication_quasi_toeplitz() {
     gr_mat_init(C, gr_mat_nrows(A, ctx), gr_mat_ncols(B, ctx), ctx);
     gr_mat_init(D, gr_mat_nrows(A, ctx), gr_mat_ncols(B, ctx), ctx);
     error = gr_mat_G_H(G_a, H_a, A, DISP_PLUS, ctx);
-    if (error != 0) {
+    if (error != GR_SUCCESS) {
       flint_printf("Failed to generate G and H of A, FIX IT FAST\n");
       gr_mat_clear(C, ctx);
       gr_mat_clear(A, ctx);
@@ -220,7 +220,7 @@ int test_multiplication_quasi_toeplitz() {
       return error;
     }
     error = gr_mat_G_H(G_b, H_b, B, DISP_PLUS, ctx);
-    if (error != 0) {
+    if (error != GR_SUCCESS) {
       flint_printf("Failed to generate G and H of B, FIX IT FAST\n");
       gr_mat_clear(C, ctx);
       gr_mat_clear(A, ctx);
@@ -234,7 +234,7 @@ int test_multiplication_quasi_toeplitz() {
       return error;
     }
     error = gr_mat_mul(C, A, B, ctx);
-    if (error != 0) {
+    if (error != GR_SUCCESS) {
       flint_printf("Failed to multiply with flint, size ??\n");
       gr_mat_clear(C, ctx);
       gr_mat_clear(A, ctx);
@@ -248,7 +248,7 @@ int test_multiplication_quasi_toeplitz() {
       return error;
     }
     error = gr_mat_mul_generator(G_c, H_c, G_a, H_a, G_b, H_b, ctx);
-    if (error != 0) {
+    if (error != GR_SUCCESS) {
       flint_printf("Failed to multiply, FIX IT FAST\n");
       gr_mat_clear(C, ctx);
       gr_mat_clear(A, ctx);
@@ -264,7 +264,7 @@ int test_multiplication_quasi_toeplitz() {
       return error;
     }
     error = gr_mat_reconstruct_A(D, G_c, H_c, DISP_PLUS, ctx);
-    if (error != 0) {
+    if (error != GR_SUCCESS) {
       flint_printf("Failed to reconstruct D, FIX IT FAST\n");
       gr_mat_clear(C, ctx);
       gr_mat_clear(A, ctx);
@@ -334,7 +334,7 @@ int test_multiplication_quasi_toeplitz() {
 
 int test_multiplication_vector() {
   int i = 0;
-  int error = 0;
+  int error = GR_SUCCESS;
   flint_rand_t state;
   flint_rand_init(state);
   flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
@@ -349,7 +349,7 @@ int test_multiplication_vector() {
     gr_mat_init(C, n, 1, ctx);
     gr_mat_init(D, n, 1, ctx);
     error = gr_mat_random_toeplitz(A, state, ctx);
-    if (error != 0) {
+    if (error != GR_SUCCESS) {
       flint_printf("Failed to create to create a Toeplitz, FIX IT FAST\n");
       gr_mat_clear(C, ctx);
       gr_mat_clear(D, ctx);
@@ -362,7 +362,7 @@ int test_multiplication_vector() {
 
     for (int j = 0; j < gr_mat_ncols(A, ctx); j++) {
       error = gr_randtest_not_zero(gr_mat_entry_ptr(X, j, 0, ctx), state, ctx);
-      if (error != 0) {
+      if (error != GR_SUCCESS) {
         flint_printf("Failed to create X, make sure you put the right size\n");
         gr_mat_clear(C, ctx);
         gr_mat_clear(D, ctx);
@@ -375,7 +375,7 @@ int test_multiplication_vector() {
     }
 
     error = gr_mat_mul(C, A, X, ctx);
-    if (error != 0) {
+    if (error != GR_SUCCESS) {
       flint_printf("Failed to do the multiplication flint, make sur you give the right size\n");
       gr_mat_clear(C, ctx);
       gr_mat_clear(D, ctx);
@@ -387,7 +387,7 @@ int test_multiplication_vector() {
     }
 
     error = gr_mat_G_H(G_a, H_a, A, DISP_PLUS, ctx);
-    if (error != 0) {
+    if (error != GR_SUCCESS) {
       flint_printf("Failed to get the generators of A, FIX IT FAST !\n");
       gr_mat_clear(C, ctx);
       gr_mat_clear(D, ctx);
@@ -401,7 +401,7 @@ int test_multiplication_vector() {
     }
 
     error = gr_mat_mul_vector(D, G_a, H_a, X, ctx);
-    if (error != 0) {
+    if (error != GR_SUCCESS) {
       flint_printf("Failed to do the multiplication, FIX IT FAST !\n");
       gr_mat_clear(C, ctx);
       gr_mat_clear(D, ctx);

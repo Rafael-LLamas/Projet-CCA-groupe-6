@@ -11,6 +11,7 @@
 
 int test_LU_detatch() {
   gr_ctx_t ctx;
+  int error = GR_SUCCESS;
   flint_printf("\n:-------: LU Detatch on random Matrix :-------:\n");
   gr_mat_t A, LU, L, U, B, C;
   slong rank, *P;
@@ -21,8 +22,8 @@ int test_LU_detatch() {
   P = flint_malloc(sizeof(slong) * 10);
   gr_mat_init(A, 5, 10, ctx);
   gr_mat_init(C, 10, 10, ctx);
-  int error = gr_mat_init_set(B, A, ctx);
-  if (error != 0) {
+  error = gr_mat_init_set(B, A, ctx);
+  if (error != GR_SUCCESS) {
     gr_mat_clear(A, ctx);
     gr_mat_clear(B, ctx);
     gr_mat_clear(C, ctx);
@@ -35,7 +36,7 @@ int test_LU_detatch() {
   gr_mat_init(L, 5, 10, ctx);
   gr_mat_init(U, 10, 10, ctx);
   error = gr_mat_random_quasi_toepitz(A, state, ctx);
-  if (error != 0) {
+  if (error != GR_SUCCESS) {
     gr_mat_clear(A, ctx);
     gr_mat_clear(B, ctx);
     gr_mat_clear(C, ctx);
@@ -52,7 +53,7 @@ int test_LU_detatch() {
   flint_printf("\n**************************************************\n");
   flint_printf("LU = \n");
   error = gr_mat_lu(&rank, P, LU, A, 0, ctx);
-  if (error != 0) {
+  if (error != GR_SUCCESS) {
     gr_mat_clear(A, ctx);
     gr_mat_clear(B, ctx);
     gr_mat_clear(C, ctx);
@@ -67,7 +68,7 @@ int test_LU_detatch() {
   gr_mat_print(LU, ctx);
   flint_printf("\n**************************************************\n");
   error = gr_mat_lu_detach(L, U, LU, ctx);
-  if (error != 0) {
+  if (error != GR_SUCCESS) {
     gr_mat_clear(A, ctx);
     gr_mat_clear(B, ctx);
     gr_mat_clear(C, ctx);
@@ -86,7 +87,7 @@ int test_LU_detatch() {
   gr_mat_print(L, ctx);
   flint_printf("\n**************************************************\n");
   error = gr_mat_mul(B, L, U, ctx);
-  if (error != 0) {
+  if (error != GR_SUCCESS) {
     gr_mat_clear(A, ctx);
     gr_mat_clear(B, ctx);
     gr_mat_clear(C, ctx);
@@ -102,7 +103,7 @@ int test_LU_detatch() {
   gr_mat_print(B, ctx);
   flint_printf("\n**************************************************\n");
   error = gr_mat_random_manual(C, state, 1009, ctx);
-  if (error != 0) {
+  if (error != GR_SUCCESS) {
     gr_mat_clear(A, ctx);
     gr_mat_clear(B, ctx);
     gr_mat_clear(C, ctx);

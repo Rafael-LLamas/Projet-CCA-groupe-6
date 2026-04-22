@@ -21,14 +21,14 @@ int check_compress_correctness(gr_mat_t ref, gr_mat_t G_c, gr_mat_t H_c, slong o
   slong n = gr_mat_nrows(ref, ctx);
   slong m = gr_mat_ncols(ref, ctx);
   slong new_rank = gr_mat_ncols(G_c, ctx);
-  
+
   gr_mat_t Check;
   gr_mat_init(Check, n, m, ctx);
   status |= gr_mat_reconstruct_A(Check, G_c, H_c, DISP_PLUS, ctx);
   if (gr_mat_equal(Check, ref, ctx) == T_FALSE) status = GR_TEST_FAIL;
   gr_mat_clear(Check, ctx);
   if (new_rank > old_rank) status = GR_TEST_FAIL;
-  
+
   gr_mat_t D;
   gr_mat_init(D, n, m, ctx);
   status |= gr_mat_displacement(D, ref, DISP_PLUS, ctx);
@@ -40,12 +40,11 @@ int check_compress_correctness(gr_mat_t ref, gr_mat_t G_c, gr_mat_t H_c, slong o
 }
 
 int test_compress_toeplitz(int nb_iter) {
-  int status = GR_SUCCESS;
-  int n = 20;
-  int i = 0;
-
   flint_rand_t state;
   flint_rand_init(state);
+  int status = GR_SUCCESS;
+  slong n = n_randint(state, 500);
+  int i = 0;
 
   gr_ctx_t ctx;
   gr_ctx_init_nmod(ctx, n_randprime(state, 61, 1));
@@ -54,11 +53,45 @@ int test_compress_toeplitz(int nb_iter) {
     gr_mat_t A, G, H;
     gr_mat_init(A, n, n, ctx);
     status |= gr_mat_random_toeplitz(A, state, ctx);
+    if (status != GR_SUCCESS) {
+      flint_printf("Error to create A");
+      gr_mat_clear(A, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return status;
+    }
     status |= gr_mat_G_H(G, H, A, DISP_PLUS, ctx);
+    if (status != GR_SUCCESS) {
+      flint_printf("Error to create G and H");
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(G, ctx);
+      gr_mat_clear(H, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return status;
+    }
 
     slong old_rank = gr_mat_ncols(G, ctx);
     status |= gr_mat_generator_compress(G, H, ctx);
+    if (status != GR_SUCCESS) {
+      flint_printf(" Error to Compress");
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(G, ctx);
+      gr_mat_clear(H, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return status;
+    }
     status |= check_compress_correctness(A, G, H, old_rank, ctx);
+    if (status != GR_SUCCESS) {
+      flint_printf("failed verification compress");
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(G, ctx);
+      gr_mat_clear(H, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return status;
+    }
 
     gr_mat_clear(A, ctx);
     gr_mat_clear(G, ctx);
@@ -72,15 +105,13 @@ int test_compress_toeplitz(int nb_iter) {
 }
 
 int test_compress_after_addition(int nb_iter) {
-  int status = GR_SUCCESS;
-  int n = 20;
-  int i = 0;
-
   flint_rand_t state;
   flint_rand_init(state);
-
+  int status = GR_SUCCESS;
+  slong n = n_randint(state, 500);
+  int i = 0;
   gr_ctx_t ctx;
-  gr_ctx_init_nmod(ctx, n_randprime(state, 61, 1));
+  gr_ctx_init_nmod(ctx, n_randprime(state, 60, 1));
 
   while (i < nb_iter) {
     gr_mat_t A, I, Ref, G_a, H_a, G_i, H_i, G_c, H_c;
@@ -89,16 +120,112 @@ int test_compress_after_addition(int nb_iter) {
     gr_mat_init(Ref, n, n, ctx);
 
     status |= gr_mat_random_toeplitz(A, state, ctx);
+    if (status != GR_SUCCESS) {
+      flint_printf("Error to create A");
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(I, ctx);
+      gr_mat_clear(Ref, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return status;
+    }
     status |= gr_mat_one(I, ctx);
+    if (status != GR_SUCCESS) {
+      flint_printf("Error to create I");
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(I, ctx);
+      gr_mat_clear(Ref, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return status;
+    }
     status |= gr_mat_add(Ref, A, I, ctx);
+    if (status != GR_SUCCESS) {
+      flint_printf("Error to do the addition");
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(I, ctx);
+      gr_mat_clear(Ref, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return status;
+    }
 
     status |= gr_mat_G_H(G_a, H_a, A, DISP_PLUS, ctx);
+    if (status != GR_SUCCESS) {
+      flint_printf("Error to create G_a and H_a");
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(I, ctx);
+      gr_mat_clear(Ref, ctx);
+      gr_mat_clear(G_a, ctx);
+      gr_mat_clear(H_a, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return status;
+    }
     status |= gr_mat_G_H(G_i, H_i, I, DISP_PLUS, ctx);
+    if (status != GR_SUCCESS) {
+      flint_printf("Error to create G_i & H_i");
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(I, ctx);
+      gr_mat_clear(Ref, ctx);
+      gr_mat_clear(G_a, ctx);
+      gr_mat_clear(H_a, ctx);
+      gr_mat_clear(G_i, ctx);
+      gr_mat_clear(H_i, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return status;
+    }
     status |= gr_mat_addition_generateur(G_a, H_a, G_i, H_i, G_c, H_c, ctx);
+    if (status != GR_SUCCESS) {
+      flint_printf("Error addition the generators");
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(I, ctx);
+      gr_mat_clear(Ref, ctx);
+      gr_mat_clear(G_a, ctx);
+      gr_mat_clear(H_a, ctx);
+      gr_mat_clear(G_i, ctx);
+      gr_mat_clear(H_i, ctx);
+      gr_mat_clear(G_c, ctx);
+      gr_mat_clear(H_c, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return status;
+    }
 
     slong old_rank = gr_mat_ncols(G_c, ctx);
     status |= gr_mat_generator_compress(G_c, H_c, ctx);
+    if (status != GR_SUCCESS) {
+      flint_printf("Error to compress");
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(I, ctx);
+      gr_mat_clear(Ref, ctx);
+      gr_mat_clear(G_a, ctx);
+      gr_mat_clear(H_a, ctx);
+      gr_mat_clear(G_i, ctx);
+      gr_mat_clear(H_i, ctx);
+      gr_mat_clear(G_c, ctx);
+      gr_mat_clear(H_c, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return status;
+    }
     status |= check_compress_correctness(Ref, G_c, H_c, old_rank, ctx);
+    if (status != GR_SUCCESS) {
+      flint_printf("failed verify the compression");
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(I, ctx);
+      gr_mat_clear(Ref, ctx);
+      gr_mat_clear(G_a, ctx);
+      gr_mat_clear(H_a, ctx);
+      gr_mat_clear(G_i, ctx);
+      gr_mat_clear(H_i, ctx);
+      gr_mat_clear(G_c, ctx);
+      gr_mat_clear(H_c, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return status;
+    }
 
     gr_mat_clear(A, ctx);
     gr_mat_clear(I, ctx);
@@ -118,12 +245,12 @@ int test_compress_after_addition(int nb_iter) {
 }
 
 int test_compress_after_multiplication(int nb_iter) {
-  int status = GR_SUCCESS;
-  int n = 20;
-  int i = 0;
-
   flint_rand_t state;
   flint_rand_init(state);
+  int status = GR_SUCCESS;
+  slong n = n_randint(state, 500);
+  int i = 0;
+
   gr_ctx_t ctx;
   gr_ctx_init_nmod(ctx, n_randprime(state, 61, 1));
 
@@ -133,15 +260,95 @@ int test_compress_after_multiplication(int nb_iter) {
     gr_mat_init(I, n, n, ctx);
 
     status |= gr_mat_random_toeplitz(A, state, ctx);
+    if (status != GR_SUCCESS) {
+      flint_printf("Error to create A");
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(I, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return status;
+    }
     status |= gr_mat_one(I, ctx);
+    if (status != GR_SUCCESS) {
+      flint_printf("Error to create I");
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(I, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return status;
+    }
 
     status |= gr_mat_G_H(G_a, H_a, A, DISP_PLUS, ctx);
+    if (status != GR_SUCCESS) {
+      flint_printf("Error to create G_a & H_a");
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(I, ctx);
+      gr_mat_clear(G_a, ctx);
+      gr_mat_clear(H_a, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return status;
+    }
     status |= gr_mat_G_H(G_i, H_i, I, DISP_PLUS, ctx);
+    if (status != GR_SUCCESS) {
+      flint_printf("Error to create G_i & H_i");
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(I, ctx);
+      gr_mat_clear(G_a, ctx);
+      gr_mat_clear(H_a, ctx);
+      gr_mat_clear(G_i, ctx);
+      gr_mat_clear(H_i, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return status;
+    }
     status |= gr_mat_mul_generator(G_c, H_c, G_a, H_a, G_i, H_i, ctx);
+    if (status != GR_SUCCESS) {
+      flint_printf("Error to multiply the generators");
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(I, ctx);
+      gr_mat_clear(G_a, ctx);
+      gr_mat_clear(H_a, ctx);
+      gr_mat_clear(G_i, ctx);
+      gr_mat_clear(H_i, ctx);
+      gr_mat_clear(G_c, ctx);
+      gr_mat_clear(H_c, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return status;
+    }
 
     slong old_rank = gr_mat_ncols(G_c, ctx);
     status |= gr_mat_generator_compress(G_c, H_c, ctx);
+    if (status != GR_SUCCESS) {
+      flint_printf("Error to crompress");
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(I, ctx);
+      gr_mat_clear(G_a, ctx);
+      gr_mat_clear(H_a, ctx);
+      gr_mat_clear(G_i, ctx);
+      gr_mat_clear(H_i, ctx);
+      gr_mat_clear(G_c, ctx);
+      gr_mat_clear(H_c, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return status;
+    }
     status |= check_compress_correctness(A, G_c, H_c, old_rank, ctx);
+    if (status != GR_SUCCESS) {
+      flint_printf("Failed to verify the compression");
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(I, ctx);
+      gr_mat_clear(G_a, ctx);
+      gr_mat_clear(H_a, ctx);
+      gr_mat_clear(G_i, ctx);
+      gr_mat_clear(H_i, ctx);
+      gr_mat_clear(G_c, ctx);
+      gr_mat_clear(H_c, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return status;
+    }
 
     gr_mat_clear(A, ctx);
     gr_mat_clear(I, ctx);
@@ -176,7 +383,7 @@ int main(int argc, char *argv[]) {
   } else if (strcmp("compress_after_multiplication", argv[1]) == 0) {
     ok = test_compress_after_multiplication(30);
   } else {
-    fprintf(stderr, "Error: test \"%s\" not found!\n", argv[1]);
+    fprintf(stderr, "status: test \"%s\" not found!\n", argv[1]);
     exit(EXIT_FAILURE);
   }
 

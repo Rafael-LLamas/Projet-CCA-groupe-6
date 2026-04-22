@@ -16,7 +16,7 @@ int test_random_toepltiz() {
   int i = 0;
   while (i < 10) {
     gr_ctx_t ctx;
-    int error;
+    int error = GR_SUCCESS;
     gr_mat_t ran, D;
     slong n = n_randint(state, 1000);
     slong m = n_randint(state, 1000);
@@ -24,7 +24,7 @@ int test_random_toepltiz() {
     gr_mat_init(ran, n, m, ctx);
     gr_mat_init(D, n, m, ctx);
     error = gr_mat_random_toeplitz(ran, state, ctx);
-    if (error != 0) {
+    if (error != GR_SUCCESS) {
       flint_printf("Failed to create a toeplitz, FIX IT FAST !\n");
       gr_mat_clear(ran, ctx);
       gr_mat_clear(D, ctx);
@@ -33,7 +33,7 @@ int test_random_toepltiz() {
       return error;
     }
     error = gr_mat_displacement(D, ran, DISP_PLUS, ctx);
-    if (error != 0) {
+    if (error != GR_SUCCESS) {
       flint_printf("Failed to do the displacement, FIX IT FAST !\n");
       gr_mat_clear(ran, ctx);
       gr_mat_clear(D, ctx);
@@ -43,7 +43,7 @@ int test_random_toepltiz() {
     }
     slong r;
     error = gr_mat_rank(&r, D, ctx);
-    if (error != 0) {
+    if (error != GR_SUCCESS) {
       flint_printf("Failed to get the rank, dunno why FLINT WHY FLINT\n");
       gr_mat_clear(ran, ctx);
       gr_mat_clear(D, ctx);
@@ -79,7 +79,7 @@ int test_random_quasi_toeplitz() {
   flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
   while (i < 10) {
     gr_ctx_t ctx;
-    int error;
+    int error = GR_SUCCESS;
     gr_mat_t ran, D;
     gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
     slong n = n_randint(state, 1000);
@@ -88,7 +88,7 @@ int test_random_quasi_toeplitz() {
     gr_mat_init(ran, n, m, ctx);
     gr_mat_init(D, n, m, ctx);
     error = gr_mat_quasi_toeplitz_rank(ran, rank, state, ctx);
-    if (error != 0) {
+    if (error != GR_SUCCESS) {
       flint_printf("Failed to create a quasi toeplitz, FIX IT FAST !\n");
       gr_mat_clear(ran, ctx);
       gr_mat_clear(D, ctx);
@@ -97,7 +97,7 @@ int test_random_quasi_toeplitz() {
       return error;
     }
     error = gr_mat_displacement(D, ran, DISP_PLUS, ctx);
-    if (error != 0) {
+    if (error != GR_SUCCESS) {
       flint_printf("Failed to do the displacement, FIX IT FAST !\n");
       gr_mat_clear(ran, ctx);
       gr_mat_clear(D, ctx);
@@ -107,7 +107,7 @@ int test_random_quasi_toeplitz() {
     }
     slong r;
     error = gr_mat_rank(&r, D, ctx);
-    if (error != 0) {
+    if (error != GR_SUCCESS) {
       flint_printf("Failed to get the rank, dunno why FLINT WHY FLINT\n");
       gr_mat_clear(ran, ctx);
       gr_mat_clear(D, ctx);

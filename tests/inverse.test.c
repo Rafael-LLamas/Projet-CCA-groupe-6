@@ -272,13 +272,11 @@ int test_inverse_full() {
     GR_TMP_INIT(det, ctx);
 
     do {
-      status |= gr_mat_random_toeplitz(A, state, ctx);
-      if (status != GR_SUCCESS) goto fail;
-      status |= gr_mat_det(det, A, ctx);
+      if (status == GR_SUCCESS) status |= gr_mat_random_toeplitz(A, state, ctx);
+      if (status == GR_SUCCESS) status |= gr_mat_det(det, A, ctx);
+
     } while (gr_is_zero(det, ctx) == T_TRUE);
 
-    gr_mat_init(G, n, 2, ctx);
-    gr_mat_init(H, n, 2, ctx);
     gr_mat_init(T, n, 2, ctx);
     gr_mat_init(U, n, 2, ctx);
 
@@ -295,7 +293,6 @@ int test_inverse_full() {
       }
     }
 
-  fail:
     GR_TMP_CLEAR(det, ctx);
     gr_mat_clear(A, ctx);
     gr_mat_clear(B, ctx);
@@ -347,7 +344,7 @@ int test_split_quadrants() {
   gr_mat_reconstruct_A(Rb, Gb, Hb, DISP_PLUS, ctx);
   gr_mat_reconstruct_A(Rc, Gc, Hc, DISP_PLUS, ctx);
   gr_mat_reconstruct_A(Rd, Gd, Hd, DISP_PLUS, ctx);
-  
+
   // compare with the dense
   for (slong r = 0; r < n; r++) {
     for (slong c = 0; c < n; c++) {
@@ -398,7 +395,7 @@ int test_pack_quadrants() {
   gr_ctx_init_nmod(ctx, 11);
   flint_rand_init(state);
 
-  slong n1 = 4, n2 = 3; 
+  slong n1 = 4, n2 = 3;
   slong n = n1 + n2;
 
   gr_mat_t Gx, Hx, Gy, Hy, Gz, Hz, Gt, Ht;
