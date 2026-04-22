@@ -43,15 +43,15 @@ int test_compress_toeplitz(int nb_iter) {
   flint_rand_t state;
   flint_rand_init(state);
   int status = GR_SUCCESS;
-  slong n = n_randint(state, 500);
   int i = 0;
-
   gr_ctx_t ctx;
   gr_ctx_init_nmod(ctx, n_randprime(state, 61, 1));
 
   while (i < nb_iter) {
+    slong n = n_randint(state, 500);
+    slong m = n_randint(state, 500);
     gr_mat_t A, G, H;
-    gr_mat_init(A, n, n, ctx);
+    gr_mat_init(A, n, m, ctx);
     status |= gr_mat_random_toeplitz(A, state, ctx);
     if (status != GR_SUCCESS) {
       flint_printf("Error to create A");
@@ -108,16 +108,18 @@ int test_compress_after_addition(int nb_iter) {
   flint_rand_t state;
   flint_rand_init(state);
   int status = GR_SUCCESS;
-  slong n = n_randint(state, 500);
+
   int i = 0;
   gr_ctx_t ctx;
   gr_ctx_init_nmod(ctx, n_randprime(state, 60, 1));
 
   while (i < nb_iter) {
+    slong n = n_randint(state, 500);
+    slong m = n_randint(state, 500);
     gr_mat_t A, I, Ref, G_a, H_a, G_i, H_i, G_c, H_c;
-    gr_mat_init(A, n, n, ctx);
-    gr_mat_init(I, n, n, ctx);
-    gr_mat_init(Ref, n, n, ctx);
+    gr_mat_init(A, n, m, ctx);
+    gr_mat_init(I, n, m, ctx);
+    gr_mat_init(Ref, n, m, ctx);
 
     status |= gr_mat_random_toeplitz(A, state, ctx);
     if (status != GR_SUCCESS) {
@@ -248,16 +250,18 @@ int test_compress_after_multiplication(int nb_iter) {
   flint_rand_t state;
   flint_rand_init(state);
   int status = GR_SUCCESS;
-  slong n = n_randint(state, 500);
+
   int i = 0;
 
   gr_ctx_t ctx;
   gr_ctx_init_nmod(ctx, n_randprime(state, 61, 1));
 
   while (i < nb_iter) {
+    slong n = n_randint(state, 500);
+    slong m = n_randint(state, 500);
     gr_mat_t A, I, G_a, H_a, G_i, H_i, G_c, H_c;
-    gr_mat_init(A, n, n, ctx);
-    gr_mat_init(I, n, n, ctx);
+    gr_mat_init(A, n, m, ctx);
+    gr_mat_init(I, m, n, ctx);
 
     status |= gr_mat_random_toeplitz(A, state, ctx);
     if (status != GR_SUCCESS) {

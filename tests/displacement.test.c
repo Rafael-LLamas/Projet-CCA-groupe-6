@@ -14,33 +14,57 @@
 int test_toeplitz_deplacement() {
   int i = 0;
   flint_rand_t state;
+  int error = GR_SUCCESS;
   flint_rand_init(state);
   flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
   while (i < 10) {
-    flint_printf(":-------: Manual nxn Toeplitz Matrix Deplacement Test :-------:\n");
+    slong n = n_randint(state, 1000);
+    slong m = n_randint(state, 1000);
     gr_ctx_t ctx;
     gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
     gr_mat_t A, D;
-    gr_mat_init(A, 3, 3, ctx);
-    gr_mat_init(D, 3, 3, ctx);
-    // feast your eyes
-    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 0, 0, ctx), 1, ctx)); // Row 0: 1, 3, 4
-    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 0, 1, ctx), 3, ctx));
-    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 0, 2, ctx), 4, ctx));
-    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 1, 0, ctx), 8, ctx)); // Row 1: 8, 1, 3
-    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 1, 1, ctx), 1, ctx));
-    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 1, 2, ctx), 3, ctx));
-    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 2, 0, ctx), 9, ctx)); // Row 2: 9, 8, 1
-    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 2, 1, ctx), 8, ctx));
-    FLINT_CHECK(gr_set_si(gr_mat_entry_ptr(A, 2, 2, ctx), 1, ctx));
-    flint_printf("Input Manual Matrix A:\n");
-    gr_mat_print(A, ctx);
-    flint_printf("\n");
-    flint_printf("Input LU Matrix A:\n");
-    gr_mat_displacement(D, A, DISP_PLUS, ctx);
-    flint_printf("Displacement Matrix (∇A):\n");
-    gr_mat_print(D, ctx);
-    flint_printf("\n");
+    gr_mat_init(A, n, m, ctx);
+    gr_mat_init(D, n, m, ctx);
+    error = gr_mat_random_toeplitz(A, state, ctx);
+    if (error != GR_SUCCESS) {
+      flint_printf("Failed to create a Toeplitz A, FIX IT FAST\n");
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(D, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return error;
+    }
+    error = gr_mat_displacement(D, A, DISP_PLUS, ctx);
+    if (error != GR_SUCCESS) {
+      flint_printf("Failed to create the Displacement\n");
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(D, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return error;
+    }
+    for (int i = 1; i < gr_mat_nrows(A, ctx); i++) {
+      for (int j = 1; j < gr_mat_ncols(A, ctx); j++) {
+        error = gr_set_ui(gr_mat_entry_ptr(A, i, j, ctx), 0, ctx);
+        if (error != GR_SUCCESS) {
+          flint_printf("Failed to put 0\n");
+          gr_mat_clear(A, ctx);
+          gr_mat_clear(D, ctx);
+          gr_ctx_clear(ctx);
+          flint_rand_clear(state);
+          return error;
+        }
+      }
+    }
+
+    if (gr_mat_equal(A, D, ctx) != T_TRUE) {
+      flint_printf("Not the right displacement\n");
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(D, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return GR_TEST_FAIL;
+    }
     gr_mat_clear(A, ctx);
     gr_mat_clear(D, ctx);
     gr_ctx_clear(ctx);
@@ -157,126 +181,139 @@ int test_large_matrix_deplacement_time() {
 }
 
 int test_toeplitz_to_G_H() {
-  int res = GR_SUCCESS;
   int i = 0;
+  int error = GR_SUCCESS;
   flint_rand_t state;
   flint_rand_init(state);
   flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
   while (i < 10) {
-    flint_printf("\n\n:-------: A Toeplitz matrix -> G & H Test :-------:\n");
+    slong n = n_randint(state, 1000);
+    slong m = n_randint(state, 1000);
     gr_ctx_t ctx;
     gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
-    gr_mat_t A, D, G, H, HT, D_from_GH, Diff;
-    slong m = 7, n = 7;
-    gr_mat_init(A, m, n, ctx);
-    gr_mat_init(D, m, n, ctx);
-    gr_mat_init(D_from_GH, m, n, ctx);
-    gr_mat_init(Diff, m, n, ctx);
-
-    if (gr_mat_random_toeplitz(A, state, ctx) != GR_SUCCESS) {
-      flint_printf("[ERROR] gr_mat_random_toeplitz failed\n");
-      res = GR_TEST_FAIL;
+    gr_mat_t A, D, G, H;
+    gr_mat_init(A, n, m, ctx);
+    gr_mat_init(D, n, m, ctx);
+    error = gr_mat_random_toeplitz(A, state, ctx);
+    if (error != GR_SUCCESS) {
+      flint_printf("Error cant create Toeplitz\n");
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(D, ctx);
+      gr_mat_clear(G, ctx);
+      gr_mat_clear(H, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return error;
     }
-    flint_printf("Original matrix A:\n");
-    gr_mat_print(A, ctx);
-    if (gr_mat_displacement(D, A, DISP_PLUS, ctx) != GR_SUCCESS) {
-      flint_printf("[ERROR] gr_mat_displacement failed\n");
-      res = GR_TEST_FAIL;
+    error = gr_mat_G_H(G, H, A, DISP_PLUS, ctx);
+    if (error != GR_SUCCESS) {
+      flint_printf("Error cant create G & H\n");
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(D, ctx);
+      gr_mat_clear(G, ctx);
+      gr_mat_clear(H, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return error;
     }
-    flint_printf("\nTrue displacement D:\n");
-    gr_mat_print(D, ctx);
-    if (gr_mat_G_H(G, H, A, DISP_PLUS, ctx) != GR_SUCCESS) {
-      flint_printf("[ERROR] gr_mat_G_H failed\n");
-      res = GR_TEST_FAIL;
+    error = gr_mat_reconstruct_A(D, G, H, DISP_PLUS, ctx);
+    if (error != GR_SUCCESS) {
+      flint_printf("Error cant reconstruct A\n");
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(D, ctx);
+      gr_mat_clear(G, ctx);
+      gr_mat_clear(H, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return error;
     }
-    flint_printf("\nGenerator G (%ld x %ld):\n", gr_mat_nrows(G, ctx), gr_mat_ncols(G, ctx));
-    gr_mat_print(G, ctx);
-    flint_printf("\nGenerator H (%ld x %ld):\n", gr_mat_nrows(H, ctx), gr_mat_ncols(H, ctx));
-    gr_mat_print(H, ctx);
-    gr_mat_init(HT, gr_mat_ncols(H, ctx), gr_mat_nrows(H, ctx), ctx);
-    if (gr_mat_transpose(HT, H, ctx) != GR_SUCCESS || gr_mat_mul(D_from_GH, G, HT, ctx) != GR_SUCCESS) {
-      flint_printf("[ERROR] transpose/mul failed\n");
-      gr_mat_clear(HT, ctx);
-      res = GR_TEST_FAIL;
-    }
-    gr_mat_clear(HT, ctx);
-    flint_printf("\nG * H^T:\n");
-    gr_mat_print(D_from_GH, ctx);
-    FLINT_CHECK(gr_mat_sub(Diff, D, D_from_GH, ctx));
-    flint_printf("\nDifference (true D - G*H^T, should be zero):\n");
-    gr_mat_print(Diff, ctx);
-    if (gr_mat_is_zero(Diff, ctx) == T_TRUE)
-      flint_printf("[SUCCESS] G * H^T == displacement(A)\n");
-    else {
-      flint_printf("[FAILURE] G * H^T != displacement(A)\n");
-      res = GR_TEST_FAIL;
+    if (gr_mat_equal(A, D, ctx) != T_TRUE) {
+      flint_printf("A & D are not equal\n");
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(D, ctx);
+      gr_mat_clear(G, ctx);
+      gr_mat_clear(H, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return GR_TEST_FAIL;
     }
     gr_mat_clear(A, ctx);
     gr_mat_clear(D, ctx);
     gr_mat_clear(G, ctx);
     gr_mat_clear(H, ctx);
-    gr_mat_clear(D_from_GH, ctx);
-    gr_mat_clear(Diff, ctx);
     gr_ctx_clear(ctx);
     i++;
   }
   flint_rand_clear(state);
-  return res;
+  return error;
 }
 
 int test_quasi_toeplitz_to_G_H() {
   int i = 0;
-  int res = GR_SUCCESS;
+  int error = GR_SUCCESS;
   flint_rand_t state;
   flint_rand_init(state);
   flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
   while (i < 10) {
-    flint_printf("\n\n:-------: A Quasi Toeplitz matrix -> G & H Test :-------:\n");
+    slong n = n_randint(state, 1000);
+    slong m = n_randint(state, 1000);
     gr_ctx_t ctx;
-
     gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
-
-    gr_mat_t A, B, T, G, H, HT;
-    slong m = 7, n = 7;
-    gr_mat_init(A, m, n, ctx);
-    gr_mat_init(B, m, n, ctx);
-    gr_mat_init(T, m, n, ctx);
-
-    gr_mat_random_quasi_toepitz(A, state, ctx);
-    FLINT_CHECK(gr_mat_set(T, A, ctx));
-    flint_printf("Original matrix A:\n");
-    gr_mat_print(A, ctx);
-    gr_mat_G_H(G, H, A, DISP_PLUS, ctx);
-    flint_printf("\nGenerator G:\n");
-    gr_mat_print(G, ctx);
-    flint_printf("\nGenerator H:\n");
-    gr_mat_print(H, ctx);
-    gr_mat_init(HT, gr_mat_ncols(H, ctx), gr_mat_nrows(H, ctx), ctx);
-    FLINT_CHECK(gr_mat_transpose(HT, H, ctx));
-    FLINT_CHECK(gr_mat_mul(B, G, HT, ctx));
-    flint_printf("\nReconstructed Displacement Matrix B:\n");
-    gr_mat_print(B, ctx);
-    flint_printf("\nShould Be equal to displacement matrix of A:\n");
-    FLINT_CHECK(gr_mat_displacement(T, T, DISP_PLUS, ctx));
-    gr_mat_print(T, ctx);
-    if (gr_mat_equal(B, T, ctx) == T_TRUE) {
-      flint_printf("[SUCCESS] Generators correctly do displacement\n");
-    } else {
-      flint_printf("[FAILURE] Generators dont match displacement\n");
-      res = GR_TEST_FAIL;
+    gr_mat_t A, D, G, H;
+    gr_mat_init(A, n, m, ctx);
+    gr_mat_init(D, n, m, ctx);
+    error = gr_mat_random_quasi_toepitz(A, state, ctx);
+    if (error != GR_SUCCESS) {
+      flint_printf("Error cant create Toeplitz\n");
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(D, ctx);
+      gr_mat_clear(G, ctx);
+      gr_mat_clear(H, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return error;
+    }
+    error = gr_mat_G_H(G, H, A, DISP_PLUS, ctx);
+    if (error != GR_SUCCESS) {
+      flint_printf("Error cant create G & H\n");
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(D, ctx);
+      gr_mat_clear(G, ctx);
+      gr_mat_clear(H, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return error;
+    }
+    error = gr_mat_reconstruct_A(D, G, H, DISP_PLUS, ctx);
+    if (error != GR_SUCCESS) {
+      flint_printf("Error cant reconstruct A\n");
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(D, ctx);
+      gr_mat_clear(G, ctx);
+      gr_mat_clear(H, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return error;
+    }
+    if (gr_mat_equal(A, D, ctx) != T_TRUE) {
+      flint_printf("A & D are not equal\n");
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(D, ctx);
+      gr_mat_clear(G, ctx);
+      gr_mat_clear(H, ctx);
+      gr_ctx_clear(ctx);
+      flint_rand_clear(state);
+      return GR_TEST_FAIL;
     }
     gr_mat_clear(A, ctx);
-    gr_mat_clear(T, ctx);
+    gr_mat_clear(D, ctx);
     gr_mat_clear(G, ctx);
     gr_mat_clear(H, ctx);
-    gr_mat_clear(HT, ctx);
-    gr_mat_clear(B, ctx);
-
     gr_ctx_clear(ctx);
     i++;
   }
   flint_rand_clear(state);
-  return res;
+  return error;
 }
 
 int test_G_H_2x2_execution() {
