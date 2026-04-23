@@ -10,9 +10,9 @@
 
 #include "addition.h"
 #include "displacement_matrices.h"
+#include "inverse_toeplitz.h"
 #include "multiplication.h"
 #include "random_toeplitz.h"
-#include "inverse_toeplitz.h"
 
 // --- GESTION DU TEMPS ---
 #ifdef _WIN32
@@ -369,9 +369,8 @@ int benchmark_addition() {
       }
       error = gr_mat_G_H(G_a, H_a, A, DISP_PLUS, ctx);
       error = gr_mat_G_H(G_b, H_b, B, DISP_PLUS, ctx);
-
       double t1 = get_time_ms();
-      error = gr_mat_addition_generateur(G_c, H_c, G_a, H_a, G_b, H_b, ctx);
+      error = gr_mat_addition_generateur(G_a, H_a, G_b, H_b, G_c, H_c, ctx);
       gen_times[i] = get_time_ms() - t1;
 
       flint_times[i] = 0;
@@ -440,8 +439,8 @@ int benchmark_inversion() {
     slong cur_n = sizesn[s];
     double gen_times[iterations], flint_times[iterations];
     printf(ANSI_COLOR_CYAN "Size %ldx%ld :\n" ANSI_COLOR_RESET, cur_n, cur_n);
-    printf(" %-12s | %-12s | %-12s\n", "Operation", "Average (ms)", "Median (ms)");
-    printf("--------------|--------------|--------------\n");
+    printf("   %-12s    | %-12s | %-12s\n", "Operation", "Average (ms)", "Median (ms)");
+    printf("-------------------|--------------|--------------\n");
 
     for (int i = 0; i < iterations; i++) {
       gr_mat_t A, B, G_a, G_b, H_a, H_b;
@@ -484,9 +483,10 @@ int benchmark_inversion() {
     if (flint) compute_stats(flint_times, iterations, &avg_flint, &med_flint);
 
     printf("\r" ANSI_CLEAR_LINE);
-    printf(ANSI_COLOR_GREEN " Generators Invert" ANSI_COLOR_RESET "   |  %-.3e   |  %-.3e \n", avg_gen, med_gen);
+    printf(ANSI_COLOR_GREEN " Generators Invert" ANSI_COLOR_RESET " |  %-.3e   |  %-.3e \n", avg_gen, med_gen);
     if (flint)
-      printf(ANSI_COLOR_YELLOW " Flint invert" ANSI_COLOR_RESET "  |  %-.3e   |  %-.3e \n", "", avg_flint, med_flint);
+      printf(ANSI_COLOR_YELLOW " Flint invert" ANSI_COLOR_RESET "      |  %-.3e   |  %-.3e \n", "", avg_flint,
+             med_flint);
   }
 
   fclose(csv);
@@ -599,8 +599,7 @@ int main(int argc, char *argv[]) {
     benchmark_multiplication();
   } else if (strcmp(argv[1], "benchmark_inv") == 0) {
     printf(ANSI_COLOR_BOLD ANSI_COLOR_BLUE "=> Running Inversion Generator benchmark...\n" ANSI_COLOR_RESET);
-    printf(ANSI_COLOR_BOLD ANSI_COLOR_RED "WORK IN PROGRESS\n" ANSI_COLOR_RESET);
-    // benchmark_inversion();
+    benchmark_inversion();
   } else if (strcmp(argv[1], "benchmark_displacement") == 0) {
     printf(ANSI_COLOR_BOLD ANSI_COLOR_BLUE "=> Running Displacement Matrix benchmark...\n" ANSI_COLOR_RESET);
     benchmark_displacement();

@@ -13,11 +13,11 @@ Project
  Grace au générateurs, nous pouvons addtionner nos matrices sans utiliser la formule standart.
  En effet, selon la propriété 10.7 et 10.8 du cours (ref cours ICI), on apprends que la somme de 2 matrices toeplitz peut etre simplfié par la concatenation de leurs générateurs de déplacement.
  Cela permet de passer a un coup de O($n \times m$) a un cout de O($\alpha \times m$) pour 2 matrices A et B de tailles $n \times m$ et leurs générateurs de taille $\alpha$ pour ceux de A et $\beta$ pour ceux de B.
- Avec flint, on peut utiliser la fonction
+ Pour faire la concatenation de nos générateurs avec flint, on peut utiliser la fonction suivante :
  \begin{verbatim}
  int gr_mat_concat_horizontal(gr_mat_t RES,gr_mat_t A,gr_mat_t B,gr_ctx_t ctx);
  \end{verbatim}
- pour faire la concatenation de nos générateurs.
+
  \subsubsection{Exemple}
 On va prendre les matrices A, B et C le résultat de l'addition de A et B.Toutes les matrices sont dans $Z/_{13}Z$ pour cette exemple.
 \begin{equation}
@@ -92,13 +92,13 @@ Dans notre projet, il suffira d'appeler la fonction:
  int gr_mat_addition_generateur(gr_mat_t G_a, gr_mat_t H_a, gr_mat_t G_b, gr_mat_t H_b, 
                                 gr_mat_t G_c, gr_mat_t H_c,gr_ctx_t ctx);
  \end{verbatim}
-avec les bons parametre pour obtenir les générateur de déplacement G et H de D.
+avec les bons parametres pour obtenir les générateurs de déplacement G et H de D.
 
 pour verifier notre résultat on peut utiliser la fonction
 \begin{verbatim}
  int gr_mat_reconstruct_A(gr_mat_t A, gr_mat_t G, gr_mat_t H, disp_type_t type, gr_ctx_t ctx);
  \end{verbatim}
-pour recomposer la matrice que l'on a obtenue D :
+pour recomposer la matrice D que l'on a obtenue :
 \begin{equation}
     D =
     \begin{pmatrix}
@@ -109,6 +109,9 @@ pour recomposer la matrice que l'on a obtenue D :
 \end{equation}
 
 On remarque bien que celle-ci est identique a la matrices C et donc que pour faire l'addition de 2 matrice toeplitz, on peut utiliser seulement leurs générateurs.
+\subsubsection{Benchmark}
+
+
 
 
 \subsection{Multiplication}
@@ -130,124 +133,80 @@ Toujours avec les générateurs, on peut simplifier la multiplication de 2 matri
 
 - $V = B^t \times U$
 
-- a (resp. b) un vecteur qui est la dernière colonne de$ Z \times A $ (resp. $Z^t \times B$)
+- a (resp. b) un vecteur qui est la dernière colonne de$ Z \times A $ (resp. $Z \times B^t$)
 
 Cela nous permet de passer de O($n^3$) pour l'algo naif a $O( \alpha^2 \times M(n) )$ pour la version que nous implémentons.
-ICI METTRE DU CODE AVEC QUELQUE COMMENTS !!!!
-\subsubsection{Multiplication Vecteur/Générateur}
-Pour faire notre multiplication de matrice vie leurs générateurs, nous avons besoin d'avoir une fonction qui va multiplier un vecteur avec des générateurs pour éviter  de recomposer les matrices.
+Ainsi nous obtenons W de la façon suivante :
 \begin{verbatim}
- int gr_mat_mul_vector(gr_mat_t Res, gr_mat_t G, gr_mat_t H, gr_mat_t X, gr_ctx_t ctx) {
-  int error = GR_SUCCESS;
-  slong n = gr_mat_nrows(G, ctx), m = gr_mat_nrows(H, ctx);
-  slong alpha = gr_mat_ncols(G, ctx), m_cols = gr_mat_ncols(X, ctx);
+     error = gr_mat_apply_Zt(Tmp, G_b, ctx);
+  error = gr_mat_mul_vector(W, G_a, H_a, Tmp, ctx);
+  error = gr_mat_apply_Z(W, W, ctx);
+\end{verbatim}
+Par ailleurs, j'obtiens V par l'opération ci-dessous:
+\begin{verbatim}
+     error = gr_mat_mul_vector(V, H_b, G_b, H_a, ctx);
+\end{verbatim}
+etant precise que pour avoir $B^t$ je fais le produit inverse qui est $H \times G$ et non $ G \times H$
 
-  gr_poly_t pg, ph, px, p_tmp;
-  gr_poly_init(pg, ctx);
-  gr_poly_init(ph, ctx);
-  gr_poly_init(px, ctx);
-  gr_poly_init(p_tmp, ctx);
+Pour récupérer la dernière colonne de $ Z \times A$ et $Z \times B^t$ nous choisissons de proceder ainsi qu'il suit
+\begin{verbatim}
 
-  error = gr_mat_zero(Res, ctx);
-  if (error) {
-    gr_poly_clear(pg, ctx);
-    gr_poly_clear(ph, ctx);
-    gr_poly_clear(px, ctx);
-    gr_poly_clear(p_tmp, ctx);
-  }
+  slong m_a = gr_mat_nrows(H_a, ctx);
+  gr_mat_init(LastCol_m, m_a, 1, ctx);
+  error = gr_mat_zero(LastCol_m, ctx);
+  error = gr_one(gr_mat_entry_ptr(LastCol_m, m_a - 1, 0, ctx), ctx);
+  error = gr_mat_mul_vector(a, G_a, H_a, LastCol_m, ctx);
+  error = gr_mat_apply_Z(a, a, ctx);
 
-  for (slong j = 0; j < m_cols; j++) {
-    gr_poly_fit_length(px, m, ctx);
-    for (slong r = 0; r < m; r++) {
-      error = gr_set(gr_poly_coeff_ptr(px, r, ctx), gr_mat_entry_srcptr(X, r, j, ctx), ctx);
-      if (error) {
-        gr_poly_clear(pg, ctx);
-        gr_poly_clear(ph, ctx);
-        gr_poly_clear(px, ctx);
-        gr_poly_clear(p_tmp, ctx);
-      }
+  slong m_bt = gr_mat_nrows(G_b, ctx);
+  gr_mat_init(LastCol_k, m_bt, 1, ctx);
+  error = gr_mat_zero(LastCol_k, ctx);
+  error = gr_one(gr_mat_entry_ptr(LastCol_k, m_bt - 1, 0, ctx), ctx);
+  error = gr_mat_mul_vector(b, H_b, G_b, LastCol_k, ctx);
+  error = gr_mat_apply_Z(b, b, ctx);
+\end{verbatim}
+Nous utilisons le vecteur 
+\begin{equation}
+    Vecteur =
+    \begin{pmatrix}
+        0 \\
+        0 \\
+        . \\
+        . \\
+        . \\
+        0 \\
+        1
+    \end{pmatrix}
+\end{equation}
+afin de récupérer la dernière colonne de la matrice, ce vecteur est constitué que de 0 à l'exclusion du dernier élément de la colonne dont la valeur est fixé a 1.
+
+
+\subsubsection{Multiplication Vecteur}
+Pour faire notre multiplication de matrice via leurs générateurs, nous avons besoin d'avoir une fonction qui va multiplier un vecteur avec des générateurs pour éviter  de recomposer les matrices.
+
+Tout d'abord, on initialise notre résultat à 0
+\begin{verbatim}
+    error = gr_mat_zero(Res, ctx);
+\end{verbatim}
+
+Nous partons du principe selon lequelle une matrices peut etre représentée par plusieurs polynome.
+Ainsi on détermine que chaque colonne de notre vecteur X est un polynome. Chaque ligne de nos matrices correspondent egalement à un polynome.
+Pour obtenir notre résultat, nous effectuons les opérations dans suivants:
+\begin{verbatim} 
+  for (slong j = 0; j < X_cols; j++) {
+
+    error = gr_poly_reverse(ph, ph, m, ctx);
+    error = gr_poly_mul(p_tmp, ph, px, ctx);
+    error = gr_poly_shift_right(p_tmp, p_tmp, m - 1, ctx);
+    error = gr_poly_mul(p_tmp, pg, p_tmp, ctx);
     }
-    _gr_poly_set_length(px, m, ctx);
-
-    for (slong k = 0; k < alpha; k++) {
-      gr_poly_fit_length(pg, n, ctx);
-      for (slong r = 0; r < n; r++) {
-        error = gr_set(gr_poly_coeff_ptr(pg, r, ctx), gr_mat_entry_srcptr(G, r, k, ctx), ctx);
-        if (error) {
-          gr_poly_clear(pg, ctx);
-          gr_poly_clear(ph, ctx);
-          gr_poly_clear(px, ctx);
-          gr_poly_clear(p_tmp, ctx);
-        }
-      }
-      _gr_poly_set_length(pg, n, ctx);
-
-      gr_poly_fit_length(ph, m, ctx);
-      for (slong r = 0; r < m; r++) {
-        error = gr_set(gr_poly_coeff_ptr(ph, r, ctx), gr_mat_entry_srcptr(H, r, k, ctx), ctx);
-        if (error) {
-          gr_poly_clear(pg, ctx);
-          gr_poly_clear(ph, ctx);
-          gr_poly_clear(px, ctx);
-          gr_poly_clear(p_tmp, ctx);
-        }
-      }
-      _gr_poly_set_length(ph, m, ctx);
-
-      error = gr_poly_reverse(ph, ph, m, ctx);
-      if (error) {
-        gr_poly_clear(pg, ctx);
-        gr_poly_clear(ph, ctx);
-        gr_poly_clear(px, ctx);
-        gr_poly_clear(p_tmp, ctx);
-      }
-      error = gr_poly_mul(p_tmp, ph, px, ctx);
-      if (error) {
-        gr_poly_clear(pg, ctx);
-        gr_poly_clear(ph, ctx);
-        gr_poly_clear(px, ctx);
-        gr_poly_clear(p_tmp, ctx);
-      }
-
-      error = gr_poly_shift_right(p_tmp, p_tmp, m - 1, ctx);
-      if (error) {
-        gr_poly_clear(pg, ctx);
-        gr_poly_clear(ph, ctx);
-        gr_poly_clear(px, ctx);
-        gr_poly_clear(p_tmp, ctx);
-      }
-      _gr_poly_set_length(p_tmp, FLINT_MIN(gr_poly_length(p_tmp, ctx), m), ctx);
-
-      error = gr_poly_mul(p_tmp, pg, p_tmp, ctx);
-      if (error) {
-        gr_poly_clear(pg, ctx);
-        gr_poly_clear(ph, ctx);
-        gr_poly_clear(px, ctx);
-        gr_poly_clear(p_tmp, ctx);
-      }
-
-      if (gr_poly_length(p_tmp, ctx) > n) _gr_poly_set_length(p_tmp, n, ctx);
-
-      for (slong i = 0; i < gr_poly_length(p_tmp, ctx); i++) {
-        error = gr_add(gr_mat_entry_ptr(Res, i, j, ctx), gr_mat_entry_ptr(Res, i, j, ctx),
-                       gr_poly_coeff_srcptr(p_tmp, i, ctx), ctx);
-        if (error) {
-          gr_poly_clear(pg, ctx);
-          gr_poly_clear(ph, ctx);
-          gr_poly_clear(px, ctx);
-          gr_poly_clear(p_tmp, ctx);
-        }
-      }
-    }
-  }
-
-  gr_poly_clear(pg, ctx);
-  gr_poly_clear(ph, ctx);
-  gr_poly_clear(px, ctx);
-  gr_poly_clear(p_tmp, ctx);
-  return error;
-}
  \end{verbatim}
+ Avec: 
+ -X_cols le nombre de colonne de notre vecteur 
+ -ph,pg et px les polynome de H,G et X
+ -p_temp le produit intermédiaire de ph et px
+
+ Pour finir, nous remplissons res avec p_temp à la bonne position.
 
 \subsubsection{Exemple}
 On va prendre les matrices A, B et C le résultat de la multiplication de A et B.Toutes les matrices sont dans $Z/_{13}Z$ pour cette exemple.
@@ -357,3 +316,4 @@ pour recomposer la matrice que l'on a obtenue D :
     \end{pmatrix}
 \end{equation}
 La matrice D est bien égale a C donc notre facon de multiplier les 2 matrices est correct dans ce cas.
+\subsubsection{Benchmark}
