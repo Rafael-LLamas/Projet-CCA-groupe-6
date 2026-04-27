@@ -10,10 +10,10 @@ Project
 |   |   |   addition.h
 \end{verbatim}
 \subsubsection{Introduction}
- Grace au générateurs, nous pouvons addtionner nos matrices sans utiliser la formule standart.
+ Grace au générateurs de déplacement, nous pouvons addtionner nos matrices sans utiliser la formule standart.
  En effet, selon la propriété 10.7 et 10.8 du cours (ref cours ICI), on apprends que la somme de 2 matrices toeplitz peut etre simplfié par la concatenation de leurs générateurs de déplacement.
- Cela permet de passer a un coup de O($n \times m$) a un cout de O($\alpha \times m$) pour 2 matrices A et B de tailles $n \times m$ et leurs générateurs de taille $\alpha$ pour ceux de A et $\beta$ pour ceux de B.
- Pour faire la concatenation de nos générateurs avec flint, on peut utiliser la fonction suivante :
+ Cela permet de passer a un coup de O($n \times m$) a un cout de O($\alpha \times m$) pour 2 matrices A et B de tailles $n \times m$ et leurs générateurs de déplacement de taille $\alpha$ pour ceux de A et $\beta$ pour ceux de B.
+ Pour faire la concatenation avec flint on peut utiliser la fonction suivante :
  \begin{verbatim}
  int gr_mat_concat_horizontal(gr_mat_t RES,gr_mat_t A,gr_mat_t B,gr_ctx_t ctx);
  \end{verbatim}
@@ -41,7 +41,7 @@ On va prendre les matrices A, B et C le résultat de l'addition de A et B.Toutes
     \end{pmatrix}
 \end{equation}
 
-si on prends les générateurs de A = (T,U) et B = (G,H)
+si on prends les générateurs de déplacement de A = (T,U) et B = (G,H)
 \begin{equation}
     T =
     \begin{pmatrix}
@@ -108,7 +108,7 @@ pour recomposer la matrice D que l'on a obtenue :
     \end{pmatrix}
 \end{equation}
 
-On remarque bien que celle-ci est identique a la matrices C et donc que pour faire l'addition de 2 matrice toeplitz, on peut utiliser seulement leurs générateurs.
+On remarque bien que celle-ci est identique a la matrices C et donc que pour faire l'addition de 2 matrice toeplitz, on peut utiliser seulement leurs générateurs de déplacement.
 \subsubsection{Benchmark}
 Le benchmark obtenu met en évidence les résultats suivants:
 \begin{verbatim}
@@ -130,13 +130,13 @@ Size 4096x4096 :
  Flint Dense  |  2.918e+01   |  2.915e+01
 \end{verbatim}
 -\underline{Pour les petites matrices} (128x128):
-    notre fonction d'addition avec les générateurs est plus rapide que la fonction naive de flint (3.577e-03 ms vs 1.373e-02 ms)
+    notre fonction d'addition avec les générateurs de déplacement est plus rapide que la fonction naive de flint (3.577e-03 ms vs 1.373e-02 ms)
     
 -\underline{Pour les matrices de tailles} 1024x1024:
-    notre fonction d'addition avec les générateurs est plus rapide que la fonction naive de flint (3.205e-02 ms vs 2.520 ms)
+    notre fonction d'addition avec les générateurs de déplacement est plus rapide que la fonction naive de flint (3.205e-02 ms vs 2.520 ms)
     
 -\underline{Pour de grandes matrices} (4096x4096):
-    notre fonction d'addition avec les générateurs est plus rapide que la fonction naive de flint (1.148e-01 ms vs 2.918e+01 ms)
+    notre fonction d'addition avec les générateurs de déplacement est plus rapide que la fonction naive de flint (1.148e-01 ms vs 2.918e+01 ms)
     
 
 (ici courbe des temps)
@@ -154,10 +154,9 @@ Project
 |   |   |   multiplication.h
 \end{verbatim}
 \subsubsection{Introduction}
-Toujours avec les générateurs, on peut simplifier la multiplication de 2 matrices et donc réduire son cout en concatenant :
+Toujours avec les générateurs de déplacement, on peut simplifier la multiplication de 2 matrices et donc réduire son cout en concatenant :
 
-- les générateurs de A=(T,U) et B=(G,H)
-
+- les générateurs de déplacement de A=(T,U) et B=(G,H)
 
 - $W = Z \times A \times Z^t \times G$
 
@@ -165,7 +164,7 @@ Toujours avec les générateurs, on peut simplifier la multiplication de 2 matri
 
 - a (resp. b) un vecteur qui est la dernière colonne de$ Z \times A $ (resp. $Z \times B^t$)
 
-Cela nous permet de passer de O($n^3$) pour l'algo naif a $O( \alpha^2 \times M(n) )$ pour la version que nous implémentons.
+Cela nous permet de passer de $O(n^3)$ pour l'algo naif a $O( \alpha^2 \times M(n) )$ pour la version que nous implémentons.
 Ainsi nous obtenons W de la façon suivante :
 \begin{verbatim}
      error = gr_mat_apply_Zt(Tmp, G_b, ctx);
@@ -212,7 +211,7 @@ afin de récupérer la dernière colonne de la matrice, ce vecteur est constitu�
 
 
 \subsubsection{Multiplication Vecteur}
-Pour faire notre multiplication de matrice via leurs générateurs, nous avons besoin d'avoir une fonction qui va multiplier un vecteur avec des générateurs pour éviter  de recomposer les matrices.
+Pour faire notre multiplication de matrice via leurs générateurs de déplacement, nous avons besoin d'avoir une fonction qui va multiplier un vecteur avec des générateurs de déplacement pour éviter  de recomposer les matrices.
 
 Tout d'abord, on initialise notre résultat à 0
 \begin{verbatim}
@@ -373,13 +372,13 @@ Size (4096x4096) X (4096x4096) :
   Toe-Vec (Flint) |  1.763e+01   |  2.104e+01
 \end{verbatim}
 -\underline{Pour les petites matrices} (128x128):
-    notre fonction de multiplication avec les générateurs est plus rapide que la fonction naive de flint (6.289e-01 ms vs 3.032 ms),
+    notre fonction de multiplication avec les générateurs de déplacement est plus rapide que la fonction naive de flint (6.289e-01 ms vs 3.032 ms),
     par contre notre fonction de multiplication de vecteur avec les générateurs est plus lente que la fonction flint (1.221e-01 ms vs 3.217e-02)
 -\underline{Pour les matrices de tailles} 1024x1024:
-    notre fonction de multiplication avec les générateurs reste plus rapide que la fonction naive de flint (3.736 ms vs 9.842e+02 ms) avec un écart 10 fois plus important,
+    notre fonction de multiplication avec les générateurs de déplacement reste plus rapide que la fonction naive de flint (3.736 ms vs 9.842e+02 ms) avec un écart 10 fois plus important,
     cette fois-ci notre fonction de multiplication de vecteur est plus rapide que celle de flint (6.383e-01 ms vs 1.554 ms)
 -\underline{Pour de grandes matrices} (4096x4096):
-    notre fonction de multiplication avec les générateurs reste plus rapide que la fonction naive de flint (1.242e+01 ms vs 3.981e+04 ms) avec un écart 10 fois plus important,
+    notre fonction de multiplication avec les générateurs de déplacement reste plus rapide que la fonction naive de flint (1.242e+01 ms vs 3.981e+04 ms) avec un écart 10 fois plus important,
     la encore, notre fonction de multiplication de vecteur demeure plus rapide que celle de flint (2.063 ms vs 1.763e+01 ms)
 
 (ici courbe des temps)

@@ -9,6 +9,7 @@
 #include <unistd.h>
 
 #include "addition.h"
+#include "compression.h"
 #include "displacement_matrices.h"
 #include "inverse_toeplitz.h"
 #include "multiplication.h"
@@ -235,7 +236,7 @@ int benchmark_multiplication() {
   return error;
 }
 int benchmark_displacement() {
-  FILE *csv = fopen("bench_displacement.csv", "w");
+  FILE *csv = fopen("bench_auxiliary.csv", "w");
   slong sizes[] = {128, 512, 1024};
   int num_sizes = 3;
   if (!csv) return GR_UNABLE;
@@ -249,7 +250,7 @@ int benchmark_displacement() {
   int iterations = (iteration != -1) ? iteration : 5;
   int error = GR_SUCCESS;
 
-  fprintf(csv, "Size,Displacement_ms,Compression_GH_ms,Reconstruction_ms\n");
+  fprintf(csv, "Size,Displacement_ms,GH_ms,Compression_ms,Reconstruction_ms\n");
 
   gr_ctx_t ctx;
   flint_rand_t state;
@@ -257,17 +258,19 @@ int benchmark_displacement() {
   flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
   gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
 
-  printf("\n" ANSI_COLOR_BOLD ANSI_COLOR_MAGENTA "=== BENCHMARK DISPLACEMENT ===" ANSI_COLOR_RESET "\n");
+  printf("\n" ANSI_COLOR_BOLD ANSI_COLOR_MAGENTA "=== BENCHMARK AUXILIARY ===" ANSI_COLOR_RESET "\n");
 
   for (int s = 0; s < num_sizes; s++) {
     slong cur_n = sizes[s];
-    double t_disp = 0, t_gh = 0, t_rec = 0;
-    double t_cur_disp = 0, t_cur_gh = 0, t_cur_rec = 0;
+    double t_disp = 0, t_gh = 0, t_rec = 0, t_comp = 0;
+    ;
+    double t_cur_disp = 0, t_cur_gh = 0, t_cur_rec = 0, t_cur_comp = 0;
+    ;
     printf(ANSI_COLOR_CYAN "Size %ldx%ld :\n" ANSI_COLOR_RESET, cur_n, cur_n);
-    printf(" %-12s | %-12s | %-12s\n", "Displace (ms)", "GH (ms)", "Reconst (ms)");
-    printf(" --------------|--------------|--------------\n");
+    printf(" %-12s | %-12s | %-12s | %-12s\n", "Displace (ms)", "GH (ms)", "Compact (ms)", "Reconst (ms)");
+    printf(" --------------|--------------|--------------|--------------\n");
     for (int i = 0; i < iterations; i++) {
-      gr_mat_t A, D, G, H, A_rec;
+      gr_mat_t A, D, G, H, A_rec, T, U, W, V;
       gr_mat_init(A, cur_n, cur_n, ctx);
       gr_mat_init(D, cur_n, cur_n, ctx);
       gr_mat_init(A_rec, cur_n, cur_n, ctx);
@@ -285,6 +288,15 @@ int benchmark_displacement() {
       start = get_time_ms();
       error = gr_mat_G_H(G, H, A, DISP_PLUS, ctx);
       t_cur_gh = (get_time_ms() - start);
+      error = gr_mat_init_set(T, G, ctx);
+      error = gr_mat_init_set(U, H, ctx);
+      error = gr_mat_zero(T, ctx);
+      error = gr_mat_zero(U, ctx);
+      error = gr_mat_addition_generateur(G, H, T, U, W, V, ctx);
+
+      start = get_time_ms();
+      error = gr_mat_generator_compress(W, V, ctx);
+      t_cur_comp = (get_time_ms() - start);
 
       start = get_time_ms();
       error = gr_mat_reconstruct_A(A_rec, G, H, DISP_PLUS, ctx);
@@ -294,20 +306,26 @@ int benchmark_displacement() {
       gr_mat_clear(D, ctx);
       gr_mat_clear(G, ctx);
       gr_mat_clear(H, ctx);
+      gr_mat_clear(T, ctx);
+      gr_mat_clear(U, ctx);
+      gr_mat_clear(W, ctx);
+      gr_mat_clear(V, ctx);
       gr_mat_clear(A_rec, ctx);
-      fprintf(csv, "%ld,%.4f,%.4f,%.4f\n", cur_n, t_cur_disp, t_cur_gh, t_cur_rec);
+      fprintf(csv, "%ld,%.4f,%.4f,%.4f,%.4f\n", cur_n, t_cur_disp, t_cur_gh, t_cur_comp, t_cur_rec);
       printf("\rSize %ldx%ld... [%d/%d]", cur_n, cur_n, i + 1, iterations);
       fflush(stdout);
       t_disp += t_cur_disp;
       t_gh += t_cur_gh;
       t_rec += t_cur_rec;
+      t_comp += t_cur_comp;
     }
 
     t_disp /= iterations;
     t_gh /= iterations;
     t_rec /= iterations;
+    t_comp /= iterations;
     printf("\r" ANSI_CLEAR_LINE);
-    printf("  %-.3e    |  %-.3e   |  %-.3e \n", t_disp, t_gh, t_rec);
+    printf("  %-.3e    |  %-.3e   |  %-.3e   |  %-.3e \n", t_disp, t_gh, t_comp, t_rec);
   }
 
   fclose(csv);
@@ -444,13 +462,21 @@ int benchmark_inversion() {
 
     for (int i = 0; i < iterations; i++) {
       gr_mat_t A, B, G_a, G_b, H_a, H_b;
+      gr_ptr det;
       gr_mat_init(A, cur_n, cur_n, ctx);
       gr_mat_init(B, cur_n, cur_n, ctx);
-      if (rank != -1) {
-        error = gr_mat_quasi_toeplitz_rank(A, rank, state, ctx);
-      } else {
-        error = gr_mat_random_toeplitz(A, state, ctx);
-      }
+      GR_TMP_INIT(det, ctx);
+
+      do {
+        if (rank != -1) {
+          error = gr_mat_quasi_toeplitz_rank(A, rank, state, ctx);
+        } else {
+          error = gr_mat_random_toeplitz(A, state, ctx);
+        }
+        error = gr_mat_det(det, A, ctx);
+
+      } while (gr_is_zero(det, ctx) == T_TRUE);
+
       error = gr_mat_G_H(G_a, H_a, A, DISP_PLUS, ctx);
       gr_mat_init(G_b, gr_mat_nrows(G_a, ctx), gr_mat_ncols(G_a, ctx), ctx);
       gr_mat_init(H_b, gr_mat_nrows(H_a, ctx), gr_mat_ncols(H_a, ctx), ctx);
@@ -469,7 +495,7 @@ int benchmark_inversion() {
       fprintf(csv, "%ld,%ld,%d,%.4f,%.4f\n", cur_n, cur_n, i, gen_times[i], flint_times[i]);
       printf("\rSize %ldx%ld... [%d/%d]", cur_n, cur_n, i + 1, iterations);
       fflush(stdout);
-
+      GR_TMP_CLEAR(det, ctx);
       gr_mat_clear(A, ctx);
       gr_mat_clear(B, ctx);
       gr_mat_clear(G_a, ctx);
@@ -513,8 +539,7 @@ void usage(char *argv[]) {
   fprintf(stderr,
           "  " ANSI_COLOR_GREEN "benchmark_mul" ANSI_COLOR_RESET "    - Run multiplication generator benchmark\n");
   fprintf(stderr, "  " ANSI_COLOR_GREEN "benchmark_inv" ANSI_COLOR_RESET "    - Run inversion generator benchmark\n");
-  fprintf(stderr,
-          "  " ANSI_COLOR_GREEN "benchmark_displacement" ANSI_COLOR_RESET "    - Run displacement matrix benchmark\n");
+  fprintf(stderr, "  " ANSI_COLOR_GREEN "benchmark_aux" ANSI_COLOR_RESET "    - Run auxiliary matrix benchmark\n");
   fprintf(stderr, "  " ANSI_COLOR_GREEN "-n (integer)" ANSI_COLOR_RESET
                   "    - Run matrix of nxm or nxn (if m not define) with the integer (needs to be positive > 0)\n");
   fprintf(stderr, "  " ANSI_COLOR_GREEN "-k (integer)" ANSI_COLOR_RESET
@@ -600,8 +625,8 @@ int main(int argc, char *argv[]) {
   } else if (strcmp(argv[1], "benchmark_inv") == 0) {
     printf(ANSI_COLOR_BOLD ANSI_COLOR_BLUE "=> Running Inversion Generator benchmark...\n" ANSI_COLOR_RESET);
     benchmark_inversion();
-  } else if (strcmp(argv[1], "benchmark_displacement") == 0) {
-    printf(ANSI_COLOR_BOLD ANSI_COLOR_BLUE "=> Running Displacement Matrix benchmark...\n" ANSI_COLOR_RESET);
+  } else if (strcmp(argv[1], "benchmark_aux") == 0) {
+    printf(ANSI_COLOR_BOLD ANSI_COLOR_BLUE "=> Running Auxiliary Matrix benchmark...\n" ANSI_COLOR_RESET);
     benchmark_displacement();
   } else {
     fprintf(stderr, ANSI_COLOR_BOLD ANSI_COLOR_RED "Error:" ANSI_COLOR_RESET " Unknown command '%s'\n", argv[1]);
