@@ -312,59 +312,34 @@ int test_inverse_full() {
   return status;
 }
 
-int test_split_quadrants() {
+int test_split_and_pack() {
   int status = GR_SUCCESS;
   gr_ctx_t ctx;
   gr_ctx_init_nmod(ctx, 11);
   flint_rand_t state;
   flint_rand_init(state);
 
-  slong n = 4;
+  slong n = 6;
   gr_mat_t A, G_A, H_A;
   gr_mat_t Ga, Ha, Gb, Hb, Gc, Hc, Gd, Hd;
-  gr_mat_t Ra, Rb, Rc, Rd; // reconstructed quadrants
+  gr_mat_t G_packed, H_packed, A_res;
 
   gr_mat_init(A, n, n, ctx);
   gr_mat_init(G_A, n, 2, ctx);
   gr_mat_init(H_A, n, 2, ctx);
-
   gr_mat_random_toeplitz(A, state, ctx);
   gr_mat_G_H(G_A, H_A, A, DISP_PLUS, ctx);
 
-  status = gr_mat_split_quadrants(Ga, Ha, Gb, Hb, Gc, Hc, Gd, Hd, G_A, H_A, ctx);
+  status |= gr_mat_split_quadrants(Ga, Ha, Gb, Hb, Gc, Hc, Gd, Hd, G_A, H_A, ctx);
 
-  slong n1 = (n + 1) / 2;
-  slong n2 = n / 2;
-  gr_mat_init(Ra, n1, n1, ctx);
-  gr_mat_init(Rb, n1, n2, ctx);
-  gr_mat_init(Rc, n2, n1, ctx);
-  gr_mat_init(Rd, n2, n2, ctx);
+  status |= gr_mat_pack_quadrants(G_packed, H_packed, Ga, Ha, Gb, Hb, Gc, Hc, Gd, Hd, ctx);
 
-  gr_mat_reconstruct_A(Ra, Ga, Ha, DISP_PLUS, ctx);
-  gr_mat_reconstruct_A(Rb, Gb, Hb, DISP_PLUS, ctx);
-  gr_mat_reconstruct_A(Rc, Gc, Hc, DISP_PLUS, ctx);
-  gr_mat_reconstruct_A(Rd, Gd, Hd, DISP_PLUS, ctx);
+  gr_mat_init(A_res, n, n, ctx);
+  status |= gr_mat_reconstruct_A(A_res, G_packed, H_packed, DISP_PLUS, ctx);
 
-  // compare with the dense
-  for (slong r = 0; r < n; r++) {
-    for (slong c = 0; c < n; c++) {
-      gr_ptr val_A = gr_mat_entry_ptr(A, r, c, ctx);
-      gr_ptr val_R;
-
-      if (r < n1 && c < n1)
-        val_R = gr_mat_entry_ptr(Ra, r, c, ctx);
-      else if (r < n1 && c >= n1)
-        val_R = gr_mat_entry_ptr(Rb, r, c - n1, ctx);
-      else if (r >= n1 && c < n1)
-        val_R = gr_mat_entry_ptr(Rc, r - n1, c, ctx);
-      else
-        val_R = gr_mat_entry_ptr(Rd, r - n1, c - n1, ctx);
-
-      if (gr_equal(val_A, val_R, ctx) != T_TRUE) {
-        printf("Split failure at index (%ld, %ld)\n", r, c);
-        status = GR_TEST_FAIL;
-      }
-    }
+  if (gr_mat_equal(A, A_res, ctx) != T_TRUE) {
+    printf("Split -> Pack -> Reconstruct failed!\n");
+    status = GR_TEST_FAIL;
   }
 
   gr_mat_clear(A, ctx);
@@ -378,99 +353,9 @@ int test_split_quadrants() {
   gr_mat_clear(Hc, ctx);
   gr_mat_clear(Gd, ctx);
   gr_mat_clear(Hd, ctx);
-  gr_mat_clear(Ra, ctx);
-  gr_mat_clear(Rb, ctx);
-  gr_mat_clear(Rc, ctx);
-  gr_mat_clear(Rd, ctx);
-  gr_ctx_clear(ctx);
-  flint_rand_clear(state);
-  return status;
-}
-
-int test_pack_quadrants() {
-  int status = GR_SUCCESS;
-  gr_ctx_t ctx;
-  flint_rand_t state;
-
-  gr_ctx_init_nmod(ctx, 11);
-  flint_rand_init(state);
-
-  slong n1 = 4, n2 = 3;
-  slong n = n1 + n2;
-
-  gr_mat_t Gx, Hx, Gy, Hy, Gz, Hz, Gt, Ht;
-  gr_mat_t GD, HD, RecFull, RecX, RecY, RecZ, RecT;
-
-  gr_mat_init(Gx, n1, 2, ctx);
-  gr_mat_init(Hx, n1, 2, ctx);
-  gr_mat_init(Gy, n1, 2, ctx);
-  gr_mat_init(Hy, n2, 2, ctx);
-  gr_mat_init(Gz, n2, 2, ctx);
-  gr_mat_init(Hz, n1, 2, ctx);
-  gr_mat_init(Gt, n2, 2, ctx);
-  gr_mat_init(Ht, n2, 2, ctx);
-
-  status |= gr_mat_randtest(Gx, state, ctx);
-  status |= gr_mat_randtest(Hx, state, ctx);
-  status |= gr_mat_randtest(Gy, state, ctx);
-  status |= gr_mat_randtest(Hy, state, ctx);
-  status |= gr_mat_randtest(Gz, state, ctx);
-  status |= gr_mat_randtest(Hz, state, ctx);
-  status |= gr_mat_randtest(Gt, state, ctx);
-  status |= gr_mat_randtest(Ht, state, ctx);
-
-  status = gr_mat_pack_quadrants(GD, HD, Gx, Hx, Gy, Hy, Gz, Hz, Gt, Ht, ctx);
-  if (status != GR_SUCCESS) goto cleanup;
-
-  gr_mat_init(RecFull, n, n, ctx);
-  status = gr_mat_reconstruct_A(RecFull, GD, HD, DISP_PLUS, ctx);
-  if (status != GR_SUCCESS) goto cleanup;
-
-  gr_mat_init(RecX, n1, n1, ctx);
-  gr_mat_reconstruct_A(RecX, Gx, Hx, DISP_PLUS, ctx);
-  gr_mat_init(RecY, n1, n2, ctx);
-  gr_mat_reconstruct_A(RecY, Gy, Hy, DISP_PLUS, ctx);
-  gr_mat_init(RecZ, n2, n1, ctx);
-  gr_mat_reconstruct_A(RecZ, Gz, Hz, DISP_PLUS, ctx);
-  gr_mat_init(RecT, n2, n2, ctx);
-  gr_mat_reconstruct_A(RecT, Gt, Ht, DISP_PLUS, ctx);
-
-  for (slong r = 0; r < n; r++) {
-    for (slong c = 0; c < n; c++) {
-      gr_ptr expected;
-      if (r < n1 && c < n1)
-        expected = gr_mat_entry_ptr(RecX, r, c, ctx);
-      else if (r < n1 && c >= n1)
-        expected = gr_mat_entry_ptr(RecY, r, c - n1, ctx);
-      else if (r >= n1 && c < n1)
-        expected = gr_mat_entry_ptr(RecZ, r - n1, c, ctx);
-      else
-        expected = gr_mat_entry_ptr(RecT, r - n1, c - n1, ctx);
-
-      if (gr_equal(gr_mat_entry_ptr(RecFull, r, c, ctx), expected, ctx) != T_TRUE) {
-        status = GR_TEST_FAIL;
-        goto cleanup;
-      }
-    }
-  }
-
-cleanup:
-  gr_mat_clear(Gx, ctx);
-  gr_mat_clear(Hx, ctx);
-  gr_mat_clear(Gy, ctx);
-  gr_mat_clear(Hy, ctx);
-  gr_mat_clear(Gz, ctx);
-  gr_mat_clear(Hz, ctx);
-  gr_mat_clear(Gt, ctx);
-  gr_mat_clear(Ht, ctx);
-  gr_mat_clear(GD, ctx);
-  gr_mat_clear(HD, ctx);
-  gr_mat_clear(RecFull, ctx);
-  gr_mat_clear(RecX, ctx);
-  gr_mat_clear(RecY, ctx);
-  gr_mat_clear(RecZ, ctx);
-  gr_mat_clear(RecT, ctx);
-  flint_rand_clear(state);
+  gr_mat_clear(G_packed, ctx);
+  gr_mat_clear(H_packed, ctx);
+  gr_mat_clear(A_res, ctx);
   gr_ctx_clear(ctx);
   return status;
 }
@@ -493,10 +378,8 @@ int main(int argc, char *argv[]) {
     ok = test_inverse_3x3();
   } else if (strcmp("inverse_full", argv[1]) == 0) {
     ok = test_inverse_full();
-  } else if (strcmp("inverse_split_quadrants", argv[1]) == 0) {
-    ok = test_split_quadrants();
-  } else if (strcmp("inverse_pack_quadrants", argv[1]) == 0) {
-    ok = test_pack_quadrants();
+  } else if (strcmp("inverse_split_pack_quadrants", argv[1]) == 0) {
+    ok = test_split_and_pack();
   } else {
     fprintf(stderr, "Error: test \"%s\" not found!\n", argv[1]);
     exit(EXIT_FAILURE);
