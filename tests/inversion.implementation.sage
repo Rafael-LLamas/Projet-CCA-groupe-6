@@ -2,7 +2,7 @@ reset()
 
 # HELPER FUNCTIONS ---------------
 
-def compute_G_H(A):
+def compute_G_H(A, ignored_n=None):
     n = A.nrows()
     m = A.ncols()
     
@@ -12,18 +12,23 @@ def compute_G_H(A):
     Z_m = matrix(QQ, m, m)
     for i in range(m-1): Z_m[i+1, i] = 1
         
-    D = A - Z_n * A * Z_m.T 
+    D = A - Z_n * A * Z_m.T # phi+(A) = D
     rank = D.rank()
     
     if rank == 0:
-        return matrix(QQ, n, 0), matrix(QQ, m, 0), 0
+        G = matrix(QQ, n, 0)
+        H = matrix(QQ, m, 0)
+        return G, H, 0 
         
     P, L, U = D.LU()
-    G_PERM = P * L 
-    keep = [i for i in range(n) if not U.row(i).is_zero()][:rank]
+    G_PERM = P * L  
     
-    G = matrix(QQ, [G_PERM.column(i) for i in keep]).T
-    H = matrix(QQ, [U.row(i) for i in keep]).T
+    keep = [i for i in range(n) if not U.row(i).is_zero()][:rank] 
+    
+    G = matrix(QQ, [G_PERM.column(i) for i in keep]).T # n x rank
+    H = matrix(QQ, [U.row(i) for i in keep]).T # m x rank
+    
+    assert G * H.T == D, "data loss"
     return G, H, rank
 
 def reconstruct_disp_plus(G, H):
@@ -47,13 +52,15 @@ def neg_generator(G, H):
     return -G, H
 
 def mul_generators(G1, H1, G2, H2):
+    n = G1.nrows()
     A = reconstruct_disp_plus(G1, H1)
     B = reconstruct_disp_plus(G2, H2)
-    return compute_G_H(A * B)[:2]
+    return compute_G_H(A * B, n)[:2]
 
 def compress_generators(G, H):
+    n = G.nrows()
     A = reconstruct_disp_plus(G, H)
-    return compute_G_H(A)[:2]
+    return compute_G_H(A, n)[:2]
 
 
 # QUADRANTS (SPLIT & PACK) ---------------
@@ -262,7 +269,7 @@ while not success:
     if not A.is_invertible():
         continue
             
-    G_A, H_A, rank = compute_G_H(A)
+    G_A, H_A, rank = compute_G_H(A, n)
 
     try:
         G_inv, H_inv = strassen_inverse_generators(G_A, H_A)
