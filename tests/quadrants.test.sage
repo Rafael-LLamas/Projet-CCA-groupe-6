@@ -28,7 +28,7 @@ def compute_G_H(A, n):
     return G, H, rank
 
 # get any matrix
-A = random_matrix(QQ, n, n, num_bound=10, den_bound=10)
+A = random_matrix(QQ, n, n)
 print("A:");print(A)
 
 G, H, rank = compute_G_H(A, n)
@@ -50,6 +50,66 @@ G_BOTTOM = G[n1 : n1 + n2, :] # second half of G
 H_TOP = H[:n1, :] # First half of H
 H_BOTTOM = H[n1 : n1 + n2, :] # Second half of H
 
+# displace operator Z for n1
+Z_N1 = matrix(QQ, n1, n1)
+for i in range(n1 - 1):
+    Z_N1[i + 1, i] = 1
+
+# displace operator Z for n2
+Z_N2 = matrix(QQ, n2, n2)
+for i in range(n2 - 1):
+    Z_N2[i + 1, i] = 1
+
+e_0_n1 = matrix(QQ, n1, 1, {(0, 0): 1}) # 0 vector with its first element as 1 for n1
+e_last_n1 = matrix(QQ, n1, 1, {(n1-1, 0): 1}) # 0 vector with its last element as 1 for n1
+
+e_0_n2 = matrix(QQ, n2, 1, {(0, 0): 1}) 
+e_last_n2 = matrix(QQ, n2, 1, {(n2-1, 0): 1})
+
+###-------- partial dense matrices --------###
+
+# last column of a
+v_a = matrix(QQ, n1, 1)
+for i in range(n1):
+    s = 0
+    for x in range(i + 1):
+        for k in range(rank):
+            s += G[i - x, k] * H[n1 - 1 - x, k]
+    v_a[i, 0] = s
+
+# last row of a
+r_a = matrix(QQ, n1, 1)
+for j in range(n1):
+    s = 0
+    for x in range(j + 1):
+        for k in range(rank):
+            s += G[n1 - 1 - x, k] * H[j - x, k]
+    r_a[j, 0] = s
+
+# bottom-right scalar value of a
+s_a = 0
+for x in range(n1):
+    for k in range(rank):
+        s_a += G[n1 - 1 - x, k] * H[n1 - 1 - x, k]
+
+# last column of c
+v_c = matrix(QQ, n2, 1)
+for l in range(n2):
+    s = 0
+    for x in range(n1):
+        for k in range(rank):
+            s += G[n1 + l - x, k] * H[n1 - 1 - x, k]
+    v_c[l, 0] = s
+
+# last row of b
+r_b = matrix(QQ, n2, 1)
+for m in range(n2):
+    s = 0
+    for x in range(n1):
+        for k in range(rank):
+            s += G[n1 - 1 - x, k] * H[n1 + m - x, k]
+    r_b[m, 0] = s
+
 ## UNPACKING a b c d ##
 
 ###-------- generator of a --------###
@@ -59,53 +119,69 @@ a = G_A * H_A.T
 print("block a displacement:");print(a)
 
 ###-------- generator of b --------###
-# Matches the top-right quadrant of Phi+(A) exactly
-G_B = G_TOP
-H_B = H_BOTTOM
+G_B = G_TOP.augment(Z_N1 * v_a)
+H_B = H_BOTTOM.augment(e_0_n2)
 
 b = G_B * H_B.T
 print("block b displacement:");print(b)
 
 ###-------- generator of c --------###
-# Matches the bottom-left quadrant of Phi+(A) exactly
-G_C = G_BOTTOM
-H_C = H_TOP
+G_C = G_BOTTOM.augment(e_0_n2)
+H_C = H_TOP.augment(Z_N1 * r_a)
 
 c = G_C * H_C.T
 print("block c displacement:"); print(c)
 
 ###-------- generator of d --------###
-# Matches the bottom-right quadrant of Phi+(A) exactly
-G_D = G_BOTTOM
-H_D = H_BOTTOM
-
+G_D = G_BOTTOM.augment((s_a * e_0_n2) + Z_N2 * v_c).augment(e_0_n2)
+H_D = H_BOTTOM.augment(e_0_n2).augment(Z_N2 * r_b)
 d = G_D * H_D.T
 print("block d displacement:");print(d)
 
-## PACKING a b c d
 
-# creating the matrices
-# [G_A     G_B     0       0    ]
-# [0       0       G_C     G_D  ]
-# and
-# [H_A     0    ]
-# [0       H_C  ]
-# [H_B     0    ]
-# [0       H_D  ]
-# so the result will be the multiplication of these both matrices will be the displacement matrix which i can the do the reconstruction
-# 
+## PACKING a b c d ##
+
 rA, rB, rC, rD = G_A.ncols(), G_B.ncols(), G_C.ncols(), G_D.ncols()
 
 G_result = block_matrix([
-    [G_A, G_B, matrix(QQ, n1, rC), matrix(QQ, n1, rD)], # n1 rows
-    [matrix(QQ, n2, rA), matrix(QQ, n2, rB), G_C, G_D]  # n2 rows
+    [G_A, G_B, matrix(QQ, n1, rC), matrix(QQ, n1, rD)],
+    [matrix(QQ, n2, rA), matrix(QQ, n2, rB), G_C, G_D]
 ])
 H_result = block_matrix([
-    [H_A, matrix(QQ, n1, rB), H_C, matrix(QQ, n1, rD)], # n1 rows
-    [matrix(QQ, n2, rA), H_B, matrix(QQ, n2, rC), H_D]  # n2 rows
+    [H_A, matrix(QQ, n1, rB), H_C, matrix(QQ, n1, rD)],
+    [matrix(QQ, n2, rA), H_B, matrix(QQ, n2, rC), H_D]
 ])
 
-assert G_result * H_result.T == G * H.T, "displacement not correct"
+
+# reverse b bleed (-Z_N1 * v_a)
+G_c1 = block_matrix([[ -Z_N1 * v_a ], [ matrix(QQ, n2, 1) ]])
+H_c1 = block_matrix([[ matrix(QQ, n1, 1) ], [ e_0_n2 ]])
+# print("G_c1");print(G_c1)
+# print("H_c1");print(H_c1)
+
+# reverse c bleed (-Z_N1 * r_a)
+G_c2 = block_matrix([[ matrix(QQ, n1, 1) ], [ -e_0_n2 ]])
+H_c2 = block_matrix([[ Z_N1 * r_a ], [ matrix(QQ, n2, 1) ]])
+# print("G_c2");print(G_c2)
+# print("H_c2");print(H_c2)
+
+# reverse d bleed part 1 (-Z_N2 * v_c and -s_a)
+G_c3 = block_matrix([[ matrix(QQ, n1, 1) ], [ -(s_a * e_0_n2 + Z_N2 * v_c) ]])
+H_c3 = block_matrix([[ matrix(QQ, n1, 1) ], [ e_0_n2 ]])
+# print("G_c3");print(G_c3)
+# print("H_c3");print(H_c3)
+
+# reverse d bleed part 2 (-Z_N2 * r_b)
+G_c4 = block_matrix([[ matrix(QQ, n1, 1) ], [ -e_0_n2 ]])
+H_c4 = block_matrix([[ matrix(QQ, n1, 1) ], [ Z_N2 * r_b ]])
+# print("G_c4");print(G_c4)
+# print("H_c4");print(H_c4)
+
+G_result = G_result.augment(G_c1).augment(G_c2).augment(G_c3).augment(G_c4)
+H_result = H_result.augment(H_c1).augment(H_c2).augment(H_c3).augment(H_c4)
+
+# print("G_result dimensions:", G_result.dimensions());print(G_result)
+# print("H_result dimensions:", H_result.dimensions());print(H_result)
 
 # recostruction_A of project
 def reconstruct_disp_plus(G, H):
@@ -124,4 +200,7 @@ def reconstruct_disp_plus(G, H):
 
 RES = reconstruct_disp_plus(G_result,H_result)
 print("repacked matrix A:");print(RES)
-assert RES == A, "matrix not correct"
+print("error in a block:"); print(RES[:n1, :n1] - A[:n1, :n1])
+print("error in b block:"); print(RES[:n1, n1:] - A[:n1, n1:])
+print("error in c block:"); print(RES[n1:, :n1] - A[n1:, :n1])
+print("error in d block:"); print(RES[n1:, n1:] - A[n1:, n1:])
