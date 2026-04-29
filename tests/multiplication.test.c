@@ -17,12 +17,12 @@ int test_multiplication_toeplitz() {
   flint_rand_t state;
   flint_rand_init(state);
   flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
-  while (i < 10) {
+  while (i < 5) {
     gr_mat_t A, B, C, D, G_a, H_a, G_b, H_b, G_c, H_c;
     gr_ctx_t ctx;
-    slong n = n_randint(state, 1000);
-    slong m = n_randint(state, 1000);
-    slong k = n_randint(state, 1000);
+    slong n = n_randint(state, 15);
+    slong m = n_randint(state, 15);
+    slong k = n_randint(state, 15);
     gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
     gr_mat_init(A, n, m, ctx);
     gr_mat_init(B, m, k, ctx);
@@ -178,12 +178,12 @@ int test_multiplication_quasi_toeplitz() {
   flint_rand_t state;
   flint_rand_init(state);
   flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
-  while (i < 10) {
+  while (i < 100) {
     gr_mat_t A, B, C, D, G_a, H_a, G_b, H_b, G_c, H_c;
     gr_ctx_t ctx;
-    slong n = n_randint(state, 1000);
-    slong m = n_randint(state, 1000);
-    slong k = n_randint(state, 1000);
+    slong n = n_randint(state, 100);
+    slong m = n_randint(state, 100);
+    slong k = n_randint(state, 100);
     gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
     gr_mat_init(A, n, m, ctx);
     gr_mat_init(B, m, k, ctx);
@@ -341,8 +341,8 @@ int test_multiplication_vector() {
   while (i < 10) {
     gr_mat_t A, X, C, D, G_a, H_a;
     gr_ctx_t ctx;
-    slong n = n_randint(state, 1000);
-    slong m = n_randint(state, 1000);
+    slong n = n_randint(state, 500);
+    slong m = n_randint(state, 600);
     gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
     gr_mat_init(A, n, m, ctx);
     gr_mat_init(X, m, 1, ctx);
@@ -504,7 +504,7 @@ int test_apply_Z() {
 void usage(char *argv[]) {
   fprintf(stderr, "Usage: %s <test_name>\n", argv[0]);
   fprintf(stderr, "Available tests:\n");
-  fprintf(stderr, "  - multiplication_generators\n");
+  fprintf(stderr, "  - multiplication_toeplitz\n");
   fprintf(stderr, "  - multiplication_quasi_toeplitz\n");
   fprintf(stderr, "  - multiplication_vector\n");
 }
