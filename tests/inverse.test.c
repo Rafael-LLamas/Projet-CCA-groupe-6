@@ -68,75 +68,78 @@ int test_inverse_base_case() {
 int test_inverse_2x2() {
   int status = GR_SUCCESS;
   flint_rand_t state;
-  flint_rand_init(state);
   gr_ctx_t ctx;
-  // gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
+
+  flint_rand_init(state);
   gr_ctx_init_nmod(ctx, 11);
 
-  gr_mat_t A, A_inv, Check;
-  gr_mat_t G_A, H_A, G_D, H_D;
-
+  gr_mat_t A, A_inv, Check, G_A, H_A, G_D, H_D;
   gr_mat_init(A, 2, 2, ctx);
+  gr_mat_init(A_inv, 2, 2, ctx);
+  gr_mat_init(Check, 2, 2, ctx);
+  gr_mat_init(G_A, 2, 4, ctx);
+  gr_mat_init(H_A, 2, 4, ctx);
+  gr_mat_init(G_D, 1, 1, ctx);
+  gr_mat_init(H_D, 1, 1, ctx);
+
   status |= gr_set_ui(gr_mat_entry_ptr(A, 0, 0, ctx), 1, ctx);
   status |= gr_set_ui(gr_mat_entry_ptr(A, 0, 1, ctx), 3, ctx);
   status |= gr_set_ui(gr_mat_entry_ptr(A, 1, 0, ctx), 2, ctx);
   status |= gr_set_ui(gr_mat_entry_ptr(A, 1, 1, ctx), 4, ctx);
 
-  printf("A =\n");
-  gr_mat_print(A, ctx);
-  printf("\n");
-
-  gr_mat_init(G_A, 2, 4, ctx);
-  gr_mat_init(H_A, 2, 4, ctx);
-
-  status = gr_mat_G_H(G_A, H_A, A, DISP_PLUS, ctx);
-  if (status != GR_SUCCESS) goto cleanup;
-
-  printf("G_A:\n");
-  gr_mat_print(G_A, ctx);
-  printf("\nH_A:\n");
-  gr_mat_print(H_A, ctx);
-  printf("\n");
-
-  gr_mat_init(G_D, 1, 1, ctx);
-  gr_mat_init(H_D, 1, 1, ctx);
-
-  status = gr_mat_inverse_toeplitz(G_D, H_D, G_A, H_A, ctx);
-
-  if (status != GR_SUCCESS) {
-    printf("gr_mat_inverse_toeplitz failed with status = %d\n", status);
-    goto cleanup;
+  if (status == GR_SUCCESS) {
+    printf("A =\n");
+    gr_mat_print(A, ctx);
+    printf("\n");
   }
 
-  printf("G_D (generators of A^-1):\n");
-  gr_mat_print(G_D, ctx);
-  printf("\nH_D (generators of A^-1):\n");
-  gr_mat_print(H_D, ctx);
-  printf("\n");
-
-  // Reconstruct inverse
-  gr_mat_init(A_inv, 2, 2, ctx);
-  status = gr_mat_reconstruct_A(A_inv, G_D, H_D, DISP_PLUS, ctx);
-  if (status != GR_SUCCESS) goto cleanup;
-
-  printf("A_inv (reconstructed):\n");
-  gr_mat_print(A_inv, ctx);
-  printf("\n");
-
-  gr_mat_init(Check, 2, 2, ctx);
-  status = gr_mat_mul(Check, A, A_inv, ctx);
-  if (status != GR_SUCCESS) goto cleanup;
-
-  printf("Check = A * A_inv =\n");
-  gr_mat_print(Check, ctx);
-  printf("\n");
-
-  if (gr_mat_is_one(Check, ctx) != T_TRUE) {
-    printf("Product is not identity\n");
-    status = GR_TEST_FAIL;
+  if (status == GR_SUCCESS) {
+    status = gr_mat_G_H(G_A, H_A, A, DISP_PLUS, ctx);
+    if (status == GR_SUCCESS) {
+      printf("G_A:\n");
+      gr_mat_print(G_A, ctx);
+      printf("\nH_A:\n");
+      gr_mat_print(H_A, ctx);
+      printf("\n");
+    }
   }
 
-cleanup:
+  if (status == GR_SUCCESS) {
+    status = gr_mat_inverse_toeplitz(G_D, H_D, G_A, H_A, ctx);
+    if (status != GR_SUCCESS) {
+      printf("gr_mat_inverse_toeplitz failed with status = %d\n", status);
+    } else {
+      printf("G_D (generators of A^-1):\n");
+      gr_mat_print(G_D, ctx);
+      printf("\nH_D (generators of A^-1):\n");
+      gr_mat_print(H_D, ctx);
+      printf("\n");
+    }
+  }
+
+  if (status == GR_SUCCESS) {
+    status = gr_mat_reconstruct_A(A_inv, G_D, H_D, DISP_PLUS, ctx);
+    if (status == GR_SUCCESS) {
+      printf("A_inv (reconstructed):\n");
+      gr_mat_print(A_inv, ctx);
+      printf("\n");
+    }
+  }
+
+  if (status == GR_SUCCESS) {
+    status = gr_mat_mul(Check, A, A_inv, ctx);
+    if (status == GR_SUCCESS) {
+      printf("Check = A * A_inv =\n");
+      gr_mat_print(Check, ctx);
+      printf("\n");
+
+      if (gr_mat_is_one(Check, ctx) != T_TRUE) {
+        printf("Product is not identity\n");
+        status = GR_TEST_FAIL;
+      }
+    }
+  }
+
   gr_mat_clear(A, ctx);
   gr_mat_clear(A_inv, ctx);
   gr_mat_clear(Check, ctx);
@@ -144,8 +147,10 @@ cleanup:
   gr_mat_clear(H_A, ctx);
   gr_mat_clear(G_D, ctx);
   gr_mat_clear(H_D, ctx);
+
   gr_ctx_clear(ctx);
   flint_rand_clear(state);
+
   return status;
 }
 
@@ -255,10 +260,10 @@ int test_inverse_full() {
   int status = GR_SUCCESS;
   flint_rand_t state;
   flint_rand_init(state);
-  int size = 5;
+  int size = 4;
   flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
 
-  while (i < 10) {
+  while (i < 15) {
     gr_mat_t A, B, G, H, T, U, C;
     gr_ctx_t ctx;
     gr_ptr det;
@@ -272,25 +277,34 @@ int test_inverse_full() {
     GR_TMP_INIT(det, ctx);
 
     do {
-      if (status == GR_SUCCESS) status |= gr_mat_random_toeplitz(A, state, ctx);
-      if (status == GR_SUCCESS) status |= gr_mat_det(det, A, ctx);
-
+      status |= gr_mat_random_toeplitz(A, state, ctx);
+      status |= gr_mat_det(det, A, ctx);
     } while (gr_is_zero(det, ctx) == T_TRUE);
 
     gr_mat_init(T, n, 2, ctx);
     gr_mat_init(U, n, 2, ctx);
 
     status |= gr_mat_G_H(G, H, A, DISP_PLUS, ctx);
-    if (status == GR_SUCCESS) status |= gr_mat_inverse_toeplitz(T, U, G, H, ctx);
 
-    if (status == GR_SUCCESS) status |= gr_mat_reconstruct_A(B, T, U, DISP_PLUS, ctx);
+    status |= gr_mat_inverse_toeplitz(T, U, G, H, ctx);
 
     if (status == GR_SUCCESS) {
+      status |= gr_mat_reconstruct_A(B, T, U, DISP_PLUS, ctx);
       status |= gr_mat_mul(C, A, B, ctx);
+
       if (gr_mat_is_one(C, ctx) != T_TRUE) {
-        printf("Failure: A * A_inv != I at size %ld\n", n);
+        printf("\nFAIL: n = %ld\n", n);
+        printf("Matrix A:\n");
+        gr_mat_print(A, ctx);
+        printf("\n");
+        printf("A * A_inv (Should be I):\n");
+        gr_mat_print(C, ctx);
+        printf("\n");
         status = GR_TEST_FAIL;
+      } else {
+        printf("n = %ld success.\n", n);
       }
+      size += 5;
     }
 
     GR_TMP_CLEAR(det, ctx);
@@ -306,7 +320,6 @@ int test_inverse_full() {
     if (status != GR_SUCCESS) break;
 
     i++;
-    size *= 2;
   }
   flint_rand_clear(state);
   return status;
@@ -314,49 +327,57 @@ int test_inverse_full() {
 
 int test_split_and_pack() {
   int status = GR_SUCCESS;
-  gr_ctx_t ctx;
-  gr_ctx_init_nmod(ctx, 11);
   flint_rand_t state;
   flint_rand_init(state);
 
-  slong n = 6;
-  gr_mat_t A, G_A, H_A;
-  gr_mat_t Ga, Ha, Gb, Hb, Gc, Hc, Gd, Hd;
-  gr_mat_t G_packed, H_packed, A_res;
+  for (slong n = 5; n <= 50; n += 5) {
+    for (slong _ = 0; _ < 5; _++) {
+      slong rank = 1 + (n_randint(state, n - 1));
 
-  gr_mat_init(A, n, n, ctx);
-  gr_mat_init(G_A, n, 2, ctx);
-  gr_mat_init(H_A, n, 2, ctx);
-  gr_mat_random_toeplitz(A, state, ctx);
-  gr_mat_G_H(G_A, H_A, A, DISP_PLUS, ctx);
+      gr_ctx_t ctx;
+      gr_ctx_init_nmod(ctx, 11);
 
-  status |= gr_mat_split_quadrants(Ga, Ha, Gb, Hb, Gc, Hc, Gd, Hd, G_A, H_A, ctx);
+      gr_mat_t A, G_A, H_A;
+      gr_mat_t Ga, Ha, Gb, Hb, Gc, Hc, Gd, Hd;
+      gr_mat_t G_packed, H_packed, A_res;
 
-  status |= gr_mat_pack_quadrants(G_packed, H_packed, Ga, Ha, Gb, Hb, Gc, Hc, Gd, Hd, ctx);
+      gr_mat_init(A, n, n, ctx);
+      gr_mat_init(G_A, n, rank, ctx);
+      gr_mat_init(H_A, n, rank, ctx);
 
-  gr_mat_init(A_res, n, n, ctx);
-  status |= gr_mat_reconstruct_A(A_res, G_packed, H_packed, DISP_PLUS, ctx);
+      gr_mat_random_toeplitz(A, state, ctx);
+      gr_mat_G_H(G_A, H_A, A, DISP_PLUS, ctx);
 
-  if (gr_mat_equal(A, A_res, ctx) != T_TRUE) {
-    printf("Split -> Pack -> Reconstruct failed!\n");
-    status = GR_TEST_FAIL;
+      status |= gr_mat_split_quadrants(Ga, Ha, Gb, Hb, Gc, Hc, Gd, Hd, G_A, H_A, ctx);
+      status |= gr_mat_pack_quadrants(G_packed, H_packed, Ga, Ha, Gb, Hb, Gc, Hc, Gd, Hd, ctx);
+
+      gr_mat_init(A_res, n, n, ctx);
+      status |= gr_mat_reconstruct_A(A_res, G_packed, H_packed, DISP_PLUS, ctx);
+
+      if (gr_mat_equal(A, A_res, ctx) != T_TRUE) {
+        flint_printf("FAIL  n = %wd  rank = %wd\n", n, rank);
+        status = GR_TEST_FAIL;
+      }
+
+      gr_mat_clear(A, ctx);
+      gr_mat_clear(G_A, ctx);
+      gr_mat_clear(H_A, ctx);
+      gr_mat_clear(Ga, ctx);
+      gr_mat_clear(Ha, ctx);
+      gr_mat_clear(Gb, ctx);
+      gr_mat_clear(Hb, ctx);
+      gr_mat_clear(Gc, ctx);
+      gr_mat_clear(Hc, ctx);
+      gr_mat_clear(Gd, ctx);
+      gr_mat_clear(Hd, ctx);
+      gr_mat_clear(G_packed, ctx);
+      gr_mat_clear(H_packed, ctx);
+      gr_mat_clear(A_res, ctx);
+      gr_ctx_clear(ctx);
+    }
   }
 
-  gr_mat_clear(A, ctx);
-  gr_mat_clear(G_A, ctx);
-  gr_mat_clear(H_A, ctx);
-  gr_mat_clear(Ga, ctx);
-  gr_mat_clear(Ha, ctx);
-  gr_mat_clear(Gb, ctx);
-  gr_mat_clear(Hb, ctx);
-  gr_mat_clear(Gc, ctx);
-  gr_mat_clear(Hc, ctx);
-  gr_mat_clear(Gd, ctx);
-  gr_mat_clear(Hd, ctx);
-  gr_mat_clear(G_packed, ctx);
-  gr_mat_clear(H_packed, ctx);
-  gr_mat_clear(A_res, ctx);
-  gr_ctx_clear(ctx);
+  flint_rand_clear(state);
   return status;
 }
 

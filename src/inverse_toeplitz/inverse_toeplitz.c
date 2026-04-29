@@ -25,7 +25,7 @@ int gr_mat_inverse_toeplitz(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H
     gr_ptr temp = gr_heap_init(ctx);
 
     status |= gr_zero(val, ctx);
-    for (slong i = 0; i < rank; i++) { // this loop should not be necessary - return - TODO
+    for (slong i = 0; i < rank; i++) {
       status |= gr_mul(temp, gr_mat_entry_srcptr(G_A, 0, i, ctx), gr_mat_entry_srcptr(H_A, 0, i, ctx), ctx);
       status |= gr_add(val, val, temp, ctx);
     }
@@ -78,8 +78,8 @@ int gr_mat_inverse_toeplitz(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H
   status |= gr_mat_mul_generator(G_eb, H_eb, G_e, H_e, G_b, H_b, ctx);
   status |= gr_mat_generator_compress(G_eb, H_eb, ctx);
 
-  // ceb = ce * eb
-  status |= gr_mat_mul_generator(G_ceb, H_ceb, G_ce, H_ce, G_eb, H_eb, ctx);
+  // ceb = c * eb
+  status |= gr_mat_mul_generator(G_ceb, H_ceb, G_c, H_c, G_eb, H_eb, ctx);
   status |= gr_mat_neg(G_ceb, G_ceb, ctx); // -ceb
   status |= gr_mat_generator_compress(G_ceb, H_ceb, ctx);
 

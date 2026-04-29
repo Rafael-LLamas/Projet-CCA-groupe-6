@@ -2,7 +2,7 @@ reset()
 
 # HELPER FUNCTIONS ---------------
 
-def compute_G_H(A, ignored_n=None):
+def compute_G_H(A):
     n = A.nrows()
     m = A.ncols()
     
@@ -55,12 +55,12 @@ def mul_generators(G1, H1, G2, H2):
     n = G1.nrows()
     A = reconstruct_disp_plus(G1, H1)
     B = reconstruct_disp_plus(G2, H2)
-    return compute_G_H(A * B, n)[:2]
+    return compute_G_H(A * B)[:2]
 
 def compress_generators(G, H):
     n = G.nrows()
     A = reconstruct_disp_plus(G, H)
-    return compute_G_H(A, n)[:2]
+    return compute_G_H(A)[:2]
 
 
 # QUADRANTS (SPLIT & PACK) ---------------
@@ -269,7 +269,7 @@ while not success:
     if not A.is_invertible():
         continue
             
-    G_A, H_A, rank = compute_G_H(A, n)
+    G_A, H_A, rank = compute_G_H(A)
 
     try:
         G_inv, H_inv = strassen_inverse_generators(G_A, H_A)
