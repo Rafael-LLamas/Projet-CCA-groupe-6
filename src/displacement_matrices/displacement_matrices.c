@@ -80,6 +80,7 @@ int gr_mat_displacement(gr_mat_t D, gr_mat_t A, disp_type_t type, gr_ctx_t ctx) 
   slong m = gr_mat_ncols(A, ctx);
 
   if (gr_mat_nrows(D, ctx) != n || gr_mat_ncols(D, ctx) != m) return GR_UNABLE;
+  if (n == 0 || m == 0) return GR_SUCCESS; // nothing to compute
   gr_ptr ptr_cur, ptr_op, ptr_dest;
 
   if (type == DISP_MINUS) {
