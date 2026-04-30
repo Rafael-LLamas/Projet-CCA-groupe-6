@@ -16,13 +16,13 @@ int test_addition_generateurs_toeplitz() {
   int error = GR_SUCCESS;
   flint_rand_t state;
   flint_rand_init(state);
-  while (i < 10) {
+  while (i < 50) {
     gr_mat_t A, B, C;
     gr_ctx_t ctx;
     flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
     gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
-    slong n = n_randint(state, 1000);
-    slong m = n_randint(state, 1000);
+    slong n = n_randint(state, 100);
+    slong m = n_randint(state, 100);
 
     gr_mat_init(A, n, m, ctx);
     gr_mat_init(B, n, m, ctx);
@@ -178,13 +178,13 @@ int test_addition_generateurs_quasi_toeplitz() {
   int error = GR_SUCCESS;
   flint_rand_t state;
   flint_rand_init(state);
-  while (i < 10) {
+  while (i < 50) {
     gr_mat_t A, B, C;
     gr_ctx_t ctx;
     flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
     gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
-    slong n = n_randint(state, 1000);
-    slong m = n_randint(state, 1000);
+    slong n = n_randint(state, 100);
+    slong m = n_randint(state, 100);
     slong r = n_randint(state, 5);
 
     gr_mat_init(A, n, m, ctx);

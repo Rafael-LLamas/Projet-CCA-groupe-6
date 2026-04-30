@@ -15,15 +15,16 @@ int test_multiplication_toeplitz() {
   int i = 0;
   int error = GR_SUCCESS;
   flint_rand_t state;
+  gr_ctx_t ctx;
   flint_rand_init(state);
   flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
-  while (i < 5) {
+  gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
+  while (i < 50) {
     gr_mat_t A, B, C, D, G_a, H_a, G_b, H_b, G_c, H_c;
-    gr_ctx_t ctx;
     slong n = n_randint(state, 15);
     slong m = n_randint(state, 15);
     slong k = n_randint(state, 15);
-    gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
+
     gr_mat_init(A, n, m, ctx);
     gr_mat_init(B, m, k, ctx);
     error = gr_mat_random_toeplitz(A, state, ctx);
@@ -52,6 +53,7 @@ int test_multiplication_toeplitz() {
     if (error != GR_SUCCESS) {
       flint_printf("Failed to generate G and H of A, FIX IT FAST\n");
       gr_mat_clear(C, ctx);
+      gr_mat_clear(D, ctx);
       gr_mat_clear(A, ctx);
       gr_mat_clear(B, ctx);
       gr_mat_clear(G_a, ctx);
@@ -65,6 +67,7 @@ int test_multiplication_toeplitz() {
     if (error != GR_SUCCESS) {
       flint_printf("Failed to generate G and H of B, FIX IT FAST\n");
       gr_mat_clear(C, ctx);
+      gr_mat_clear(D, ctx);
       gr_mat_clear(A, ctx);
       gr_mat_clear(B, ctx);
       gr_mat_clear(G_a, ctx);
@@ -80,6 +83,7 @@ int test_multiplication_toeplitz() {
       flint_printf("Failed to multiply with flint, size ??\n");
       gr_mat_clear(C, ctx);
       gr_mat_clear(A, ctx);
+      gr_mat_clear(D, ctx);
       gr_mat_clear(B, ctx);
       gr_mat_clear(G_a, ctx);
       gr_mat_clear(G_b, ctx);
@@ -94,6 +98,7 @@ int test_multiplication_toeplitz() {
       flint_printf("Failed to multiply, FIX IT FAST\n");
       gr_mat_clear(C, ctx);
       gr_mat_clear(A, ctx);
+      gr_mat_clear(D, ctx);
       gr_mat_clear(B, ctx);
       gr_mat_clear(G_a, ctx);
       gr_mat_clear(G_b, ctx);
@@ -110,6 +115,7 @@ int test_multiplication_toeplitz() {
       flint_printf("Failed to reconstruct D, FIX IT FAST\n");
       gr_mat_clear(C, ctx);
       gr_mat_clear(A, ctx);
+      gr_mat_clear(D, ctx);
       gr_mat_clear(B, ctx);
       gr_mat_clear(G_a, ctx);
       gr_mat_clear(G_b, ctx);
@@ -156,6 +162,7 @@ int test_multiplication_toeplitz() {
       error = 1;
       i = 9998;
     }
+    gr_mat_clear(D, ctx);
     gr_mat_clear(C, ctx);
     gr_mat_clear(A, ctx);
     gr_mat_clear(B, ctx);
@@ -165,10 +172,10 @@ int test_multiplication_toeplitz() {
     gr_mat_clear(H_a, ctx);
     gr_mat_clear(H_b, ctx);
     gr_mat_clear(H_c, ctx);
-    gr_ctx_clear(ctx);
     i++;
   }
   flint_rand_clear(state);
+  gr_ctx_clear(ctx);
   return error;
 }
 
@@ -213,6 +220,7 @@ int test_multiplication_quasi_toeplitz() {
       gr_mat_clear(C, ctx);
       gr_mat_clear(A, ctx);
       gr_mat_clear(B, ctx);
+      gr_mat_clear(D, ctx);
       gr_mat_clear(G_a, ctx);
       gr_mat_clear(H_a, ctx);
       gr_ctx_clear(ctx);
@@ -225,6 +233,7 @@ int test_multiplication_quasi_toeplitz() {
       gr_mat_clear(C, ctx);
       gr_mat_clear(A, ctx);
       gr_mat_clear(B, ctx);
+      gr_mat_clear(D, ctx);
       gr_mat_clear(G_a, ctx);
       gr_mat_clear(G_b, ctx);
       gr_mat_clear(H_a, ctx);
@@ -239,6 +248,7 @@ int test_multiplication_quasi_toeplitz() {
       gr_mat_clear(C, ctx);
       gr_mat_clear(A, ctx);
       gr_mat_clear(B, ctx);
+      gr_mat_clear(D, ctx);
       gr_mat_clear(G_a, ctx);
       gr_mat_clear(G_b, ctx);
       gr_mat_clear(H_a, ctx);
@@ -253,6 +263,7 @@ int test_multiplication_quasi_toeplitz() {
       gr_mat_clear(C, ctx);
       gr_mat_clear(A, ctx);
       gr_mat_clear(B, ctx);
+      gr_mat_clear(D, ctx);
       gr_mat_clear(G_a, ctx);
       gr_mat_clear(G_b, ctx);
       gr_mat_clear(G_c, ctx);
@@ -269,6 +280,7 @@ int test_multiplication_quasi_toeplitz() {
       gr_mat_clear(C, ctx);
       gr_mat_clear(A, ctx);
       gr_mat_clear(B, ctx);
+      gr_mat_clear(D, ctx);
       gr_mat_clear(G_a, ctx);
       gr_mat_clear(G_b, ctx);
       gr_mat_clear(G_c, ctx);
@@ -311,7 +323,7 @@ int test_multiplication_quasi_toeplitz() {
       flint_printf("Matrice D = \n");
       gr_mat_print(D, ctx);
       flint_printf("\n");
-      error = 1;
+      error = GR_TEST_FAIL;
       i = 9998;
     }
 
@@ -529,7 +541,7 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "Error: test \"%s\" not found!\n", argv[1]);
     exit(EXIT_FAILURE);
   }
-
+  flint_cleanup();
   if (!ok) {
     fprintf(stderr, "Test \"%s\" finished: SUCCESS\n", argv[1]);
     return EXIT_SUCCESS;

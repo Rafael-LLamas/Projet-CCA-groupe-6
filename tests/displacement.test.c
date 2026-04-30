@@ -17,9 +17,9 @@ int test_toeplitz_deplacement() {
   int error = GR_SUCCESS;
   flint_rand_init(state);
   flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
-  while (i < 10) {
-    slong n = n_randint(state, 1000);
-    slong m = n_randint(state, 1000);
+  while (i < 50) {
+    slong n = n_randint(state, 100);
+    slong m = n_randint(state, 100);
     gr_ctx_t ctx;
     gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
     gr_mat_t A, D;
@@ -186,9 +186,9 @@ int test_toeplitz_to_G_H() {
   flint_rand_t state;
   flint_rand_init(state);
   flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
-  while (i < 10) {
-    slong n = n_randint(state, 1000);
-    slong m = n_randint(state, 1000);
+  while (i < 50) {
+    slong n = n_randint(state, 100);
+    slong m = n_randint(state, 100);
     gr_ctx_t ctx;
     gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
     gr_mat_t A, D, G, H;
@@ -254,9 +254,9 @@ int test_quasi_toeplitz_to_G_H() {
   flint_rand_t state;
   flint_rand_init(state);
   flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
-  while (i < 10) {
-    slong n = n_randint(state, 1000);
-    slong m = n_randint(state, 1000);
+  while (i < 50) {
+    slong n = n_randint(state, 100);
+    slong m = n_randint(state, 100);
     gr_ctx_t ctx;
     gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
     gr_mat_t A, D, G, H;

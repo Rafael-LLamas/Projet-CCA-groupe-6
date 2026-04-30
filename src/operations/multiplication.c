@@ -12,34 +12,29 @@ int gr_mat_mul_vector(gr_mat_t Res, gr_mat_t G, gr_mat_t H, gr_mat_t X, gr_ctx_t
   slong n = gr_mat_nrows(G, ctx), m = gr_mat_nrows(H, ctx);
   slong alpha = gr_mat_ncols(G, ctx), m_cols = gr_mat_ncols(X, ctx);
 
-  gr_poly_t pg, ph, px, p_tmp;
-  gr_poly_init(pg, ctx);
-  gr_poly_init(ph, ctx);
-  gr_poly_init(px, ctx);
-  gr_poly_init(p_tmp, ctx);
+  gr_poly_t pg, ph, px, p_tmp, p_tmp_shift, p_tmp2;
 
   error = gr_mat_zero(Res, ctx);
-  if (error) {
-    gr_poly_clear(pg, ctx);
-    gr_poly_clear(ph, ctx);
-    gr_poly_clear(px, ctx);
-    gr_poly_clear(p_tmp, ctx);
-  }
+  if (error) { return error; }
 
   for (slong j = 0; j < m_cols; j++) {
+    gr_poly_init(px, ctx);
     gr_poly_fit_length(px, m, ctx);
     for (slong r = 0; r < m; r++) {
       error = gr_set(gr_poly_coeff_ptr(px, r, ctx), gr_mat_entry_srcptr(X, r, j, ctx), ctx);
       if (error) {
-        gr_poly_clear(pg, ctx);
-        gr_poly_clear(ph, ctx);
         gr_poly_clear(px, ctx);
-        gr_poly_clear(p_tmp, ctx);
+        return error;
       }
     }
     _gr_poly_set_length(px, m, ctx);
 
     for (slong k = 0; k < alpha; k++) {
+      gr_poly_init(pg, ctx);
+      gr_poly_init(ph, ctx);
+      gr_poly_init(p_tmp, ctx);
+      gr_poly_init(p_tmp_shift, ctx);
+      gr_poly_init(p_tmp2, ctx);
       gr_poly_fit_length(pg, n, ctx);
       for (slong r = 0; r < n; r++) {
         error = gr_set(gr_poly_coeff_ptr(pg, r, ctx), gr_mat_entry_srcptr(G, r, k, ctx), ctx);
@@ -48,6 +43,9 @@ int gr_mat_mul_vector(gr_mat_t Res, gr_mat_t G, gr_mat_t H, gr_mat_t X, gr_ctx_t
           gr_poly_clear(ph, ctx);
           gr_poly_clear(px, ctx);
           gr_poly_clear(p_tmp, ctx);
+          gr_poly_clear(p_tmp_shift, ctx);
+          gr_poly_clear(p_tmp2, ctx);
+          return error;
         }
       }
       _gr_poly_set_length(pg, n, ctx);
@@ -60,6 +58,9 @@ int gr_mat_mul_vector(gr_mat_t Res, gr_mat_t G, gr_mat_t H, gr_mat_t X, gr_ctx_t
           gr_poly_clear(ph, ctx);
           gr_poly_clear(px, ctx);
           gr_poly_clear(p_tmp, ctx);
+          gr_poly_clear(p_tmp_shift, ctx);
+          gr_poly_clear(p_tmp2, ctx);
+          return error;
         }
       }
       _gr_poly_set_length(ph, m, ctx);
@@ -70,6 +71,9 @@ int gr_mat_mul_vector(gr_mat_t Res, gr_mat_t G, gr_mat_t H, gr_mat_t X, gr_ctx_t
         gr_poly_clear(ph, ctx);
         gr_poly_clear(px, ctx);
         gr_poly_clear(p_tmp, ctx);
+        gr_poly_clear(p_tmp_shift, ctx);
+        gr_poly_clear(p_tmp2, ctx);
+        return error;
       }
       error = gr_poly_mul(p_tmp, ph, px, ctx);
       if (error) {
@@ -77,44 +81,58 @@ int gr_mat_mul_vector(gr_mat_t Res, gr_mat_t G, gr_mat_t H, gr_mat_t X, gr_ctx_t
         gr_poly_clear(ph, ctx);
         gr_poly_clear(px, ctx);
         gr_poly_clear(p_tmp, ctx);
+        gr_poly_clear(p_tmp_shift, ctx);
+        gr_poly_clear(p_tmp2, ctx);
+        return error;
       }
 
-      error = gr_poly_shift_right(p_tmp, p_tmp, m - 1, ctx);
+      error = gr_poly_shift_right(p_tmp_shift, p_tmp, m - 1, ctx);
       if (error) {
         gr_poly_clear(pg, ctx);
         gr_poly_clear(ph, ctx);
         gr_poly_clear(px, ctx);
         gr_poly_clear(p_tmp, ctx);
+        gr_poly_clear(p_tmp_shift, ctx);
+        gr_poly_clear(p_tmp2, ctx);
+        return error;
       }
-      _gr_poly_set_length(p_tmp, FLINT_MIN(gr_poly_length(p_tmp, ctx), m), ctx);
 
-      error = gr_poly_mul(p_tmp, pg, p_tmp, ctx);
+      error = gr_poly_mul(p_tmp2, pg, p_tmp_shift, ctx);
+
       if (error) {
         gr_poly_clear(pg, ctx);
         gr_poly_clear(ph, ctx);
         gr_poly_clear(px, ctx);
         gr_poly_clear(p_tmp, ctx);
+        gr_poly_clear(p_tmp_shift, ctx);
+        gr_poly_clear(p_tmp2, ctx);
+        return error;
       }
 
-      if (gr_poly_length(p_tmp, ctx) > n) _gr_poly_set_length(p_tmp, n, ctx);
+      if (gr_poly_length(p_tmp2, ctx) > n) _gr_poly_set_length(p_tmp2, n, ctx);
 
-      for (slong i = 0; i < gr_poly_length(p_tmp, ctx); i++) {
-        error = gr_add(gr_mat_entry_ptr(Res, i, j, ctx), gr_mat_entry_ptr(Res, i, j, ctx),
-                       gr_poly_coeff_srcptr(p_tmp, i, ctx), ctx);
+      for (slong i = 0; i < gr_poly_length(p_tmp2, ctx); i++) {
+        error = gr_add(gr_mat_entry_ptr(Res, i, j, ctx), gr_mat_entry_srcptr(Res, i, j, ctx),
+                       gr_poly_coeff_srcptr(p_tmp2, i, ctx), ctx);
         if (error) {
           gr_poly_clear(pg, ctx);
           gr_poly_clear(ph, ctx);
           gr_poly_clear(px, ctx);
           gr_poly_clear(p_tmp, ctx);
+          gr_poly_clear(p_tmp_shift, ctx);
+          gr_poly_clear(p_tmp2, ctx);
+          return error;
         }
       }
+      gr_poly_clear(pg, ctx);
+      gr_poly_clear(ph, ctx);
+      gr_poly_clear(p_tmp_shift, ctx);
+      gr_poly_clear(p_tmp, ctx);
+      gr_poly_clear(p_tmp2, ctx);
     }
+    gr_poly_clear(px, ctx);
   }
 
-  gr_poly_clear(pg, ctx);
-  gr_poly_clear(ph, ctx);
-  gr_poly_clear(px, ctx);
-  gr_poly_clear(p_tmp, ctx);
   return error;
 }
 int gr_mat_mul_generator(gr_mat_t G_c, gr_mat_t H_c, gr_mat_t G_a, gr_mat_t H_a, gr_mat_t G_b, gr_mat_t H_b,

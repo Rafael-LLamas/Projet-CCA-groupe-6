@@ -16,28 +16,64 @@ int gr_mat_random_quasi_toepitz(gr_mat_t A, flint_rand_t state, gr_ctx_t ctx) {
   gr_mat_init(colL, gr_mat_nrows(A, ctx), 1, ctx);
   gr_mat_init(rowU, 1, gr_mat_ncols(A, ctx), ctx);
   error = gr_mat_zero(L, ctx);
-  if (error != 0) { return error; }
+  if (error != 0) {
+    gr_mat_clear(L, ctx);
+    gr_mat_clear(U, ctx);
+    gr_mat_clear(colL, ctx);
+    gr_mat_clear(rowU, ctx);
+    return error;
+  }
   error = gr_mat_zero(U, ctx);
-  if (error != 0) { return error; }
+  if (error != 0) {
+    gr_mat_clear(L, ctx);
+    gr_mat_clear(U, ctx);
+    gr_mat_clear(colL, ctx);
+    gr_mat_clear(rowU, ctx);
+    return error;
+  }
 
   for (int i = 0; i < gr_mat_nrows(A, ctx); i++) {
     error = gr_randtest_not_zero(gr_mat_entry_ptr(colL, i, 0, ctx), state, ctx);
-    if (error != 0) { return error; }
+    if (error != 0) {
+      gr_mat_clear(L, ctx);
+      gr_mat_clear(U, ctx);
+      gr_mat_clear(colL, ctx);
+      gr_mat_clear(rowU, ctx);
+      return error;
+    }
   }
   for (int j = 0; j < gr_mat_ncols(A, ctx); j++) {
     error = gr_randtest_not_zero(gr_mat_entry_ptr(rowU, 0, j, ctx), state, ctx);
-    if (error != 0) { return error; }
+    if (error != 0) {
+      gr_mat_clear(L, ctx);
+      gr_mat_clear(U, ctx);
+      gr_mat_clear(colL, ctx);
+      gr_mat_clear(rowU, ctx);
+      return error;
+    }
   }
 
   for (int i = 0; i < gr_mat_nrows(A, ctx); i++) {
     for (int j = 0; j < gr_mat_ncols(A, ctx); j++) {
       if (i >= j) {
         error = gr_set(gr_mat_entry_ptr(L, i, j, ctx), gr_mat_entry_srcptr(colL, i - j, 0, ctx), ctx);
-        if (error != 0) { return error; }
+        if (error != 0) {
+          gr_mat_clear(L, ctx);
+          gr_mat_clear(U, ctx);
+          gr_mat_clear(colL, ctx);
+          gr_mat_clear(rowU, ctx);
+          return error;
+        }
       }
       if (j >= i) {
         error = gr_set(gr_mat_entry_ptr(U, i, j, ctx), gr_mat_entry_srcptr(rowU, 0, j - i, ctx), ctx);
-        if (error != 0) { return error; }
+        if (error != 0) {
+          gr_mat_clear(L, ctx);
+          gr_mat_clear(U, ctx);
+          gr_mat_clear(colL, ctx);
+          gr_mat_clear(rowU, ctx);
+          return error;
+        }
       }
     }
   }
@@ -60,22 +96,41 @@ int gr_mat_random_toeplitz(gr_mat_t A, flint_rand_t state, gr_ctx_t ctx) {
 
   for (int i = 0; i < gr_mat_nrows(A, ctx); i++) {
     error = gr_randtest_not_zero(gr_mat_entry_ptr(col, i, 0, ctx), state, ctx);
-    if (error != 0) { return error; }
+    if (error != 0) {
+      gr_mat_clear(col, ctx);
+      gr_mat_clear(row, ctx);
+      return error;
+    }
   }
-  for (int j = 0; j < gr_mat_ncols(A, ctx); j++) {
+  for (int j = 1; j < gr_mat_ncols(A, ctx); j++) {
     error = gr_randtest_not_zero(gr_mat_entry_ptr(row, 0, j, ctx), state, ctx);
-    if (error != 0) { return error; }
+    if (error != 0) {
+      gr_mat_clear(col, ctx);
+      gr_mat_clear(row, ctx);
+      return error;
+    }
   }
-  error = gr_set(gr_mat_entry_ptr(row, 0, 0, ctx), gr_mat_entry_srcptr(col, 0, 0, ctx), ctx);
-  if (error != 0) { return error; }
+  if (error != 0) {
+    gr_mat_clear(col, ctx);
+    gr_mat_clear(row, ctx);
+    return error;
+  }
   for (int i = 0; i < gr_mat_nrows(A, ctx); i++) {
     for (int j = 0; j < gr_mat_ncols(A, ctx); j++) {
       if (i >= j) {
         error = gr_set(gr_mat_entry_ptr(A, i, j, ctx), gr_mat_entry_srcptr(col, i - j, 0, ctx), ctx);
-        if (error != 0) { return error; }
+        if (error != 0) {
+          gr_mat_clear(col, ctx);
+          gr_mat_clear(row, ctx);
+          return error;
+        }
       } else {
         error = gr_set(gr_mat_entry_ptr(A, i, j, ctx), gr_mat_entry_srcptr(row, 0, j - i, ctx), ctx);
-        if (error != 0) { return error; }
+        if (error != 0) {
+          gr_mat_clear(col, ctx);
+          gr_mat_clear(row, ctx);
+          return error;
+        }
       }
     }
   }
