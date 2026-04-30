@@ -85,9 +85,10 @@ int test_random_quasi_toeplitz() {
 
     gr_mat_t ran, D;
     gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
-    slong n = n_randint(state, 100) + 1;
-    slong m = n_randint(state, 100) + 1;
-    slong rank = n_randint(state, 5);
+    slong rank = n_randint(state, 5) + 1;
+    slong n = n_randint(state, 100) + rank;
+    slong m = n_randint(state, 100) + rank;
+
     gr_mat_init(ran, n, m, ctx);
     gr_mat_init(D, n, m, ctx);
     error = gr_mat_quasi_toeplitz_rank(ran, rank, state, ctx);
