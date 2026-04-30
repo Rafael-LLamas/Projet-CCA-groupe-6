@@ -2,93 +2,260 @@
 
 \subsubsection{Introduction}
 
-In this section we will study how we implemented Strassen's Inversion method on generators.
-This code can be found in:
+In this section we will study how we implemented Strassen's inversion method on displacement generators.
+Algorithm follows:
+
+\begin{algorithm}[H]
+\caption{Strassen-type Inversion for Displacement Generators}
+\label{alg:strassen_generators}
+\begin{algorithmic}[1]
+\Procedure{StrassenInverseGenerators}{$G_A, H_A$}
+\caption{Strassen-type Inversion for Displacement Generators (adapted from \cite{aecf-2017-pdf})}
+    \If{$n = 1$} \Comment{\textbf{Step 1: Base Case}}
+            \State \textbf{return} $G_D$ $H_D$ representing the inverse of the scalar value of $A$ from $G_A, H_A$
+    \EndIf
+    \Statex
+    \State $G_a, H_a, \dots, G_d, H_d \gets \textsc{SplitQuadrants}(G_A, H_A)$ \Comment{\textbf{Step 2: Split into Quadrants}}
+    \Statex
+    \State $G_e, H_e \gets \textsc{StrassenInverseGenerators}(G_a, H_a)$ \Comment{$e := a^{-1}$} \Comment{\textbf{Step 3: Recursion \#1}}
+    \Statex
+    \State $G_{ce}, H_{ce} \gets \textsc{Compress}(\textsc{Mul}(G_c, H_c, G_e, H_e))$ \Comment{\textbf{Step 4: Schur Complement}}
+    \State $G_{eb}, H_{eb} \gets \textsc{Compress}(\textsc{Mul}(G_e, H_e, G_b, H_b))$
+    \State $G_{ceb}, H_{ceb} \gets \textsc{Compress}(\textsc{Mul}(G_c, H_c, G_{eb}, H_{eb}) \times -1)$
+    \State $G_S, H_S \gets \textsc{Compress}(\textsc{Add}(G_d, H_d, G_{ceb}, H_{ceb}))$ \Comment{$S := d - ceb$}
+    \Statex
+    \State $G_t, H_t \gets \textsc{StrassenInverseGenerators}(G_S, H_S)$ \Comment{$t := S^{-1}$} \Comment{\textbf{Step 5: Recursion \#2}}
+    \Statex
+    \State $G_{ebt}, H_{ebt} \gets \textsc{Compress}(\textsc{Mul}(G_{eb}, H_{eb}, G_t, H_t))$ \Comment{\textbf{Step 6: Strassen Assembly}}
+    \State $G_{tce}, H_{tce} \gets \textsc{Compress}(\textsc{Mul}(G_t, H_t, G_{ce}, H_{ce}))$
+    \State $G_{ebtce}, H_{ebtce} \gets \textsc{Compress}(\textsc{Mul}(G_{ebt}, H_{ebt}, G_{ce}, H_{ce}))$
+    \Statex
+    \State $G_x, H_x \gets \textsc{Compress}(\textsc{Add}(G_e, H_e, G_{ebtce}, H_{ebtce}))$ \Comment{$x := e + ebtce$}
+    \State $G_y, H_y \gets \textsc{Negate}(G_{ebt}, H_{ebt})$ \Comment{$y := -ebt$}
+    \State $G_z, H_z \gets \textsc{Negate}(G_{tce}, H_{tce})$ \Comment{$z := -tce$}
+    \Statex
+    \State $G_{Inv}, H_{Inv} \gets \textsc{PackQuadrants}(G_x, H_x, G_y, H_y, G_z, H_z, G_t, H_t)$ \Comment{\textbf{Step 7: Pack}}
+    \State \textbf{return} \textsc{Compress}($G_{Inv}, H_{Inv}$)
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+This algorithm is based on Algorithm 10.1 from \cite[Algorithme 10.1]{aecf-2017-pdf}. 
+Notice that we strictly operate on $\Phi_+$ displacement and bypassing $\Phi_-$ generators. 
+
+\begin{proof}
+We proceed by induction on the size of the matrix $n = 2k$. Let $\Phi_+(X) = X - ZXZ^T$ be the displacement operator.
+
+\paragraph{Base Case ($n=1$):} 
+For a scalar matrix $A = [a]$, the operator $Z$ is a $1 \times 1$ zero matrix. 
+The displacement of $A$ is $\Phi_+(A) = A - 0 \cdot A \cdot 0 = A$. 
+\paragraph{Inductive Step:} 
+Consider a matrix $A$ of size $2k \times 2k$ represented by $\Phi_+$ generators. 
+The Strassen-type inversion relies on splitting the sub-blocks $a, b, c, d$ which are represented by $\Phi_+$ displacements,
+recursive calls to invert top-left block $a$ ($e = a^{-1}$) and antoher for the Schur complement $t = S^{-1}$ and each outputs a $\Phi_+$ generator.
+Lastly, multiplication and addition algorithms are taking a generator of $\Phi_+$ displacement and returns a generator of $\Phi_+$ displacement.
+Each computation and the final assembly remain in $\Phi_+$ displacement.
+\paragraph{Conclusion:}
+Because the base case returns the inverse to $\Phi_+$ generators, and the arithmetics are on $\Phi_+$ generator operations, by induction, we maintain $\Phi_+$ displacement during the entire execution.
+\end{proof}
+
+\subsubsection{Split and Pack quadrants from displacement generators}
+
+Any Strassen-type divide and conquer algorithm will divide the problem to create sub-problems to economise in complexity.
+This type of approach on displacement generators require arithmetic operations to ensure the data stability during execution.
+
+Main concern regarding this approach for our implementation of Toeplitz matrices in this project is that the algorithm doesn't have direct access to the dense matrix $A$.
+Any splitting and packing operation done will be on the generators $G_A$ and $H_A$ which represent the matrix entirely by default.
+Challenge of applying this split and pack comes from the displacement operator $\Phi_+$ affecting the dense matrix entirely. 
+
+Let a dense matrix $A$ be split into four quadrants:
+$$ A = \begin{pmatrix} a & b \\ c & d \end{pmatrix} $$
+
+The shift operator $Z$ acts on the entire matrix resulting elements from blocks to cross its boundaries. 
+Precisely the last column of $a$ shifted down into $b$.
+Last row of $a$ shifted down into $c$.
+Last row of $b$, last column of $c$ and the bottom-right element of $a$ shifted down into $d$.
+
+When we attempt to evaluate the local displacement of a sub-block (for example, $\Phi_+(d)$), we cannot simply extract the rows from the global generators $G_A$ and $H_A$. 
+The global generators are corrupted by the boundary elements of $a$ that shifted into $b$ and $c$. 
+
+To correctly split or pack the generators without having access to the dense matrix $A$, we must mathematically isolate and correct these boundary crossings which we call bleeding.
+
+\vspace{1cm}
+$\textbf{Splitting:}$
+During the Split, our goal is to extract the generators for the sub-blocks $a, b, c, d$ using only the global generators $G_A$ and $H_A$.
+
+We start by spliting literally the generators $G_A$ and $H_A$:
+
+$$G = \begin{pmatrix} G_{TOP} \\ G_{BOTTOM} \end{pmatrix}, \quad H = \begin{pmatrix} H_{TOP} \\ H_{BOTTOM} \end{pmatrix}$$
+
+We define $n_1 = ceil(n / 2)$ and $n_2 = floor(n / 2)$. Let $G_{TOP}$ and $H_{TOP}$ be a matrix of size $n_1 \times rank$ and $G_{BOTTOM}$ and $H_{BOTTOm}$ be a matrix of size $n_2 \times rank$.
+This allows us to create a split dimension which handles odd and even numbers.
+
+\par\noindent\rule{\textwidth}{0.4pt}
+
+\vspace{0.1cm}
+For $a$, there are no bleed corrections. This block is the one that bleeds to all other blocks, in other words, there are no external shifts into it.
+Thus, its generators are simply the truncated top halves of the global generators:
+$$ G_{a} = G_{TOP}, \quad H_{a} = H_{TOP} $$
+
+\par\noindent\rule{\textwidth}{0.4pt}
+
+\vspace{0.1cm}
+For $b$, block $a$ bleeds into it from the left. Specifically the last column of block $a$ shifts rightwards across the boundary into the first column of block $b$. 
+To correct this bleed, we need to define the vector $e^{(m)}$ that has the dimensions of $m \times 1$: 
+Let $e^{(m)}_0$ be a column vector with a $1$ at the top, and $e^{(m)}_{m-1}$ be a column vector with a $1$ at the bottom:
+$$e^{(m)}_0 = \begin{pmatrix} 1 \\ 0 \\ \vdots \\ 0 \end{pmatrix}, \quad e^{(m)}_{m-1} = \begin{pmatrix} 0 \\ \vdots \\ 0 \\ 1 \end{pmatrix}$$
+
+We calculate $v_a$, the last column of $a$. This column must contain the data for the bleed values, meaning that we are forced to partially calculate that part of the dense matrix.
+We rely on $\Phi_+$ displacement reconstruction formula.
+
+For any cell at row $i$ and column $j$, the value of the dense matrix $A$ is given by the sum of the shifted generator products, bounded by the diagonal limit $\min(i, j)$:
+$$ A_{i,j} = \sum_{k=0}^{r-1} \sum_{x=0}^{\min(i,j)} G_A[i-x, k] H_A[j-x, k] $$
+where $r$ is the displacement rank. The first sum of $k$ is to run the columns of the displacement generators to retrieve the base values.
+The second sum over $x$ essentially climbs up diagonally through the displacement matrix since $\Phi_+$ displacement substracts diagonally the shifted matrix, 
+we must add these shifted generator products back together to reconstruct the true value and stop when we hit the matrix boundary at min(i,j).
+
+Since $a$ is an $n_1 \times n_1$ matrix, the global column index for $v_a$ is $j = n_1 - 1$ (the left end of the block $a$). 
+For any row index $i$ within this block ($0 \leq i < n_1$), we are guaranteed that $i \leq n_1 - 1$. So the boundary condition simplifies to $\min(i, n_1 - 1) = i$. 
+We can write the $i$-th element of the vector $v_a$ as:
+$$ (v_a)_i = \sum_{k=0}^{r-1} \sum_{x=0}^{i} G_{A}[i-x, k] H_{A}[n_1 - 1 - x, k] $$
+
+By doing this, we evade the total reconstruction of a matrix and do a vector extraction which has the complexity $\mathcal{O}(n_1 \cdot r)$.
+
+We shift $v_a$ down using $Z_{n_1}$ and append it to $G_{TOP}$. 
+The corresponding $H$ generator receives the vector $e_0^{(n_2)}$ to activate this correction exclusively on the first column of $b$ when multiplied:
+$$ G_{b} = \begin{pmatrix} G_{TOP} & Z_{n_1} v_a \end{pmatrix}, \quad H_{b} = \begin{pmatrix} H_{BOTTOM} & e_0^{(n_2)} \end{pmatrix} $$
+
+\par\noindent\rule{\textwidth}{0.4pt}
+
+\vspace{0.1cm}
+For block $c$, data bleeds into it from above. The last row of block $a$ shifts downwards across the boundary. 
+Just like to block $b$, we calculate $r_a$, the last row of $a$. 
+$$ (r_a)_j = \sum_{k=0}^{r-1} \sum_{x=0}^{j} G_{A}[n_1 - 1 - x, k] H_{A}[j - x, k] $$
+Because $H$ matrices represent the transposed components of the displacement (in this case row instead of column), we apply the shift $Z_{n_1}$ to $r_a$ and append it to $H_{TOP}$:
+$$ G_{c} = \begin{pmatrix} G_{BOTTOM} & e_0^{(n_2)} \end{pmatrix}, \quad H_{c} = \begin{pmatrix} H_{TOP} & Z_{n_1} r_a \end{pmatrix} $$
+
+\par\noindent\rule{\textwidth}{0.4pt}
+
+\vspace{0.1cm}
+Block $d$ has the most bleeding, as it receives shifts from the last column of $c$ ($v_c$) shifting right, the last row of $b$ ($r_b$) shifting down, and the bottom-right scalar of $a$ ($s_a$) shifting diagonally into the top-left cell of $d$.
+We extract $v_c$, $r_b$, and $s_a$ from the global generators continuing the logic we have applied to block $a$:
+$$ (v_c)_l = \sum_{k=0}^{r-1} \sum_{x=0}^{n_1 - 1} G_A[n_1 + l - x, k] H_A[n_1 - 1 - x, k] $$
+$$ (r_b)_m = \sum_{k=0}^{r-1} \sum_{x=0}^{n_1 - 1} G_A[n_1 - 1 - x, k] H_A[n_1 + m - x, k] $$
+$s_a$ is a single scalar value located at the exact bottom-right corner of block $a$. Its global row and column indices are both exactly $n_1 - 1$, the boundary limit is $\min(n_1 - 1, n_1 - 1) = n_1 - 1$. 
+$$ s_a = \sum_{k=0}^{r-1} \sum_{x=0}^{n_1 - 1} G_{A}[n_1 - 1 - x, k] H_{A}[n_1 - 1 - x, k] $$
+
+We scale the basis vector $e_0^{(n_2)}$ by $s_a$ and add it to the shifted column vector $Z_{n_2} v_c$. We create a double correction structure appended to the original truncated generators:
+$$ G_{d} = \begin{pmatrix} G_{BOTTOM} & s_a e_0^{(n_2)} + Z_{n_2} v_c & e_0^{(n_2)} \end{pmatrix}, \quad H_{d} = \begin{pmatrix} H_{BOTTOM} & e_0^{(n_2)} & Z_{n_2} r_b \end{pmatrix} $$
+\par\noindent\rule{\textwidth}{0.4pt}
+
+\vspace{1cm}
+$\textbf{Packing}$
+
+Pack performs the exact inverse of the splitting operation. 
+After computing the inverse sub-blocks (we note as $x, y, z, t$), 
+our goal is to get the global generators $G_{Inv}$ and $H_{Inv}$ for the full inverse matrix $A^{-1}$.
+
+If we were to concatenate the local generators, the result would assume that the boundaries between the blocks are filled with zeros. 
+Because the operator $\Phi_+$ shifts data across these boundaries, just like during split, we must re-inject the bleeding corrections to restore the data integrity.
+
+\vspace{0.3cm}
+Just as we calculated boundaries, we partially reconstruct the boundary vectors of the local inverse blocks using again the formula.
+Because we are now operating on isolated blocks' generators (rather than the single global array),the coordinates for each reconstruction does not need an offset (like +$n_1$ we did for split).
+So the diagonal shift boundries must be bounded by local dimensions.
+
+Let $r_x, r_y,$ and $r_z$ be the respective displacement ranks of these blocks, and let $w$ represent the diagonal shift index.
+Block $x$ is an $n_1 \times n_1$ matrix. Because it is a square block, 
+its boundaries mirror the exact logic we used for block $a$. 
+The last column ($v_x$), last row ($r_x$), and bottom-right scalar ($s_x$) are computed strictly from $G_x$ and $H_x$:
+$$ (v_x)_i = \sum_{k=0}^{r_x-1} \sum_{w=0}^{i} G_x[i-w, k] H_x[n_1 - 1 - w, k] \quad \text{for } 0 \leq i < n_1 $$
+$$ (r_x)_j = \sum_{k=0}^{r_x-1} \sum_{w=0}^{j} G_x[n_1 - 1 - w, k] H_x[j-w, k] \quad \text{for } 0 \leq j < n_1 $$
+$$ s_x = \sum_{k=0}^{r_x-1} \sum_{w=0}^{n_1 - 1} G_x[n_1 - 1 - w, k] H_x[n_1 - 1 - w, k] $$
+
+Block $z$ has dimensions $n_2 \times n_1$. 
+The last column is fixed at local index $j = n_1 - 1$, while the row index $l$ varies up to $n_2 - 1$. 
+Unlike split, $l$ is no longer offset by a global position. 
+Therefore, we must do the diagonal shift using $\min(l, n_1 - 1)$ to ensure the reconstruction does not exceed the dimensions of $z$:
+$$ (v_z)_l = \sum_{k=0}^{r_z-1} \sum_{w=0}^{\min(l, \ n_1 - 1)} G_z[l-w, k] H_z[n_1 - 1 - w, k] \quad \text{for } 0 \leq l < n_2 $$
+
+Same for the block $y$ which has the dimensions $n_1 \times n_2$. 
+The last row is fixed at index $i = n_1 - 1$, and the column index $m$ varies up to $n_2 - 1$. 
+Again, because we are operating within local coordinates, the diagonal shift is bounded by $\min(n_1 - 1, m)$:
+$$ (r_y)_m = \sum_{k=0}^{r_y-1} \sum_{w=0}^{\min(n_1 - 1, \ m)} G_y[n_1 - 1 - w, k] H_y[m-w, k] \quad \text{for } 0 \leq m < n_2 $$
+
+To apply these corrections, we construct a large set of global generators. 
+We horizontally concatenate the local generators of $x, y, z, t$ into their respective quadrants. 
+To correct the displacement boundaries, we append four specific correction columns ($c_1, c_2, c_3, c_4$).
+
+We define these giant global generators as block matrices:
+$$ G_{RES} = \begin{pmatrix} 
+G_x & G_y & 0 & 0 & -Z_{n_1} v_x & 0 & 0 & 0 \\ 
+0 & 0 & G_z & G_t & 0 & -e_0^{(n_2)} & -(s_x e_0^{(n_2)} + Z_{n_2} v_z) & -e_0^{(n_2)} 
+\end{pmatrix} $$
+$$ H_{RES} = \begin{pmatrix} 
+H_x & 0 & H_z & 0 & 0 & Z_{n_1} r_x & 0 & 0 \\ 
+0 & H_y & 0 & H_t & e_0^{(n_2)} & 0 & e_0^{(n_2)} & Z_{n_2} r_y 
+\end{pmatrix} $$
+
+Notice that the boundary correction columns in $G_{RES}$ has negative signs. 
+The displacement operation subtracts the diagonally shifted matrix: $\Phi_+(A^{-1}) = A^{-1} - Z A^{-1} Z^T $.
+When the local inverse blocks ($x, y, z, t$) are computed, their local displacements (ex. $G_y H_y^T$) are evaluated as if the blocks exist alone, 
+assuming that any data shifted outside their local boundaries is replaced by zeros. 
+
+Within the global structure of $A^{-1}$, these blocks are next to eachother. 
+The global shift operator $Z$ pushes data across these block boundaries. 
+Any data that bleeds from block $x$ into block $y$ must physically enter the local equation of $y$ as a subtracted value. 
+By negating bleeds on the appended correction columns in $G_{RES}$, the generator multiplication $G_{RES} H_{RES}^T$ produces these required negative terms. 
+
+\vspace{0.3cm}
+To prove the mathematical correctness of these correction columns, 
+we can explicitly compute the global displacement reconstruction by multiplying the uncompressed generators: $\Phi_+(A^{-1}) = G_{RES} H_{RES}^T$.
+
+$$ G_{RES} H_{RES}^T = \begin{pmatrix} 
+G_x H_x^T                               & G_y H_y^T - Z_{n_1} v_x (e_0^{(n_2)})^T \\ 
+G_z H_z^T - e_0^{(n_2)} (Z_{n_1} r_x)^T & G_t H_t^T - Z_{n_2} v_z (e_0^{(n_2)})^T - e_0^{(n_2)} (Z_{n_2} r_y)^T - s_x e_0^{(n_2)} (e_0^{(n_2)})^T
+\end{pmatrix} $$
+
+\vspace{0.3cm}
+The terms ($G_x H_x^T$, $G_y H_y^T$, etc.) represent the isolated local displacements of the sub-matrices. 
+The subtracted terms are the bleeds. 
+For example the term $- Z_{n_1} v_x (e_0^{(n_2)})^T$ subtracts the shifted last column of block $x$ into the first column of block $y$.
+
+\vspace{1cm}
+This implementation exposes a vulnerability: Let $r_x, r_y, r_z, r_t$ be the displacement ranks of the quadrants. The rank of our assembled matrix is:
+$$ \text{Rank}_{RES} = r_x + r_y + r_z + r_t + 4 $$
+
+Passing this uncompressed matrix up to the next recursion level would cause the rank to explose.
+Therefore, immediately after constructing $G_{RES}$ and $H_{RES}$, we compress them.
+
+
+\subsubsection{Conclusion}
+
+The advantage of this inversion lies on displacement generators rather than dense matrix representations like any other algorithm mentioned in this report. 
+
+By operating on generators of size $n \times r$ (where the displacement rank $r \ll n$), the complexity in memory is reduced from the standard $\mathcal{O}(n^2)$ down to $\mathcal{O}(r \cdot n)$. 
+Assuming optimal generator multiplication, the complexity of the recursive Strassen-type assembly falls significantly below the $\mathcal{O}(n^3)$ or $\mathcal{O}(n^{2.81})$ operations required by classical dense matrix inversion.
+
+Despite these gains, the structured approach introduces overhead due to strict displacement boundary management. 
+The split and pack require continuous $\mathcal{O}(r \cdot n)$ diagonal vector extractions to mathematically correct the $\Phi_+$ bleeding. 
+More critically, the structural reassembly during the pack and each multiplication and addition increases the rank, requiring more computation for compressions at every recursive return. 
+
+While highly optimal for large matrices with a strictly bounded rank, this heavy structural overhead makes the algorithm computationally disadvantageous for small matrices compared to standard dense inversion.
+
 \begin{verbatim}
-Project
-\   src
-|   \   toeplitz_inverse
-|   |   |   toeplitz_inverse.c
-|   |   |   toeplitz_inverse.h
+mention a threshold
+mention and show benchmarks once sure and verified
 \end{verbatim}
 
-\subsubsection{Block Decomposition of the Displacement Operator}
+As detailed by Victor Y. Pan in \textit{Structured Matrices and Polynomials} \cite[Chapter 5]{pan2001structured}, 
+the alternative is the Morf-Bitmead-Anderson (MBA) algorithm. 
+Originally proposed by Morf (1980) and Bitmead and Anderson (1980), achieving $\mathcal{O}(n \log^2 n)$ complexity for Toeplitz-like and Hankel-like matrices. 
+However, because it is also a divide-and-conquer method, the MBA approach still requires calculations of quadrants and generator compression.
 
-To perform Strassen's inversion recursively, we must first split our $n \times n$ matrix $A$
-into four sub-blocks of size $m \times m$ (where $m = n/2$). Let $A$ be:
-$$A = \begin{pmatrix} a & b \\ c & d \end{pmatrix}$$
+To bypass the need to split the matrix, one should prefer a Newton iterative inversion. 
+Pan dedicates significant analysis to this approach in \cite[Chapters 6 and 7]{pan2001structured}, (detailing based on the Schulz iteration: $X_{k+1} = X_k(2I - A X_k)$). 
 
-Similarly, we partition its displacement generators $G$ and $H$ (of size $n \times \alpha$)
-into top and bottom halves of size $m \times \alpha$:
-$$G = \begin{pmatrix} G_{top} \\ G_{bottom} \end{pmatrix}, \quad H = \begin{pmatrix} H_{top} \\ H_{bottom} \end{pmatrix}$$
-
-As mentioned before, the $\phi_{+}$ displacement of $A$ is given by:
-$$\phi_{+}(A) = A - Z_n A Z_n^T = G H^T$$
-
-Following the displacement fomula,
-If we divide $Z_n$ into four $m \times m$ blocks too, it needs the last puzzle piece to connect the shifting line from the top half
-of the matrix to the bottom half. (In other words, we need a way to represent the part c of matrix A)
-
-We build this using standard basis vectors $e$.
-Let $e_0$ be a column vector with a $1$ at the top, and $e_{m-1}$ be a column vector with a $1$ at the bottom:
-$$e_0 = \begin{pmatrix} 1 \\ 0 \\ \vdots \\ 0 \end{pmatrix}, \quad e_{m-1} = \begin{pmatrix} 0 \\ \vdots \\ 0 \\ 1 \end{pmatrix}$$
-
-When we multiply the column $e_0$ by the row $e_{m-1}^T$, we get an $m \times m$ matrix of all zeros, with a single $1$ in the top-right corner.
-This is our piece:
-$$e_0 e_{m-1}^T = \begin{pmatrix} 1 \\ 0 \\ \vdots \\ 0 \end{pmatrix} \begin{pmatrix} 0 & \dots & 0 & 1 \end{pmatrix} = \begin{pmatrix} 0 & \dots & 0 & 1 \\ 0 & \dots & 0 & 0 \\ \vdots & \ddots & \vdots & \vdots \\ 0 & \dots & 0 & 0 \end{pmatrix}$$
-
-Using this, we can write the full shift matrix $Z_n$ and its transpose $Z_n^T$ in block form:
-$$Z_n = \begin{pmatrix} Z_m & 0 \\ e_0 e_{m-1}^T & Z_m \end{pmatrix}, \quad Z_n^T = \begin{pmatrix} Z_m^T & e_{m-1} e_0^T \\ 0 & Z_m^T \end{pmatrix}$$
-
-First, we multiply $Z_n$ by $A$:
-$$Z_n A = \begin{pmatrix} Z_m & 0 \\ e_0 e_{m-1}^T & Z_m \end{pmatrix} \begin{pmatrix} a & b \\ c & d \end{pmatrix} = \begin{pmatrix} Z_m a & Z_m b \\ e_0 e_{m-1}^T a + Z_m c & e_0 e_{m-1}^T b + Z_m d \end{pmatrix}$$
-
-Next, $Z_n^T$:
-$$(Z_n A) Z_n^T = \begin{pmatrix} Z_m a & Z_m b \\ e_0 e_{m-1}^T a + Z_m c & e_0 e_{m-1}^T b + Z_m d \end{pmatrix} \begin{pmatrix} Z_m^T & e_{m-1} e_0^T \\ 0 & Z_m^T \end{pmatrix}$$
-
-Let's calculate the four resulting blocks:
-\begin{itemize}
-    \item \textbf{Top-Left:} $Z_m a Z_m^T$
-    \item \textbf{Top-Right:} $Z_m a e_{m-1} e_0^T + Z_m b Z_m^T$
-    \item \textbf{Bottom-Left:} $(e_0 e_{m-1}^T a + Z_m c) Z_m^T = e_0 e_{m-1}^T a Z_m^T + Z_m c Z_m^T$
-    \item \textbf{Bottom-Right:} $(e_0 e_{m-1}^T a + Z_m c) e_{m-1} e_0^T + (e_0 e_{m-1}^T b + Z_m d) Z_m^T$
-\end{itemize}
-
-\subsubsection{Extraction of Block Generators}
-
-By identifying the respective sub-blocks of the global displacement equation $\phi_{+}(A) = A - Z_n A Z_n^T = G H^T$, we can systematically extract the generators for each quadrant of $A$.
-
-\paragraph{a:}
-Equating the top-left blocks yields the direct displacement of $a$:
-\begin{align*}
-    a - Z_m a Z_m^T &= G_{top} H_{top}^T \\
-    \phi_{+}(a) &= G_{top} H_{top}^T
-\end{align*}
-Since this block is unaffected, its generators are restored:
-$$G_a = G_{top}, \quad H_a = H_{top}$$
-
-\paragraph{b:}
-Equating the top-right blocks to the initial equation. We isolate the terms belonging to $b$ on the left side:
-\begin{align*}
-    b - Z_m a e_{m-1} e_0^T - Z_m b Z_m^T &= G_{top} H_{bottom}^T \\
-    b - Z_m b Z_m^T &= G_{top} H_{bottom}^T + Z_m a e_{m-1} e_0^T \\
-    \phi_{+}(b) &= G_{top} H_{bottom}^T + (Z_m a e_{m-1}) e_0^T
-\end{align*}
-POINTER TO RAFAEL SUM GENERATOR:
-$$G_b = \begin{bmatrix} G_{top} \mid Z_m a e_{m-1} \end{bmatrix}, \quad H_b = \begin{bmatrix} H_{bottom} \mid e_0 \end{bmatrix}$$
-
-\paragraph{c:}
-We follow the exact same process, but with the transpose property $(X Y)^T = Y^T X^T$ to group the vectors:
-\begin{align*}
-    c - e_0 e_{m-1}^T a Z_m^T - Z_m c Z_m^T &= G_{bottom} H_{top}^T \\
-    c - Z_m c Z_m^T &= G_{bottom} H_{top}^T + e_0 e_{m-1}^T a Z_m^T \\
-    \phi_{+}(c) &= G_{bottom} H_{top}^T + e_0 (Z_m a^T e_{m-1})^T
-\end{align*}
-THus, the generators for $c$ are formed by concatenation:
-$$G_c = \begin{bmatrix} G_{bottom} \mid e_0 \end{bmatrix}, \quad H_c = \begin{bmatrix} H_{top} \mid Z_m a^T e_{m-1} \end{bmatrix}$$
-
-\paragraph{d:}
-The internal structure of the bottom-right block corresponds exactly to the top-left block evaluated on the bottom generators
-$$d = \left( \sum_{k=1}^{\alpha} L(G_{bottom, k}) U(H_{bottom, k}) \right) + a$$
-In terms of generators, matrix addition corresponds to horizontal concatenation. Given that $\phi_{+}(a)$ is generated by $G_{top}$ and $H_{top}$, we obtain:
-$$G_d = \begin{bmatrix} G_{bottom} \mid G_{top} \end{bmatrix}, \quad H_d = \begin{bmatrix} H_{bottom} \mid H_{top} \end{bmatrix}$$
+\begin{verbatim}
+conclude even more
+\end{verbatim}

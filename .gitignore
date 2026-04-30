@@ -88,3 +88,5 @@ report/texput.log
 
 #Flint 
 flint-3.4.0/
+report/libproject_lib.a
+report/DartConfiguration.tcl
