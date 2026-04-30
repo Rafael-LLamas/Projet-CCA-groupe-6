@@ -24,5 +24,12 @@ int gr_mat_random_toeplitz(gr_mat_t A, flint_rand_t state, gr_ctx_t ctx);
  * @param[in] ctx The FLINT context object
  */
 int gr_mat_quasi_toeplitz_rank(gr_mat_t A, int nb_rand, flint_rand_t state, gr_ctx_t ctx);
-
+/**
+ * @brief create directly random displacement generator for toeplitz matrix, G and H need to be init
+ * @param[in] G one displacement generator of your future matrix
+ * @param[in] H one displacement generator of your future matrix
+ * @param[in] state The FLINT state for random
+ * @param[in] ctx The FLINT context object
+ */
+int gr_mat_random_generator_toeplitz(gr_mat_t G, gr_mat_t H, flint_rand_t state, gr_ctx_t ctx);
 #endif

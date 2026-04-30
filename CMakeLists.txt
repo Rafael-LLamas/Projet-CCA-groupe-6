@@ -91,6 +91,7 @@ add_executable(test_random tests/random_toeplitz.test.c)
 target_link_libraries(test_random PRIVATE project_lib)
 add_test(NAME Random.gr_mat_random_toeplitz                         COMMAND test_random gr_mat_random_toeplitz)
 add_test(NAME Random.gr_mat_random_quasi_toeplitz                   COMMAND test_random gr_mat_random_quasi_toeplitz)
+add_test(NAME Random.gr_mat_random_generator_toeplitz                   COMMAND test_random gr_mat_random_generator_toeplitz)
 
 add_executable(test_operations_multiplication tests/multiplication.test.c)
 target_link_libraries(test_operations_multiplication PRIVATE project_lib)

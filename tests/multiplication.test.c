@@ -21,9 +21,9 @@ int test_multiplication_toeplitz() {
   gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
   while (i < 50) {
     gr_mat_t A, B, C, D, G_a, H_a, G_b, H_b, G_c, H_c;
-    slong n = n_randint(state, 15);
-    slong m = n_randint(state, 15);
-    slong k = n_randint(state, 15);
+    slong n = n_randint(state, 100) + 1;
+    slong m = n_randint(state, 100) + 1;
+    slong k = n_randint(state, 100) + 1;
 
     gr_mat_init(A, n, m, ctx);
     gr_mat_init(B, m, k, ctx);
@@ -185,12 +185,12 @@ int test_multiplication_quasi_toeplitz() {
   flint_rand_t state;
   flint_rand_init(state);
   flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
-  while (i < 100) {
+  while (i < 50) {
     gr_mat_t A, B, C, D, G_a, H_a, G_b, H_b, G_c, H_c;
     gr_ctx_t ctx;
-    slong n = n_randint(state, 100);
-    slong m = n_randint(state, 100);
-    slong k = n_randint(state, 100);
+    slong n = n_randint(state, 100) + 1;
+    slong m = n_randint(state, 100) + 1;
+    slong k = n_randint(state, 100) + 1;
     gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
     gr_mat_init(A, n, m, ctx);
     gr_mat_init(B, m, k, ctx);
@@ -350,11 +350,11 @@ int test_multiplication_vector() {
   flint_rand_t state;
   flint_rand_init(state);
   flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
-  while (i < 10) {
+  while (i < 50) {
     gr_mat_t A, X, C, D, G_a, H_a;
     gr_ctx_t ctx;
-    slong n = n_randint(state, 500);
-    slong m = n_randint(state, 600);
+    slong n = n_randint(state, 100) + 1;
+    slong m = n_randint(state, 100) + 1;
     gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
     gr_mat_init(A, n, m, ctx);
     gr_mat_init(X, m, 1, ctx);

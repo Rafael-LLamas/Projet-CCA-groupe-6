@@ -467,15 +467,11 @@ int benchmark_inversion() {
       gr_mat_init(B, cur_n, cur_n, ctx);
       GR_TMP_INIT(det, ctx);
 
-      do {
-        if (rank != -1) {
-          error = gr_mat_quasi_toeplitz_rank(A, rank, state, ctx);
-        } else {
-          error = gr_mat_random_toeplitz(A, state, ctx);
-        }
-        error = gr_mat_det(det, A, ctx);
-
-      } while (gr_is_zero(det, ctx) == T_TRUE);
+      if (rank != -1) {
+        error = gr_mat_quasi_toeplitz_rank(A, rank, state, ctx);
+      } else {
+        error = gr_mat_random_toeplitz(A, state, ctx);
+      }
 
       error = gr_mat_G_H(G_a, H_a, A, DISP_PLUS, ctx);
       gr_mat_init(G_b, gr_mat_nrows(G_a, ctx), gr_mat_ncols(G_a, ctx), ctx);
@@ -483,6 +479,7 @@ int benchmark_inversion() {
 
       double t1 = get_time_ms();
       error = gr_mat_inverse_toeplitz(G_b, H_b, G_a, H_a, ctx);
+      if (error) { continue; }
       gen_times[i] = get_time_ms() - t1;
 
       flint_times[i] = 0;
