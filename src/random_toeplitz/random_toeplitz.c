@@ -127,7 +127,13 @@ int gr_mat_random_quasi_toepitz(gr_mat_t A, flint_rand_t state, gr_ctx_t ctx) {
     }
   }
   error = gr_mat_mul(A, L, U, ctx);
-  if (error != GR_SUCCESS) { return error; }
+  if (error != GR_SUCCESS) {
+    gr_mat_clear(L, ctx);
+    gr_mat_clear(U, ctx);
+    gr_mat_clear(colL, ctx);
+    gr_mat_clear(rowU, ctx);
+    return error;
+  }
   gr_mat_clear(L, ctx);
   gr_mat_clear(U, ctx);
   gr_mat_clear(colL, ctx);
@@ -175,5 +181,40 @@ int gr_mat_random_generator_toeplitz(gr_mat_t G, gr_mat_t H, flint_rand_t state,
   }
   error = gr_set_ui(gr_mat_entry_ptr(H, 0, 0, ctx), 1, ctx);
   error = gr_set_ui(gr_mat_entry_ptr(G, 0, 1, ctx), 1, ctx);
+  return error;
+}
+
+int gr_mat_random_generator_quasi_toeplitz(gr_mat_t G, gr_mat_t H, int rank, flint_rand_t state, gr_ctx_t ctx) {
+  /*Pour l'intants c'est toeplitz*/
+  int error = GR_SUCCESS;
+  if (rank < 1) { return GR_DOMAIN; }
+  // Init G
+  for (int i = 0; i < gr_mat_nrows(G, ctx); i++) {
+    for (int j = 0; j < rank; j++) {
+      if (i == j) {
+        error = gr_set_ui(gr_mat_entry_ptr(G, i, j, ctx), 1, ctx);
+        if (error != GR_SUCCESS) { return error; }
+      } else if (i < j) {
+        error = gr_set_ui(gr_mat_entry_ptr(G, i, j, ctx), 0, ctx);
+        if (error != GR_SUCCESS) { return error; }
+      } else {
+        error = gr_randtest_not_zero(gr_mat_entry_ptr(G, i, j, ctx), state, ctx);
+        if (error != GR_SUCCESS) { return error; }
+      }
+    }
+  }
+  // Init H
+  for (int i = 0; i < gr_mat_nrows(H, ctx); i++) {
+    for (int j = 0; j < rank; j++) {
+      if (i < j) {
+        error = gr_set_ui(gr_mat_entry_ptr(H, i, j, ctx), 0, ctx);
+        if (error != GR_SUCCESS) { return error; }
+      } else {
+        error = gr_randtest_not_zero(gr_mat_entry_ptr(H, i, j, ctx), state, ctx);
+        if (error != GR_SUCCESS) { return error; }
+      }
+    }
+  }
+
   return error;
 }

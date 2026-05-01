@@ -548,7 +548,7 @@ int benchmark_random() {
   if (rank == -1) { rank = 3; }
   int error = GR_SUCCESS;
   fprintf(csv, "N,M,Iteration,Gen_Toeplitz_Time_ms,Matrice_Toeplitz_Dense_time_ms,Matrice_Quasi_Toeplitz_Dense_time_ms,"
-               "Matrice_Quasi_Toeplitz_rank_Dense_time_ms\n");
+               "Matrice_Quasi_Toeplitz_rank_Dense_time_ms,Gen_Quasi_Toeplitz_Time_ms\n");
 
   gr_ctx_t ctx;
   flint_rand_t state;
@@ -562,10 +562,11 @@ int benchmark_random() {
   for (int s = 0; s < num_sizes; s++) {
     slong cur_n = sizesn[s];
     slong cur_m = sizesm[s];
-    double gen_Toe[iterations], Toe_dense[iterations], quasi_Toe_dense[iterations], quasi_Toe_rank_dense[iterations];
+    double gen_Toe[iterations], Toe_dense[iterations], quasi_Toe_dense[iterations], quasi_Toe_rank_dense[iterations],
+        gen_quasi_Toe[iterations];
     printf(ANSI_COLOR_CYAN "Size %ldx%ld :\n" ANSI_COLOR_RESET, cur_n, cur_m);
-    printf(" %-12s   | %-12s | %-12s\n", "Operation", "Average (ms)", "Median (ms)");
-    printf("----------------|--------------|--------------\n");
+    printf(" %-12s     | %-12s | %-12s\n", "Operation", "Average (ms)", "Median (ms)");
+    printf("------------------|--------------|--------------\n");
 
     for (int i = 0; i < iterations; i++) {
       gr_mat_t C, A, B, G, H, T, U;
@@ -574,6 +575,8 @@ int benchmark_random() {
       gr_mat_init(C, cur_n, cur_m, ctx);
       gr_mat_init(G, cur_n, 2, ctx);
       gr_mat_init(H, cur_m, 2, ctx);
+      gr_mat_init(T, cur_n, rank, ctx);
+      gr_mat_init(U, cur_m, rank, ctx);
 
       double t1 = get_time_ms();
       error = gr_mat_random_toeplitz(A, state, ctx);
@@ -587,9 +590,12 @@ int benchmark_random() {
       double t4 = get_time_ms();
       error = gr_mat_random_generator_toeplitz(G, H, state, ctx);
       gen_Toe[i] = get_time_ms() - t4;
+      double t5 = get_time_ms();
+      error = gr_mat_random_generator_quasi_toeplitz(G, H, rank, state, ctx);
+      gen_quasi_Toe[i] = get_time_ms() - t5;
 
-      fprintf(csv, "%ld,%ld,%d,%.4f,%.4f,%.4f,%.4f\n", cur_n, cur_m, i, gen_Toe[i], Toe_dense[i], quasi_Toe_dense[i],
-              quasi_Toe_rank_dense[i]);
+      fprintf(csv, "%ld,%ld,%d,%.4f,%.4f,%.4f,%.4f,%.4f\n", cur_n, cur_m, i, gen_Toe[i], Toe_dense[i],
+              quasi_Toe_dense[i], quasi_Toe_rank_dense[i], gen_quasi_Toe[i]);
       printf("\rSize %ldx%ld... [%d/%d]", cur_n, cur_m, i + 1, iterations);
       fflush(stdout);
 
@@ -598,20 +604,27 @@ int benchmark_random() {
       gr_mat_clear(C, ctx);
       gr_mat_clear(G, ctx);
       gr_mat_clear(H, ctx);
+      gr_mat_clear(T, ctx);
+      gr_mat_clear(U, ctx);
     }
 
-    double avg_gen_toe, med_gen_toe, avg_toe_dense, med_toe_dense, avg_quasi_dense, med_quasi_dense, avg_rank, med_rank;
+    double avg_gen_toe, med_gen_toe, avg_toe_dense, med_toe_dense, avg_quasi_dense, med_quasi_dense, avg_rank, med_rank,
+        avg_gen_quasi_toe, med_gen_quasi_toe;
     compute_stats(gen_Toe, iterations, &avg_gen_toe, &med_gen_toe);
     compute_stats(Toe_dense, iterations, &avg_toe_dense, &med_toe_dense);
     compute_stats(quasi_Toe_dense, iterations, &avg_quasi_dense, &med_quasi_dense);
     compute_stats(quasi_Toe_rank_dense, iterations, &avg_rank, &med_rank);
+    compute_stats(gen_quasi_Toe, iterations, &avg_gen_quasi_toe, &med_gen_quasi_toe);
 
     printf("\r" ANSI_CLEAR_LINE);
-    printf(ANSI_COLOR_GREEN " Generators Toe" ANSI_COLOR_RESET " |  %-.3e   |  %-.3e \n", avg_gen_toe, med_gen_toe);
-    printf(ANSI_COLOR_BLUE " Matrix Toe" ANSI_COLOR_RESET "     |  %-.3e   |  %-.3e \n", avg_toe_dense, med_toe_dense);
-    printf(ANSI_COLOR_MAGENTA " Matrix Quasi" ANSI_COLOR_RESET "   |  %-.3e   |  %-.3e \n", avg_quasi_dense,
+    printf(ANSI_COLOR_GREEN " Generators Toe" ANSI_COLOR_RESET "   |  %-.3e   |  %-.3e \n", avg_gen_toe, med_gen_toe);
+    printf(ANSI_COLOR_BLUE " Matrix Toe" ANSI_COLOR_RESET "       |  %-.3e   |  %-.3e \n", avg_toe_dense,
+           med_toe_dense);
+    printf(ANSI_COLOR_MAGENTA " Matrix Quasi" ANSI_COLOR_RESET "     |  %-.3e   |  %-.3e \n", avg_quasi_dense,
            med_quasi_dense);
-    printf(ANSI_COLOR_YELLOW " Matrix Rank %d" ANSI_COLOR_RESET "  |  %-.3e   |  %-.3e \n", rank, avg_rank, med_rank);
+    printf(ANSI_COLOR_YELLOW " Matrix Rank %d" ANSI_COLOR_RESET "    |  %-.3e   |  %-.3e \n", rank, avg_rank, med_rank);
+    printf(ANSI_COLOR_GREEN " Generators Quasi" ANSI_COLOR_RESET " |  %-.3e   |  %-.3e \n", avg_gen_quasi_toe,
+           med_gen_quasi_toe);
   }
 
   fclose(csv);
