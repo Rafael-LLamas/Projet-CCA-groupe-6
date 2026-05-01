@@ -35,7 +35,7 @@ int gr_mat_quasi_toeplitz_rank(gr_mat_t A, int nb_rand, flint_rand_t state, gr_c
 int gr_mat_random_generator_toeplitz(gr_mat_t G, gr_mat_t H, flint_rand_t state, gr_ctx_t ctx);
 /**
  * @brief create directly random displacement generator for quasi toeplitz matrix, G and H need to be init of size n(or
- * m for H)xrank.
+ * m for H)xrank with n (or m) > rank .
  * @param[in] G one displacement generator of your future matrix
  * @param[in] H one displacement generator of your future matrix
  * @param[in] rank the rank of the matrix you want (minimum 1)

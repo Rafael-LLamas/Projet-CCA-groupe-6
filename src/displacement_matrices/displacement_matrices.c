@@ -278,3 +278,86 @@ int gr_mat_reconstruct_A(gr_mat_t A, gr_mat_t G, gr_mat_t H, disp_type_t type, g
   gr_heap_clear(temp, ctx);
   return status;
 }
+
+int gr_mat_reconstruct_A_v2(gr_mat_t A, gr_mat_t G, gr_mat_t H, disp_type_t type, gr_ctx_t ctx) {
+
+  /* Reconstructs the original A from its generators
+   *
+   * This function performs the inverse of the displacement operator
+   * It is a computational approach to the multiplication of L and U using
+   * diagonal pointer arithmetics
+   *
+   * The reconstruction depends on the displacement type used to generate
+   * G and H:
+   *
+   * DISP_PLUS | Phi+ (Sigma LU)
+   * Toeplitz data flows from the top-left corner, to compute cell A[i,j],
+   * following the data backwards by walking diagonally UP and LEFT towards
+   * the (0,0). We accumulate G[i-x] * H[j-x] and walk until we hit
+   * the top or left wall (max_x = min(i, j)).
+   *
+   * DISP_MINUS | Phi- (Sigma UL)
+   * A = Sum( U(rev(x_k)) * L(rev(y_k)) )
+   * Toeplitz data flows from the bottom-right corner. We follow the data
+   * by walking diagonally DOWN and RIGHT. Accumulate G[i+x] * H[j+x]
+   * walking until we hit the bottom or right wall (max_x = min(n-1-i, m-1-j)).
+   */
+
+  int status = GR_SUCCESS;
+  slong rank = gr_mat_ncols(G, ctx);
+
+  if (gr_mat_nrows(A, ctx) != gr_mat_nrows(G, ctx) || gr_mat_ncols(A, ctx) != gr_mat_nrows(H, ctx)) {
+    return GR_UNABLE;
+  }
+
+  gr_ptr sum_res = gr_heap_init(ctx); // final value for A[i,j]
+  gr_ptr temp = gr_heap_init(ctx);    // g * h
+
+  if (type == DISP_MINUS) {
+    for (slong i = 0; i < gr_mat_nrows(G, ctx); i++) {
+      for (slong j = 0; j < gr_mat_nrows(H, ctx); j++) {
+        status |= gr_zero(sum_res, ctx);
+        slong max_x = FLINT_MIN(gr_mat_nrows(G, ctx) - 1 - i, gr_mat_nrows(H, ctx) - 1 - j);
+        for (slong k = 0; k < rank; k++) {
+          for (slong x = 0; x <= max_x; x++) {
+            status |= gr_mul(temp, gr_mat_entry_ptr(G, i + x, k, ctx), gr_mat_entry_ptr(H, j + x, k, ctx), ctx);
+            status |= gr_add(sum_res, sum_res, temp, ctx);
+          }
+        }
+        status |= gr_set(gr_mat_entry_ptr(A, i, j, ctx), sum_res, ctx);
+      }
+    }
+
+  } else { // DISP_PLUS
+    slong n = gr_mat_nrows(G, ctx);
+    slong m = gr_mat_nrows(H, ctx);
+    slong r = gr_mat_ncols(G, ctx);
+    gr_poly_t pg, ph, ptemp, pA;
+    gr_mat_zero(A, ctx);
+    for (int k = 0; k < r; k++) {
+      gr_poly_init(pg, ctx);
+      gr_poly_init(ph, ctx);
+      gr_poly_init(ptemp, ctx);
+      gr_poly_init(pA, ctx);
+      gr_poly_fit_length(pg, n, ctx);
+      for (int i = 0; i < n; i++) {
+        status |= gr_set(gr_poly_coeff_ptr(pg, i, ctx), gr_mat_entry_srcptr(G, i, k, ctx), ctx);
+      }
+      gr_poly_fit_length(ph, m, ctx);
+      for (int j = 0; j < m; j++) {
+        status |= gr_set(gr_poly_coeff_ptr(ph, j, ctx), gr_mat_entry_srcptr(H, j, k, ctx), ctx);
+      }
+      status |= gr_poly_reverse(ph, ph, m, ctx);
+      status |= gr_poly_mul(pA, pg, ph, ctx);
+      if (gr_poly_length(pA, ctx) > n) _gr_poly_set_length(pA, n, ctx);
+      for (slong i = 0; i < gr_poly_length(pA, ctx); i++) {
+        status |= gr_add(gr_mat_entry_ptr(A, i, k, ctx), gr_mat_entry_srcptr(A, i, k, ctx),
+                         gr_poly_coeff_srcptr(pA, i, ctx), ctx);
+      }
+    }
+  }
+
+  gr_heap_clear(sum_res, ctx);
+  gr_heap_clear(temp, ctx);
+  return status;
+}
