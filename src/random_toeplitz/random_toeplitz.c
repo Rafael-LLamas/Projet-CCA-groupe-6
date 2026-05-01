@@ -162,14 +162,18 @@ int gr_mat_quasi_toeplitz_rank(gr_mat_t A, int nb_rand, flint_rand_t state, gr_c
 
 int gr_mat_random_generator_toeplitz(gr_mat_t G, gr_mat_t H, flint_rand_t state, gr_ctx_t ctx) {
   int error = GR_SUCCESS;
+  error = gr_mat_zero(G, ctx);
+  error = gr_mat_zero(H, ctx);
   for (int i = 0; i < gr_mat_nrows(G, ctx); i++) {
     error = gr_randtest_not_zero(gr_mat_entry_ptr(G, i, 0, ctx), state, ctx);
     if (error != GR_SUCCESS) { return error; }
   }
-  for (int j = 1; j < gr_mat_nrows(H, ctx); j++) {
-    error = gr_randtest_not_zero(gr_mat_entry_ptr(H, j, 0, ctx), state, ctx);
+
+  for (int j = 0; j < gr_mat_nrows(H, ctx); j++) {
+    error = gr_randtest_not_zero(gr_mat_entry_ptr(H, j, 1, ctx), state, ctx);
     if (error != GR_SUCCESS) { return error; }
   }
-  error = gr_set(gr_mat_entry_ptr(H, 0, 0, ctx), gr_mat_entry_srcptr(G, 0, 0, ctx), ctx);
+  error = gr_set_ui(gr_mat_entry_ptr(H, 0, 0, ctx), 1, ctx);
+  error = gr_set_ui(gr_mat_entry_ptr(G, 0, 1, ctx), 1, ctx);
   return error;
 }

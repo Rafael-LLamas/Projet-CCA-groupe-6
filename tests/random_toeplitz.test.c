@@ -154,8 +154,8 @@ int test_random_generator_toeplitz() {
     gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
     slong n = n_randint(state, 100) + 1;
     slong m = n_randint(state, 100) + 1;
-    gr_mat_init(G, n, 1, ctx);
-    gr_mat_init(H, m, 1, ctx);
+    gr_mat_init(G, n, 2, ctx);
+    gr_mat_init(H, m, 2, ctx);
     gr_mat_init(A, n, m, ctx);
     gr_mat_init(D, n, m, ctx);
     error = gr_mat_random_generator_toeplitz(G, H, state, ctx);
@@ -216,7 +216,6 @@ int test_random_generator_toeplitz() {
       i = 9998;
       error = GR_TEST_FAIL;
     }
-
     gr_mat_clear(G, ctx);
     gr_mat_clear(H, ctx);
     gr_mat_clear(A, ctx);

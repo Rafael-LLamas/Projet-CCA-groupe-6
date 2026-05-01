@@ -50,7 +50,17 @@ int gr_mat_inverse_toeplitz(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H
   /* GET BLOCKS a b c d ------------------------------------------- */
   gr_mat_t G_a, H_a, G_b, H_b, G_c, H_c, G_d, H_d;
   status |= gr_mat_split_quadrants(G_a, H_a, G_b, H_b, G_c, H_c, G_d, H_d, G_A, H_A, ctx);
-  if (status != GR_SUCCESS) return status;
+  if (status != GR_SUCCESS) {
+    gr_mat_clear(G_a, ctx);
+    gr_mat_clear(H_a, ctx);
+    gr_mat_clear(G_b, ctx);
+    gr_mat_clear(H_b, ctx);
+    gr_mat_clear(G_c, ctx);
+    gr_mat_clear(H_c, ctx);
+    gr_mat_clear(G_d, ctx);
+    gr_mat_clear(H_d, ctx);
+    return status;
+  }
 
   /* RECURSION #1 - INVERT BLOCK a -------------------------------------------
    * To apply the strassen's block inversion we need the inverse of the block a.
@@ -65,7 +75,6 @@ int gr_mat_inverse_toeplitz(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H
    * As we multiply these generators their ranks explose.
    * We call the compression algorithm after each arithmetics to keep
    * the algorithm efficient.
-   *
    * We do 3 multiplications in sequence.
    */
   gr_mat_t G_ce, H_ce, G_eb, H_eb, G_ceb, H_ceb, G_S, H_S;

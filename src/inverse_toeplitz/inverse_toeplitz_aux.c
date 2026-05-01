@@ -11,7 +11,7 @@ int shift_vec(gr_mat_t out, gr_mat_t v, slong n, gr_ctx_t ctx) {
   int status = GR_SUCCESS;
   status |= gr_mat_zero(out, ctx);
   for (slong i = 1; i < n; i++)
-      
+
     status |= gr_set(gr_mat_entry_ptr(out, i, 0, ctx), gr_mat_entry_srcptr(v, i - 1, 0, ctx), ctx);
   return status;
 }
@@ -314,8 +314,7 @@ int gr_mat_pack_quadrants(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_x, gr_mat_t H_x
   status |= shift_vec(Zra, r_a, n1, ctx);
   status |= shift_vec(Zvc, v_c, n2, ctx);
   status |= shift_vec(Zrb, r_b, n2, ctx);
-  
-  
+
   gr_ptr tmp = gr_heap_init(ctx);
 
   // c1: G=-Z*v_a (top), H=e_0_n2 (bottom)
@@ -353,6 +352,10 @@ int gr_mat_pack_quadrants(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_x, gr_mat_t H_x
   gr_mat_clear(r_a, ctx);
   gr_mat_clear(v_c, ctx);
   gr_mat_clear(r_b, ctx);
+  gr_mat_clear(Zra, ctx);
+  gr_mat_clear(Zrb, ctx);
+  gr_mat_clear(Zva, ctx);
+  gr_mat_clear(Zvc, ctx);
   gr_heap_clear(s_a, ctx);
   gr_heap_clear(minus_1, ctx);
   gr_heap_clear(tmp, ctx);
