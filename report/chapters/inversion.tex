@@ -210,7 +210,7 @@ By negating bleeds on the appended correction columns in $G_{RES}$, the generato
 
 \vspace{0.3cm}
 To prove the mathematical correctness of these correction columns, 
-we can explicitly compute the global displacement reconstruction by multiplying the uncompressed generators: $\Phi_+(A^{-1}) = G_{RES} H_{RES}^T$.
+we can compute the global displacement reconstruction by multiplying the uncompressed generators: $\Phi_+(A^{-1}) = G_{RES} H_{RES}^T$.
 
 $$ G_{RES} H_{RES}^T = \begin{pmatrix} 
 G_x H_x^T                               & G_y H_y^T - Z_{n_1} v_x (e_0^{(n_2)})^T \\ 
@@ -241,20 +241,23 @@ Despite these gains, the structured approach introduces overhead due to strict d
 The split and pack require continuous $\mathcal{O}(r \cdot n)$ diagonal vector extractions to mathematically correct the $\Phi_+$ bleeding. 
 More critically, the structural reassembly during the pack and each multiplication and addition increases the rank, requiring more computation for compressions at every recursive return. 
 
-While highly optimal for large matrices with a strictly bounded rank, this heavy structural overhead makes the algorithm computationally disadvantageous for small matrices compared to standard dense inversion.
+While this implementation is great for large matrices with a strictly bounded rank, 
+the overhead makes the algorithm computationally disadvantageous for smaller matrices compared to standard dense inversion.
 
 \begin{verbatim}
 mention a threshold
 mention and show benchmarks once sure and verified
 \end{verbatim}
 
-As detailed by Victor Y. Pan in \textit{Structured Matrices and Polynomials} \cite[Chapter 5]{pan2001structured}, 
-the alternative is the Morf-Bitmead-Anderson (MBA) algorithm. 
-Originally proposed by Morf (1980) and Bitmead and Anderson (1980), achieving $\mathcal{O}(n \log^2 n)$ complexity for Toeplitz-like and Hankel-like matrices. 
-However, because it is also a divide-and-conquer method, the MBA approach still requires calculations of quadrants and generator compression.
+As detailed by Victor Y. Pan in \textit{Structured Matrices and Polynomials} \cite[Chapter 5]{pan2001structured}, an alternative is the Morf-Bitmead-Anderson (MBA) algorithm. 
+Originally proposed by Morf (1980) and Bitmead and Anderson (1980), it achieves $\mathcal{O}(n \log^2 n)$ complexity for Toeplitz-like matrices. 
+Because it is also a divide-and-conquer method, this approach still requires calculations of sub-quadrants and continuous generator compression.
 
-To bypass the need to split the matrix, one should prefer a Newton iterative inversion. 
-Pan dedicates significant analysis to this approach in \cite[Chapters 6 and 7]{pan2001structured}, (detailing based on the Schulz iteration: $X_{k+1} = X_k(2I - A X_k)$). 
+To bypass the need to split the matrix, one should prefer to implement the Newton iterative version.
+Pan dedicates analysis to this approach in \cite[Chapters 6 and 7]{pan2001structured}, which is based on the Schulz iteration: $X_{k+1} = X_k(2I - A X_k)$. 
+
+New research provides a deterministic algebraic alternative by Khichane and Neiger \cite{khichane2026matricesdisplacementstructuredeterministic} 
+which evades the split by reformulating the system as polynomials that achieves $\tilde{\mathcal{O}}(r^{\omega-1}n)$ complexity.
 
 \begin{verbatim}
 conclude even more
