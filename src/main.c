@@ -424,7 +424,7 @@ int benchmark_addition() {
     printf("\r" ANSI_CLEAR_LINE);
     printf(ANSI_COLOR_GREEN " Generators" ANSI_COLOR_RESET "   |  %-.3e   |  %-.3e \n", avg_gen, med_gen);
     if (flint)
-      printf(ANSI_COLOR_YELLOW " Flint Dense" ANSI_COLOR_RESET "  |  %-.3e   |  %-.3e \n", "", avg_flint, med_flint);
+      printf(ANSI_COLOR_YELLOW " Flint Dense" ANSI_COLOR_RESET "  |  %-.3e   |  %-.3e \n", avg_flint, med_flint);
   }
 
   fclose(csv);
@@ -435,7 +435,7 @@ int benchmark_addition() {
 
 int benchmark_inversion() {
   FILE *csv = fopen("bench_inversion.csv", "w");
-  slong sizesn[] = {128, 1024, 4096};
+  slong sizesn[] = {512, 1024, 2048};
   int num_sizes = 3;
   if (!csv) return GR_UNABLE;
 
