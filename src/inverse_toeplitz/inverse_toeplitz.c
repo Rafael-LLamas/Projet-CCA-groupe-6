@@ -33,8 +33,6 @@ int gr_mat_inverse_toeplitz(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H
     status = gr_inv(val, val, ctx);
 
     if (status == GR_SUCCESS) {
-      gr_mat_clear(G_D, ctx);
-      gr_mat_clear(H_D, ctx);
       gr_mat_init(G_D, 1, 1, ctx);
       gr_mat_init(H_D, 1, 1, ctx);
 
@@ -67,8 +65,6 @@ int gr_mat_inverse_toeplitz(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H
    * We call the fuction on the generators of the block a. The result is placed on G_e and H_e.
    */
   gr_mat_t G_e, H_e;
-  gr_mat_init(G_e, gr_mat_nrows(G_a, ctx), rank, ctx);
-  gr_mat_init(H_e, gr_mat_nrows(H_a, ctx), rank, ctx);
   status |= gr_mat_inverse_toeplitz(G_e, H_e, G_a, H_a, ctx);
 
   /* SHUR COMPLEMENT S=d−c*e*b -------------------------------------------
@@ -101,8 +97,6 @@ int gr_mat_inverse_toeplitz(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H
    * We call the fuction on the generators of S. The result is placed on G_t and H_t.
    */
   gr_mat_t G_t, H_t;
-  gr_mat_init(G_t, gr_mat_nrows(G_S, ctx), gr_mat_ncols(G_S, ctx), ctx);
-  gr_mat_init(H_t, gr_mat_nrows(H_S, ctx), gr_mat_ncols(H_S, ctx), ctx);
   status |= gr_mat_inverse_toeplitz(G_t, H_t, G_S, H_S, ctx);
 
   /* FINAL STRASSEN ASSEMBLY -------------------------------------------

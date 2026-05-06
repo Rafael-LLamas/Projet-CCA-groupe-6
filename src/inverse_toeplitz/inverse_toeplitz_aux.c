@@ -185,7 +185,7 @@ int gr_mat_split_quadrants(gr_mat_t G_a, gr_mat_t H_a, gr_mat_t G_b, gr_mat_t H_
   gr_mat_clear(M, ctx);
   gr_mat_clear(G_d_tmp, ctx);
   gr_mat_clear(H_d_tmp, ctx);
-  gr_clear(s_a, ctx);
+  gr_heap_clear(s_a, ctx);
   return status;
 }
 

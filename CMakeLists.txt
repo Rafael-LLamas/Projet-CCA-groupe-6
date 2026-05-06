@@ -4,7 +4,7 @@ project(model_project VERSION 0.1.0 LANGUAGES C)
 include(CTest)
 enable_testing()
 
-add_compile_options(-g -O2 -Wall)
+add_compile_options(-g -O1 -Wall)
 set(CMAKE_C_STANDARD 99)
 
 # Setting path location
@@ -40,6 +40,7 @@ target_link_libraries(flint_core INTERFACE
     ${GMP_LIB}
     ${MPFR_LIB}
 )
+
 
 ####
 # EXECUTABLES

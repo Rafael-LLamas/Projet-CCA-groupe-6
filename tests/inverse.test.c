@@ -77,10 +77,6 @@ int test_inverse_2x2() {
   gr_mat_init(A, 2, 2, ctx);
   gr_mat_init(A_inv, 2, 2, ctx);
   gr_mat_init(Check, 2, 2, ctx);
-  gr_mat_init(G_A, 2, 4, ctx);
-  gr_mat_init(H_A, 2, 4, ctx);
-  gr_mat_init(G_D, 1, 1, ctx);
-  gr_mat_init(H_D, 1, 1, ctx);
 
   status |= gr_set_ui(gr_mat_entry_ptr(A, 0, 0, ctx), 1, ctx);
   status |= gr_set_ui(gr_mat_entry_ptr(A, 0, 1, ctx), 3, ctx);
@@ -168,10 +164,6 @@ int test_inverse_3x3() {
   gr_mat_init(A_inv, 3, 3, ctx);
   gr_mat_init(A_inv_ref, 3, 3, ctx);
   gr_mat_init(Check, 3, 3, ctx);
-  gr_mat_init(G_A, 3, 6, ctx);
-  gr_mat_init(H_A, 3, 6, ctx);
-  gr_mat_init(G_D, 1, 1, ctx);
-  gr_mat_init(H_D, 1, 1, ctx);
 
   status |= gr_set_ui(gr_mat_entry_ptr(A, 0, 0, ctx), 1, ctx);
   status |= gr_set_ui(gr_mat_entry_ptr(A, 0, 1, ctx), 2, ctx);
@@ -280,9 +272,6 @@ int test_inverse_full() {
       status |= gr_mat_random_toeplitz(A, state, ctx);
       status |= gr_mat_det(det, A, ctx);
     } while (gr_is_zero(det, ctx) == T_TRUE);
-
-    gr_mat_init(T, n, 2, ctx);
-    gr_mat_init(U, n, 2, ctx);
 
     status |= gr_mat_G_H(G, H, A, DISP_PLUS, ctx);
 
