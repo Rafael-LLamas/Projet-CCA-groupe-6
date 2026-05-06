@@ -1,6 +1,6 @@
-\subsection{Inversion}
+\section{Inversion}
 
-\subsubsection{Introduction}
+\subsection{Introduction}
 
 In this section we will study how we implemented Strassen's inversion method on displacement generators.
 Algorithm follows:
@@ -244,10 +244,9 @@ More critically, the structural reassembly during the pack and each multiplicati
 While this implementation is great for large matrices with a strictly bounded rank, 
 the overhead makes the algorithm computationally disadvantageous for smaller matrices compared to standard dense inversion.
 
-\begin{verbatim}
-mention a threshold
-mention and show benchmarks once sure and verified
-\end{verbatim}
+\todo{ARDA: THRESHOLD ???}
+\todo{ARDA: BENCHMARKS for both n for any nxn and for displacement rank}
+
 
 As detailed by Victor Y. Pan in \textit{Structured Matrices and Polynomials} \cite[Chapter 5]{pan2001structured}, an alternative is the Morf-Bitmead-Anderson (MBA) algorithm. 
 Originally proposed by Morf (1980) and Bitmead and Anderson (1980), it achieves $\mathcal{O}(n \log^2 n)$ complexity for Toeplitz-like matrices. 
@@ -256,9 +255,8 @@ Because it is also a divide-and-conquer method, this approach still requires cal
 To bypass the need to split the matrix, one should prefer to implement the Newton iterative version.
 Pan dedicates analysis to this approach in \cite[Chapters 6 and 7]{pan2001structured}, which is based on the Schulz iteration: $X_{k+1} = X_k(2I - A X_k)$. 
 
-New research provides a deterministic algebraic alternative by Khichane and Neiger \cite{khichane2026matricesdisplacementstructuredeterministic} 
-which evades the split by reformulating the system as polynomials that achieves $\tilde{\mathcal{O}}(r^{\omega-1}n)$ complexity.
+While the implementation here computes $A^{-1}$ explicitly, it is worth noting that in practice, solving a linear system $Ax = b$ does not require forming the inverse directly. 
+Recent work by Khichane and Neiger~\cite{khichane2026matricesdisplacementstructuredeterministic} proposes a deterministic algebraic approach that reformulates the system in terms of polynomial arithmetic, solving it with $\tilde{\mathcal{O}}(r^{\omega-1}n)$ 
+complexity while bypassing explicit inversion altogether.
 
-\begin{verbatim}
-conclude even more
-\end{verbatim}
+\todo{ARDA: CONCLUSION}
