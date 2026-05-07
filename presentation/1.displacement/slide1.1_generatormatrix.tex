@@ -1,0 +1,23 @@
+\begin{frame}{Example - Displacement \& Generators}
+      \begin{block}{Toeplitz Matrix $A$}
+        \[
+          A = \begin{pmatrix}
+            4 & 3 & 2 & 1 \\
+            5 & 4 & 3 & 2 \\
+            6 & 5 & 4 & 3 \\
+            7 & 6 & 5 & 4
+          \end{pmatrix}
+        \]
+      \end{block}
+      \begin{block}{Displacement $\nabla A = A - ZAZ^T$}
+        \[
+          \nabla A = \begin{pmatrix}
+            4 & 3 & 2 & 1 \\
+            5 & 0 & 0 & 0 \\
+            6 & 0 & 0 & 0 \\
+            7 & 0 & 0 & 0
+          \end{pmatrix}
+        \]
+        Only first row and column stays. $\mathrm{rank} = 2$.
+      \end{block}
+\end{frame}

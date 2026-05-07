@@ -71,7 +71,6 @@ _deps
 CMakeUserPresets.json
 build/
 
-
 # Report
 report/main.aux
 report/main.fdb_latexmk
@@ -84,9 +83,20 @@ report/main.blg
 report/main.bbl
 report/q.log
 report/texput.log
+report/libproject_lib.a
+report/DartConfiguration.tcl
 .DS_Store
+
+# Presentation
+presentation/diapo.toc
+presentation/diapo.synctex.gz
+presentation/diapo.out
+presentation/diapo.nav
+presentation/diapo.log
+presentation/diapo.fls
+presentation/diapo.fdb_latexmk
+presentation/diapo.aux
+presentation/diapo.snm
 
 #Flint 
 flint-3.4.0/
-report/libproject_lib.a
-report/DartConfiguration.tcl

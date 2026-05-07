@@ -1,0 +1,16 @@
+\begin{frame}{Toeplitz Matrices}
+  \begin{definition}
+    A matrix $A \in \mathbb{K}^{n \times m}$ is \textbf{Toeplitz} if
+    $A_{i,j} = A_{i+1,j+1}$ for all valid $i, j$.
+  \end{definition}
+  \vspace{0.5em}
+  \[
+    A =
+    \begin{pmatrix}
+      a_0    & a_{-1} & \cdots & a_{-(m-1)} \\
+      a_1    & a_0    & \cdots & a_{-(m-2)} \\
+      \vdots & \ddots & \ddots & \vdots     \\
+      a_{n-1}& \cdots & a_1    & a_{n-m}
+    \end{pmatrix}
+  \]
+\end{frame}
