@@ -1,24 +1,16 @@
-\begin{frame}{Displacement \& Generators}
+\begin{frame}{Addition of Toeplitz-like Matrices}
   \begin{columns}
     \begin{column}{0.5\textwidth}
-      \begin{block}{Displacement Operator}
+      \begin{block}{Generator Addition}
         \[
-          \nabla A = A - Z A Z^T = G H^T
-        \]
-        For Toeplitz: $\mathrm{rank}(\nabla A) \leq 2$
-      \end{block}
-    \end{column}
-    \begin{column}{0.5\textwidth}
-      \begin{block}{Reconstruction}
-        \[
-          A = \sum_{k=1}^{\alpha} L(g_k)\, U(h_k)
+           A = (T,U), B = (G,H)
+            \implies A + B = (T | G, U | H)
         \]
       \end{block}
     \end{column}
   \end{columns}
   \vspace{1em}
   \begin{alertblock}{Notice}
-    Storing $(G, H)$ instead of $A$ reduces memory from
-    $O(n^2)$ to $O(\alpha n)$.
+    from $O(n^2)$ to $O(\alpha M(n))$.
   \end{alertblock}
 \end{frame}
