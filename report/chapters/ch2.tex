@@ -1,25 +1,24 @@
 \section{Operation}
 
 \subsection{Addition}
-This code can be found in:
-\begin{verbatim}
-Project
-\   src
-|   \   operations
-|   |   |   addition.c
-|   |   |   addition.h
-\end{verbatim}
 \subsubsection{Introduction}
- Grace au générateurs de déplacement, nous pouvons addtionner nos matrices sans utiliser la formule standart.
- En effet, selon la propriété 10.7 et 10.8 du cours (ref cours ICI), on apprends que la somme de 2 matrices toeplitz peut etre simplfié par la concatenation de leurs générateurs de déplacement.
- Cela permet de passer a un coup de O($n \times m$) a un cout de O($\alpha \times m$) pour 2 matrices A et B de tailles $n \times m$ et leurs générateurs de déplacement de taille $\alpha$ pour ceux de A et $\beta$ pour ceux de B.
- Pour faire la concatenation avec flint on peut utiliser la fonction suivante :
- \begin{verbatim}
- int gr_mat_concat_horizontal(gr_mat_t RES,gr_mat_t A,gr_mat_t B,gr_ctx_t ctx);
- \end{verbatim}
+With the displacement generators, we can simplify the addition of 2 matrices and thus reduce its cost by concatenating the generators of the 2 matrices.
+From the property 10.7 and 10.8, we can pass from $O(n^2)$ for the naive algorithm to $O( \alpha \times M(n) )$ for the version that we implement.
+We need A=(T,U) and B=(G,H)
+ \begin{algorithm}[H]
+\caption{Generator Addition}
+\begin{algorithmic}[1]
+\Function{gr\_mat\_mul\_generator}{$T,U,G,H$}
+
+    \State $G_C \gets \Call{gr\_mat\_Concat\_Horizontal}{T,G}$
+    \State $H_C \gets \Call{gr\_mat\_Concat\_Horizontal}{U,H}$
+    \State \textbf{return} $G_C, H_C$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
 
  \subsubsection{Exemple}
-On va prendre les matrices A, B et C le résultat de l'addition de A et B.Toutes les matrices sont dans $Z/_{13}Z$ pour cette exemple.
+We takes A and B, two randoms matrices, C the result we need to getof A and B.Every matrices are in $Z/_{13}Z$.
 \begin{equation}
     A =
     \begin{pmatrix}
@@ -40,8 +39,7 @@ On va prendre les matrices A, B et C le résultat de l'addition de A et B.Toutes
         3     & 5     & 9  
     \end{pmatrix}
 \end{equation}
-
-si on prends les générateurs de déplacement de A = (T,U) et B = (G,H)
+If we takes displacement generator of A = (T,U) and B = (G,H)
 \begin{equation}
     T =
     \begin{pmatrix}
@@ -54,9 +52,7 @@ si on prends les générateurs de déplacement de A = (T,U) et B = (G,H)
         5     & 0      \\
         0     & 7      \\
         0     & 10      
-    \end{pmatrix}
-\end{equation}
-\begin{equation}
+    \end{pmatrix},
     G =
     \begin{pmatrix}
         1    & 0      \\
@@ -70,16 +66,14 @@ si on prends les générateurs de déplacement de A = (T,U) et B = (G,H)
         4     & 3  
     \end{pmatrix}
 \end{equation}
-et que l'on fait la concaténation on obtiens
+and we do the concatenation of T,G and U,H to obtain $RES_G$ and $RES_H$ (we have to do the concatenation in the order that I cited the elements).
 \begin{equation}
     RES_G =
     \begin{pmatrix}
         0    & 1     & 1 & 0 \\
         1     & 0     & 0 & 0 \\
         0     & 0     & 9  & 1
-    \end{pmatrix}
-\end{equation}
-\begin{equation}
+    \end{pmatrix},
     RES_H =
     \begin{pmatrix}
         5     & 0     & 9 & 0 \\
@@ -87,18 +81,7 @@ et que l'on fait la concaténation on obtiens
         0     & 10     & 4  & 3
     \end{pmatrix}
 \end{equation}
-Dans notre projet, il suffira d'appeler la fonction:
-\begin{verbatim}
- int gr_mat_addition_generateur(gr_mat_t G_a, gr_mat_t H_a, gr_mat_t G_b, gr_mat_t H_b, 
-                                gr_mat_t G_c, gr_mat_t H_c,gr_ctx_t ctx);
- \end{verbatim}
-avec les bons parametres pour obtenir les générateurs de déplacement G et H de D.
-
-pour verifier notre résultat on peut utiliser la fonction
-\begin{verbatim}
- int gr_mat_reconstruct_A(gr_mat_t A, gr_mat_t G, gr_mat_t H, disp_type_t type, gr_ctx_t ctx);
- \end{verbatim}
-pour recomposer la matrice D que l'on a obtenue :
+The matrix that we get D :
 \begin{equation}
     D =
     \begin{pmatrix}
@@ -108,36 +91,24 @@ pour recomposer la matrice D que l'on a obtenue :
     \end{pmatrix}
 \end{equation}
 
-On remarque bien que celle-ci est identique a la matrices C et donc que pour faire l'addition de 2 matrice toeplitz, on peut utiliser seulement leurs générateurs de déplacement.
+We can see that the matrix D is equal to C so our way to add the 2 matrices is correct in this case.
 \subsubsection{Benchmark}
-Le benchmark obtenu met en évidence les résultats suivants:
-\begin{verbatim}
-=== BENCHMARK ADDITION (10 runs) ===
-Size 128x128 :
- Operation    | Average (ms) | Median (ms) 
---------------|--------------|--------------
- Generators   |  3.577e-03   |  3.422e-03 
- Flint Dense  |  1.373e-02   |  1.208e-02 
-Size 1024x1024 :
- Operation    | Average (ms) | Median (ms) 
---------------|--------------|--------------
- Generators   |  3.205e-02   |  3.365e-02 
- Flint Dense  |  2.520e+00   |  3.018e+00 
-Size 4096x4096 :
- Operation    | Average (ms) | Median (ms) 
---------------|--------------|--------------
- Generators   |  1.148e-01   |  1.104e-01 
- Flint Dense  |  2.918e+01   |  2.915e+01
-\end{verbatim}
--\underline{Pour les petites matrices} (128x128):
-    notre fonction d'addition avec les générateurs de déplacement est plus rapide que la fonction naive de flint (3.577e-03 ms vs 1.373e-02 ms)
-    
--\underline{Pour les matrices de tailles} 1024x1024:
-    notre fonction d'addition avec les générateurs de déplacement est plus rapide que la fonction naive de flint (3.205e-02 ms vs 2.520 ms)
-    
--\underline{Pour de grandes matrices} (4096x4096):
-    notre fonction d'addition avec les générateurs de déplacement est plus rapide que la fonction naive de flint (1.148e-01 ms vs 2.918e+01 ms)
-    
+The benchmark obtained highlights the following results:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{r r r}
+\hline
+$n$ & Generators (ms) & Flint Dense (ms) \\
+\hline
+128  & 3.577e-03  & 1.373e-02   \\
+1024 & 3.205e-02 & 2.52  \\
+4096 & 1.148e-01 & 29.18  \\
+\hline
+\end{tabular}
+\caption{Median runtimes over 5 runs}
+\label{tab:bench_add}
+\end{table}
 
 (ici courbe des temps)
 blablabla...explication complexité...blablabla
@@ -145,58 +116,44 @@ blablabla...explication complexité...blablabla
 
 
 \subsection{Multiplication}
-This code can be found in:
-\begin{verbatim}
-Project
-\   src
-|   \   operations
-|   |   |   multiplication.c
-|   |   |   multiplication.h
-\end{verbatim}
 \subsubsection{Introduction}
-Toujours avec les générateurs de déplacement, on peut simplifier la multiplication de 2 matrices et donc réduire son cout en concatenant :
-
-- les générateurs de déplacement de A=(T,U) et B=(G,H)
+With displacement generators we also can simplify the multiplication of 2 matrices and thus reduce its cost by concatenating the generators of the 2 matrices.
+- The displacement generators A=(T,U) and B=(G,H) 
 
 - $W = Z \times A \times Z^t \times G$
 
 - $V = B^t \times U$
 
-- a (resp. b) un vecteur qui est la dernière colonne de$ Z \times A $ (resp. $Z \times B^t$)
+- a (resp. b) a vector which is the last column of $ Z \times A $ (resp. $Z \times B^t$)
 
-Cela nous permet de passer de $O(n^3)$ pour l'algo naif a $O( \alpha^2 \times M(n) )$ pour la version que nous implémentons.
-Ainsi nous obtenons W de la façon suivante :
-\begin{verbatim}
-     error = gr_mat_apply_Zt(Tmp, G_b, ctx);
-  error = gr_mat_mul_vector(W, G_a, H_a, Tmp, ctx);
-  error = gr_mat_apply_Z(W, W, ctx);
-\end{verbatim}
-Par ailleurs, j'obtiens V par l'opération ci-dessous:
-\begin{verbatim}
-     error = gr_mat_mul_vector(V, H_b, G_b, H_a, ctx);
-\end{verbatim}
-etant precise que pour avoir $B^t$ je fais le produit inverse qui est $H \times G$ et non $ G \times H$
+This allows us to pass from $O(n^3)$ for the naive algorithm to $O( \alpha^2 \times M(n) )$ for the version we implement.
+\begin{algorithm}[H]
+\caption{Generator Multiplication}
+\begin{algorithmic}[1]
+\Function{gr\_mat\_mul\_generator}{$T,U,G,H$}
 
-Pour récupérer la dernière colonne de $ Z \times A$ et $Z \times B^t$ nous choisissons de proceder ainsi qu'il suit
-\begin{verbatim}
+    \State $W_{Temp} \gets \Call{gr\_mat\_apply\_Zt}{G}$
+    \State $W \gets \Call{gr\_mat\_mul\_vector}{T,U,W_{Temp}}$
+    \State $W \gets \Call{gr\_mat\_apply\_Z}{W}$
 
-  slong m_a = gr_mat_nrows(H_a, ctx);
-  gr_mat_init(LastCol_m, m_a, 1, ctx);
-  error = gr_mat_zero(LastCol_m, ctx);
-  error = gr_one(gr_mat_entry_ptr(LastCol_m, m_a - 1, 0, ctx), ctx);
-  error = gr_mat_mul_vector(a, G_a, H_a, LastCol_m, ctx);
-  error = gr_mat_apply_Z(a, a, ctx);
+    \State $V \gets \Call{gr\_mat\_mul\_vector}{H,G,U}$
 
-  slong m_bt = gr_mat_nrows(G_b, ctx);
-  gr_mat_init(LastCol_k, m_bt, 1, ctx);
-  error = gr_mat_zero(LastCol_k, ctx);
-  error = gr_one(gr_mat_entry_ptr(LastCol_k, m_bt - 1, 0, ctx), ctx);
-  error = gr_mat_mul_vector(b, H_b, G_b, LastCol_k, ctx);
-  error = gr_mat_apply_Z(b, b, ctx);
-\end{verbatim}
-Nous utilisons le vecteur 
+    \State $a \gets \Call{gr\_mat\_mul\_vector}{T,U,LastCol}$
+    \State $a \gets \Call{gr\_mat\_apply\_Z}{a}$
+
+    \State $b \gets \Call{gr\_mat\_mul\_vector}{H,G,LastCol}$
+    \State $b \gets \Call{gr\_mat\_apply\_Z}{b}$
+    \State $b \gets \Call{gr\_mat\_neg}{b}$
+
+    \State $G_C \gets \Call{gr\_mat\_concat\_horizontal}{T,W,a}$
+    \State $H_C \gets \Call{gr\_mat\_concat\_horizontal}{V,H,b}$
+    \State \textbf{return} $G_C, H_C$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+We use the vector 
 \begin{equation}
-    Vecteur =
+    LastCol =
     \begin{pmatrix}
         0 \\
         0 \\
@@ -207,20 +164,20 @@ Nous utilisons le vecteur
         1
     \end{pmatrix}
 \end{equation}
-afin de récupérer la dernière colonne de la matrice, ce vecteur est constitué que de 0 à l'exclusion du dernier élément de la colonne dont la valeur est fixé a 1.
-
+in order to retrieve the last column of the matrix, this vector is composed of 0 except for the last element of the column which is fixed to 1.
 
 \subsubsection{Multiplication Vecteur}
-Pour faire notre multiplication de matrice via leurs générateurs de déplacement, nous avons besoin d'avoir une fonction qui va multiplier un vecteur avec des générateurs de déplacement pour éviter  de recomposer les matrices.
+To perform the matrix multiplication via their displacement generators, we need a function that multiplies a vector with displacement generators to avoid recomposing the matrices.
 
-Tout d'abord, on initialise notre résultat à 0
+First, we initialize our result to 0
 \begin{verbatim}
     error = gr_mat_zero(Res, ctx);
 \end{verbatim}
 
-Nous partons du principe selon lequelle une matrices peut etre représentée par plusieurs polynome.
-Ainsi on détermine que chaque colonne de notre vecteur X est un polynome. Chaque ligne de nos matrices correspondent egalement à un polynome.
-Pour obtenir notre résultat, nous effectuons les opérations dans suivants:
+We part from the principle that a matrix can be represented by several polynomials.
+Thus, we determine that each column of our vector X is a polynomial. Each row of our matrices also corresponds to a polynomial.
+To obtain our result, we perform the following operations:
+
 \begin{verbatim} 
   for (slong j = 0; j < X_cols; j++) {
 
@@ -230,15 +187,17 @@ Pour obtenir notre résultat, nous effectuons les opérations dans suivants:
     error = gr_poly_mul(p_tmp, pg, p_tmp, ctx);
     }
  \end{verbatim}
- Avec: 
- -X_cols le nombre de colonne de notre vecteur 
- -ph,pg et px les polynome de H,G et X
- -p_temp le produit intermédiaire de ph et px
 
- Pour finir, nous remplissons res avec p_temp à la bonne position.
+With: 
+ \begin{itemize}
+    \item X\_cols le nombre de colonne de notre vecteur 
+    \item ph,pg et px les polynome de H,G et X
+    \item p\_temp le produit intermédiaire de ph et px
+ \end{itemize}
+For finish, we put p\_temp in res.
 
 \subsubsection{Exemple}
-On va prendre les matrices A, B et C le résultat de la multiplication de A et B.Toutes les matrices sont dans $Z/_{13}Z$ pour cette exemple.
+We takes A and B, two randoms matrices, C the result we need to getof A and B.Every matrices are in $Z/_{13}Z$.
 \begin{equation}
     A =
     \begin{pmatrix}
@@ -259,8 +218,7 @@ On va prendre les matrices A, B et C le résultat de la multiplication de A et B
         2     & 0     & 2  
     \end{pmatrix}
 \end{equation}
-
-si on prends les générateurs de A = (T,U) et B = (G,H)
+If we takes displacement generator of A = (T,U) and B = (G,H)
 \begin{equation}
     T =
     \begin{pmatrix}
@@ -273,9 +231,7 @@ si on prends les générateurs de A = (T,U) et B = (G,H)
         10     & 0      \\
         5     & 4      \\
         8     & 9      
-    \end{pmatrix}
-\end{equation}
-\begin{equation}
+    \end{pmatrix},
     G =
     \begin{pmatrix}
         0    & 1      \\
@@ -289,8 +245,7 @@ si on prends les générateurs de A = (T,U) et B = (G,H)
         0     & 0  
     \end{pmatrix}
 \end{equation}
-
-on doit calculer W et V via leurs formule donné au début.
+We need to calculate W and V before concatenating the generators of A and B to obtain the displacement generator of D.
 \begin{equation}
     W =
     \begin{pmatrix}
@@ -313,9 +268,7 @@ et la concatenation de  V,H et $\beta$ pour obtenir $RES_H$ (il faut faire la co
         1     & 0     & 0 & 0 & 0 \\
         7    & 1     & 10 & 0 & 8 \\
         12     & 11     & 5  & 0 & 5
-    \end{pmatrix}
-\end{equation}
-\begin{equation}
+    \end{pmatrix},
     RES_H =
     \begin{pmatrix}
         2     & 12     & 3 & 0 & 0 \\
@@ -323,19 +276,7 @@ et la concatenation de  V,H et $\beta$ pour obtenir $RES_H$ (il faut faire la co
         2     & 12     & 0  & 0 & 10
     \end{pmatrix}
 \end{equation}
-Dans notre projet, il suffira d'appeler la fonction:
-\begin{verbatim}
- int gr_mat_mul_generator(gr_mat_t G_c, gr_mat_t H_c, gr_mat_t G_a,
-                             gr_mat_t H_a, gr_mat_t G_b, gr_mat_t H_b,
-                             gr_ctx_t ctx);
- \end{verbatim}
-avec les bons parametre pour obtenir les générateur de déplacement G et H de D.
-
-pour verifier notre résultat on peut utiliser la fonction
-\begin{verbatim}
- int gr_mat_reconstruct_A(gr_mat_t A, gr_mat_t G, gr_mat_t H, disp_type_t type, gr_ctx_t ctx);
- \end{verbatim}
-pour recomposer la matrice que l'on a obtenue D :
+La matrice que l'on a obtenue D :
 \begin{equation}
     D =
     \begin{pmatrix}
@@ -344,42 +285,22 @@ pour recomposer la matrice que l'on a obtenue D :
         2     & 0     & 2  
     \end{pmatrix}
 \end{equation}
-La matrice D est bien égale a C donc notre facon de multiplier les 2 matrices est correct dans ce cas.
+We can see that the matrix D is equal to C so our way to multiply the 2 matrices is correct in this case.
 \subsubsection{Benchmark}
-Le benchmark obtenu met en évidence les résultats suivants:
-\begin{verbatim}
-=== BENCHMARK MULTIPLICATION (Toeplitz & Random) ===
-Size (128x128) X (128x128) :
-  Operation       | Average (ms) | Median (ms) 
-  ----------------|--------------|--------------
-  Toe-Toe (Mine)  |  6.289e-01   |  5.995e-01 
-  Toe-Toe (Flint) |  3.032e+00   |  2.936e+00 
-  Toe-Vec (Mine)  |  1.221e-01   |  1.197e-01 
-  Toe-Vec (Flint) |  3.217e-02   |  2.648e-02 
-Size (1024x1024) X (1024x1024) :
-  Operation       | Average (ms) | Median (ms) 
-  ----------------|--------------|--------------
-  Toe-Toe (Mine)  |  3.736e+00   |  3.704e+00 
-  Toe-Toe (Flint) |  9.842e+02   |  9.823e+02 
-  Toe-Vec (Mine)  |  6.383e-01   |  6.412e-01 
-  Toe-Vec (Flint) |  1.554e+00   |  1.499e+00 
-Size (4096x4096) X (4096x4096) :
-  Operation       | Average (ms) | Median (ms) 
-  ----------------|--------------|--------------
-  Toe-Toe (Mine)  |  1.242e+01   |  1.531e+01 
-  Toe-Toe (Flint) |  3.981e+04   |  4.273e+04 
-  Toe-Vec (Mine)  |  2.063e+00   |  2.532e+00 
-  Toe-Vec (Flint) |  1.763e+01   |  2.104e+01
-\end{verbatim}
--\underline{Pour les petites matrices} (128x128):
-    notre fonction de multiplication avec les générateurs de déplacement est plus rapide que la fonction naive de flint (6.289e-01 ms vs 3.032 ms),
-    par contre notre fonction de multiplication de vecteur avec les générateurs est plus lente que la fonction flint (1.221e-01 ms vs 3.217e-02)
--\underline{Pour les matrices de tailles} 1024x1024:
-    notre fonction de multiplication avec les générateurs de déplacement reste plus rapide que la fonction naive de flint (3.736 ms vs 9.842e+02 ms) avec un écart 10 fois plus important,
-    cette fois-ci notre fonction de multiplication de vecteur est plus rapide que celle de flint (6.383e-01 ms vs 1.554 ms)
--\underline{Pour de grandes matrices} (4096x4096):
-    notre fonction de multiplication avec les générateurs de déplacement reste plus rapide que la fonction naive de flint (1.242e+01 ms vs 3.981e+04 ms) avec un écart 10 fois plus important,
-    la encore, notre fonction de multiplication de vecteur demeure plus rapide que celle de flint (2.063 ms vs 1.763e+01 ms)
-
+The benchmark obtained highlights the following results:
+\begin{table}[h]
+\centering
+\begin{tabular}{r r r r r}
+\hline
+$n$ & Generators (ms) & Flint Dense (ms) & Vector (ms) & Vector Flint (ms) \\
+\hline
+128  & 6.289e-01  & 3.032 & 1.221e-01  & 3.217e-02  \\
+1024 & 3.736 & 984.2 & 6.383e-01  & 1.554 \\
+4096 & 12.42 & 39810 & 2.063  & 17.63 \\
+\hline
+\end{tabular}
+\caption{Median runtimes over 5 runs}
+\label{tab:bench_mul}
+\end{table}
 (ici courbe des temps)
 blablabla...explication complexité...blablabla
