@@ -1,16 +1,18 @@
 \documentclass[aspectratio=169]{beamer}
 \usetheme{Hannover}
 \usecolortheme{default}
+\setbeamertemplate{navigation symbols}{}
 
 \usepackage{amsmath, amssymb, amsthm}
 \usepackage{mathtools}
-\usepackage{xcolor}
+\usepackage[dvipsnames]{xcolor}
 \usepackage{booktabs}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 \usepackage{tikz}
 \newcommand{\todo}[1]{\textbf{\textcolor{blue}{[TODO: #1]}}}
-
+\setbeamercolor{block title}{bg=Periwinkle, fg=white}
+\setbeamercolor{block body}{bg=Periwinkle!10, fg=black}
 
 \title[Project CCA 6]{Elementary Operations on Quasi-Toeplitz Matrices}
 \subtitle{PCCA6}
@@ -29,12 +31,18 @@
 \input{0.introduction/slide1.0_content.tex}
 \input{0.introduction/slide1.1_content.tex}
 \section{Definitions}
+\subsection{Toeplitz M.}
 \input{0.introduction/slide2_definitions.tex}
 
-% Part 1 - displacement
-\subsection{Generator Matrices}
-\input{1.displacement/slide1.0_generatormatrix.tex}
-\input{1.displacement/slide1.1_generatormatrix.tex}
+% Part 1 - definitions
+\subsection{Displacement M.}
+\input{1.0.displacement/slide1.0_generatormatrix.tex}
+\input{1.0.displacement/slide1.1_generatormatrix_ex.tex}
+\input{1.0.displacement/slide1.2_generatormatrix_ex.tex}
+\subsection{Reconstruction}
+\input{1.1.reconstruction/slide1.0_reconstruction_sigmalu.tex}
+\input{1.1.reconstruction/slide1.1_reconstruction_sigmalu_ex.tex}
+\input{1.1.reconstruction/slide1.2_reconstruction_sigmalu_com.tex}
 
 % Part 2 - Addition
 \input{2.Addition/slide2.0_generatormatrix.tex}
@@ -43,7 +51,29 @@
 \input{3.multiplication/slide3.0_generatormatrix.tex}
 \input{3.multiplication/slide3.1_generatormatrix.tex}
 
+% Part 4 - compression
+\section{Compression}
+\input{4.compression/slide4.0_compression.tex}
+\input{4.compression/slide4.1_compression.tex}
+\input{4.compression/slide4.2_compression_algo.tex}
+
 % Part 4 - inversion
+\section{Inversion}
+\input{5.inversion/slide5.0_inversion.tex}
+\input{5.inversion/slide5.1_inversion.tex}
+\input{5.inversion/slide5.2_inversion_algo.tex}
+\input{5.inversion/slide5.2_inversion_algo_difficulty.tex}
+
+\input{5.inversion/slide5.3_inversion_split.tex}
+
+
+% part 98 - live benchmark
+\section{Benchmarking}
+\begin{frame}
+  \centering
+  \vspace{2em}
+  {\Large Live Benchmarking}\\[1em]
+\end{frame}
 
 % part 99 - thank you
 \begin{frame}

@@ -1,0 +1,41 @@
+\begin{frame}{Reconstruction}
+  \begin{columns}
+    % \begin{column}{0.5\textwidth}
+    %   \begin{block}{Displacement Operator}
+    %     \[
+    %       \nabla A = A - Z A Z^T = G H^T
+    %     \]
+    %     For Toeplitz: $\mathrm{rank}(\nabla A) \leq 2$
+    %   \end{block}
+    % \end{column}
+    \begin{column}{0.5\textwidth}
+      \begin{block}{Reconstruction}
+        \[
+          A = \sum_{k=1}^{\alpha} L(g_k)\, U(h_k)
+        \]
+      \end{block}
+    \end{column}
+  \end{columns}
+
+  \vspace{1cm}
+  
+  Defining $L$ and $U$ are Lower and Upper matrices respectfully:
+  \[
+      L(g_k)=
+      \begin{bmatrix}
+          g_1 & 0 & 0 & 0 \\
+          g_2 & g_1 & 0 & 0 \\
+          g_3 & g_2 & g_1 & 0 \\
+          g_4 & g_3 & g_2 & g_1
+      \end{bmatrix}
+      \qquad
+      U(h_k)=
+      \begin{bmatrix}
+          h_1 & h_2 & h_3 & h_4 \\
+          0 & h_1 & h_2 & h_3 \\
+          0 & 0 & h_1 & h_2 \\
+          0 & 0 & 0 & h_1
+      \end{bmatrix}
+  \]
+  
+\end{frame}

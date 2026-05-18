@@ -333,7 +333,7 @@ int gr_mat_reconstruct_A_v2(gr_mat_t A, gr_mat_t G, gr_mat_t H, disp_type_t type
     slong m = gr_mat_nrows(H, ctx);
     slong r = gr_mat_ncols(G, ctx);
     gr_poly_t pg, ph, ptemp, pA;
-    gr_mat_zero(A, ctx);
+    status |= gr_mat_zero(A, ctx);
     for (int k = 0; k < r; k++) {
       gr_poly_init(pg, ctx);
       gr_poly_init(ph, ctx);

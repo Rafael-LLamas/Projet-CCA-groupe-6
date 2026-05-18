@@ -1,0 +1,19 @@
+\begin{frame}{Compression}
+\begin{algorithm}[H]
+\caption{Generator Compression}
+\begin{algorithmic}[1]
+\Function{gr\_mat\_generator\_compress\_aux}{$G, H$}
+    \State $P, L, U \gets \text{LU\_Decomposition}(G^T)$ \Comment{$P G^T = L U$}
+    \State $r \gets \text{Number of non-zero rows in } U$ \Comment{rank}
+    \If{$r < 1$}
+        \State \textbf{return} Generators of a $0$ matrix
+    \EndIf
+    \State $G_{D} \gets (U_{[0:r-1],*})^T$
+    \State $H_{D} \gets H P^T \times L_{*,[0:r-1]}$
+    \State \textbf{return} $G_D, H_D$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+Giving us a complexity of $O(\alpha^2n)$
+\end{frame}

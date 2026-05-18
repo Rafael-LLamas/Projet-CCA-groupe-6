@@ -1,0 +1,36 @@
+\begin{frame}{Inversion} 
+    \begin{algorithm}[H]
+    \scriptsize % Stepped down from \footnotesize to \scriptsize
+    \caption{Strassen-type Inversion for Generators: \textsc{StrassenInv}($G_A, H_A$)}
+    \begin{algorithmic}[1]
+        
+        \If{$n = 1$} \textbf{return} scalar inverse $(G_D, H_D)$ \EndIf \Comment{\textbf{Step 1: Base Case}}
+        
+        \State $G_a, H_a, \dots, G_d, H_d \gets \textsc{Split}(G_A, H_A)$ \Comment{\textbf{Step 2: Quadrants}}
+        
+        \State $G_e, H_e \gets \textsc{StrassenInv}(G_a, H_a)$ \Comment{\textbf{Step 3: Recursion 1 ($e := a^{-1}$)}}
+        
+        \State $G_{ce}, H_{ce} \gets \mathcal{C}(G_c, H_c \otimes G_e, H_e)$ \Comment{\textbf{Step 4: Schur Complement}}
+        \State $G_{eb}, H_{eb} \gets \mathcal{C}(G_e, H_e \otimes G_b, H_b)$
+        \State $G_{ceb}, H_{ceb} \gets \mathcal{C}(G_c, H_c \otimes G_{eb}, H_{eb} \times -1)$
+        \State $G_S, H_S \gets \mathcal{C}(G_d, H_d \oplus G_{ceb}, H_{ceb})$ \Comment{$S := d - ceb$}
+        
+        \State $G_t, H_t \gets \textsc{StrassenInv}(G_S, H_S)$ \Comment{\textbf{Step 5: Recursion 2 ($t := S^{-1}$)}}
+        
+        \State $G_{ebt}, H_{ebt} \gets \mathcal{C}(G_{eb}, H_{eb} \otimes G_t, H_t)$ \Comment{\textbf{Step 6: Strassen Assembly}}
+        \State $G_{tce}, H_{tce} \gets \mathcal{C}(G_t, H_t \otimes G_{ce}, H_{ce})$
+        \State $G_{ebtce}, H_{ebtce} \gets \mathcal{C}(G_{ebt}, H_{ebt} \otimes G_{ce}, H_{ce})$
+        
+        \State $G_x, H_x \gets \mathcal{C}(G_e, H_e \oplus G_{ebtce}, H_{ebtce})$ \Comment{$x := e + ebtce$}
+        \State $G_y, H_y \gets \textsc{Negate}(G_{ebt}, H_{ebt})$; \quad $G_z, H_z \gets \textsc{Negate}(G_{tce}, H_{tce})$ 
+        
+        \State $G_{Inv}, H_{Inv} \gets \textsc{Pack}(G_x, H_x, G_y, H_y, G_z, H_z, G_t, H_t)$ \Comment{\textbf{Step 7: Pack}}
+        \State \textbf{return} $\mathcal{C}(G_{Inv}, H_{Inv})$
+        
+    \end{algorithmic}
+    \end{algorithm}
+
+    \vspace{-0.2cm}
+    {\scriptsize \textit{Notation: $\mathcal{C}(\cdot)$ = Compress, $\otimes$ = Multiply Generators, $\oplus$ = Add Generators}}
+    \vspace{-0.1cm}
+\end{frame}
