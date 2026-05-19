@@ -1,15 +1,13 @@
-\subsection{Generator Compression}
+\section{Generator Compression}
+\label{ch:compression}
 
-Any operation done on Toeplitz matrices will increase the rank of the generators.
-To maintain the complexity advantage of this structure, we must perform compressions. 
-This will appear more and more on algorithms that require arithmetics.
+Matrices $G \in \mathbb{R}^{n \times \alpha}$ and $H \in \mathbb{R}^{n \times \alpha}$ representing a displacement matrix $\nabla A = G H^T$, where the actual rank of $\nabla A$ is $r < \alpha$.
+\vspace{0.5em}
 
-For any pair of matrices $G_{A}, H_{A} \in \mathbb{K}^{n \times k}$ representing a matrix $A$, let $r$ be the rank of their product $G_{A} H_{A}^T$ (where $r \le k$). 
-Our goal is to construct a new pair generators $G_{D}, H_{D} \in \mathbb{K}^{n \times r}$ such these conditions are met:
-\begin{enumerate}
-    \item The displacement product is preserved:$G_{A} H_{A}^T = G_{D} H_{D}^T$
-    \item The number of columns of the matrices $G_{D}$ and $H_{D}$ are equal and is the displacement rank of ${A}$.
-\end{enumerate}
+\textbf{Goal:} Find generators $G' \in \mathbb{R}^{n \times r}$ and $H' \in \mathbb{R}^{n \times r}$ s.t. the product is the same:
+\[
+    G'H'^T = G H^T
+\]
 
 We will achieve this by independently compression both matrices and applying the inverse of the operations done to the other.
 
@@ -40,24 +38,21 @@ We will achieve this by independently compression both matrices and applying the
 \end{algorithmic}
 \end{algorithm}
 
-Note that calling \textsc{gr\_mat\_generator\_compress\_aux} twice with swapped arguments is valid because each call preserves the product $GH^T$, 
+Note that calling \textsc{gr\_mat\_generator\_compress\_aux} twice with swapped arguments (and variables) is valid because each call preserves the product $GH^T$, 
 as can be verified from the LU factorization.
 
 \begin{proof}
 We show that $G_D H_D^T = G H^T$, that the auxiliary function 
 preserves the generator product.
-
 Since $U$ has rank $r$, its last $k - r$ rows are zero by LU decomposition. 
-Therefore the product $LU$ only depends on the first $r$ columns of $L$ and the first $r$ rows of $U$:
+Therefore the product $LU$ only depends on the first $r$ columns of $L$ and rows of $U$: $LU = L_{*,[0:r-1]}\, U_{[0:r-1],*}$.
+
+\vspace{0.1cm}
+
+Starting from $PG^T = LU$ and multiplying both sides on the left by $P^T$:
 \[
-    LU = L_{*,[0:r-1]}\, U_{[0:r-1],*}.
+    G^T = P^T L_{*,[0:r-1]}\, U_{[0:r-1],*} \quad \text{($P^T \times P = I$ since $P$ is a permutation matrix)}
 \]
-Starting from $PG^T = LU$ and multiplying both sides on the left by 
-$P^T$ ($P^T * P = I$ since $P$ is a permutation matrix):
-\[
-    G^T = P^T L_{*,[0:r-1]}\, U_{[0:r-1],*}.
-\]
-Transposing both sides results the factorization of $G$:
 \[
     G = \bigl(U_{[0:r-1],*}\bigr)^T L_{*,[0:r-1]}^T\, P.
 \]
@@ -78,13 +73,4 @@ Our implementation is using loops to get the selected amount of rows and columns
 
 We can generalize the complexity by revising for any matrix in $\mathbb{K}^{m \times n}$ the overall time complexity for the generator compression is $\mathcal{O}(r m n)$.
 
-Our implementation can be found in:
-\begin{verbatim}
-Project
-\   src
-|   \   compression
-|   |   |   compression.c
-|   |   |   compression.h
-\end{verbatim}
-
-\paragraph{int gr\_mat\_generator\_compress(gr\_mat\_t G\_d, gr\_mat\_t H\_d, gr\_ctx\_t ctx);} Is our function that implements the algorithms talked in this chapter.
+Our implementation can be found in \ref{annexe:compression}.

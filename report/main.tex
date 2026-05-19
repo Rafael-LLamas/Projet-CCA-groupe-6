@@ -1,4 +1,4 @@
-\documentclass[a4paper, 11pt, oneside]{report}
+\documentclass[a4paper, 11pt]{article}
 
 % --- PACKAGES ---
 \usepackage[utf8]{inputenc}
@@ -32,23 +32,20 @@
 % --- COMMANDS ---
 \newcommand{\todo}[1]{\textbf{\textcolor{blue}{[TODO: #1]}}}
 
-% --- STYLES (Bold, Wide, Monotone) ---
-\titleformat{\chapter}[hang]
-  {\normalfont\huge\sffamily\bfseries\color{primaryDark}}{\thechapter\quad}{0pt}{\huge\sffamily\bfseries}
+% --- STYLES ---
+\titleformat{\chapter}[hang]{\normalfont\huge\sffamily\bfseries\color{primaryDark}}{\thechapter\quad}{0pt}{\huge\sffamily\bfseries}
 \titlespacing*{\chapter}{0pt}{-20pt}{20pt}
-
 \titleformat{\section}
-  {\normalfont\Large\sffamily\bfseries\color{primaryDark}}{\thesection\quad}{0pt}{}
-
-\titleformat{\subsection}
-  {\normalfont\large\sffamily\bfseries\color{primaryDark}}{\thesubsection\quad}{0pt}{}
+{\normalfont\Large\sffamily\bfseries\color{primaryDark}}{\thesection\quad}{0pt}{}
+\titleformat{\subsection}{\normalfont\large\sffamily\bfseries\color{primaryDark}}{\thesubsection\quad}{0pt}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\sffamily\bfseries\color{primaryDark}}{\thesubsubsection\quad}{0pt}{}
 
 % --- PAGE SETTINGS ---
 \geometry{margin=2.5cm, top=3cm, bottom=3cm}
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{\small\color{secondaryGrey}\sffamily\textbf{Project CCA}}
-\fancyhead[R]{\small\color{secondaryGrey}\sffamily Ali Arda BARUT, Rafael Llamas}
+\fancyhead[R]{\small\color{secondaryGrey}\sffamily Ali Arda BARUT, Rafael LLAMAS}
 \fancyfoot[C]{\small\color{secondaryGrey}\thepage}
 \renewcommand{\headrulewidth}{0.4pt} % Adds a subtle line under the header
 
@@ -79,9 +76,13 @@
 \input{chapters/compression.tex}
 \input{chapters/inversion.tex}
 
+
 % references
 \newpage
 \bibliographystyle{plainurl}
 \bibliography{references}
+
+\newpage
+\input{chapters/annexe.tex}
 
 \end{document}

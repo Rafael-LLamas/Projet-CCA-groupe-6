@@ -1,0 +1,40 @@
+\section*{Annexe}
+\subsection*{Implementations}
+
+\subsubsection*{\underline{Displacement}}
+
+\begin{verbatim}
+Project
+\   src
+|   \   displacement_matrices
+|   |   |   displacement_matrices.c
+|   |   |   displacement_matrices.h
+\end{verbatim}
+
+\paragraph{gr\_mat\_displacement(gr\_mat\_t D, gr\_mat\_t A, disp\_type\_t type, gr\_ctx\_t ctx)}
+Is the function taking as parameter the matrix $A$ and returns into the matrix $D$, indicating destination, the displacement matrix of $A$.
+According to the type of displacement we pass via the parameter \texttt{type}, it calculates the implementations \eqref{imp:phi_plus} or \eqref{imp:phi_minus}.
+
+\paragraph{int gr\_mat\_G\_H(gr\_mat\_t G, gr\_mat\_t H, gr\_mat\_t A, disp\_type\_t type, gr\_ctx\_t ctx))}
+Is the function that computes the generator matrices $G$ and $H^T$ for an input matrix $A$.
+Based on the displacement equations discussed previously, the equation \eqref{eq:SigmaLU}, the function first calculates the displacement matrix according to the specified type of displacement.
+Since the displacement of a structured matrix (like a Toeplitz matrix) inherently results in a matrix with a low rank ($\alpha$),
+$D$ can be factored into two smaller matrices such that $D = G H^T$.
+The function achieves this by performing an LU decomposition on the displacement matrix $D$. It then extracts the independent columns to form $G$ and the corresponding rows to form $H^T$.
+This is where the storage economy for structured matrices come from.
+
+\paragraph{int gr\_mat\_reconstruct\_A(gr\_mat\_t A, gr\_mat\_t G, gr\_mat\_t H, disp\_type\_t type, gr\_ctx\_t ctx)}
+\todo{RAFAEL -> V2 VERSION}
+
+
+\subsubsection*{\underline{Compression}}\label{annexe:compression}
+
+\begin{verbatim}
+Project
+\   src
+|   \   compression
+|   |   |   compression.c
+|   |   |   compression.h
+\end{verbatim}
+
+\paragraph{int gr\_mat\_generator\_compress(gr\_mat\_t G\_d, gr\_mat\_t H\_d, gr\_ctx\_t ctx);} Is our function that implements the algorithms talked in chapter \ref{ch:compression}.

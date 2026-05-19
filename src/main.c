@@ -519,7 +519,7 @@ int benchmark_inversion() {
     printf("\r" ANSI_CLEAR_LINE);
     printf(ANSI_COLOR_GREEN " Generators " ANSI_COLOR_RESET " |  %-.3e   |  %-.3e \n", avg_gen, med_gen);
     if (flint)
-      printf(ANSI_COLOR_YELLOW " Flint Dense" ANSI_COLOR_RESET " |  %-.3e   |  %-.3e \n", "", avg_flint, med_flint);
+      printf(ANSI_COLOR_YELLOW " Flint Dense" ANSI_COLOR_RESET " |  %-.3e   |  %-.3e \n", avg_flint, med_flint);
   }
 
   fclose(csv);

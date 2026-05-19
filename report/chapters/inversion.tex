@@ -265,41 +265,6 @@ $n$ & Generators (ms) & Flint Dense (ms) \\
 \label{tab:bench}
 \end{table}
 
-\begin{verbatim}
-(temporary)
-=== BENCHMARK INVERSSION (5 runs) ===
-Size 128x128 :
- Operation   | Average (ms) | Median (ms)
--------------|--------------|--------------
- Generators  |  8.950e+00   |  7.779e+00
- Flint Dense |  3.106e+00   |  2.714e+00
-Size 256x256 :
- Operation   | Average (ms) | Median (ms)
--------------|--------------|--------------
- Generators  |  1.278e+01   |  1.247e+01
- Flint Dense |  1.216e+01   |  1.191e+01
-Size 512x512 :
- Operation   | Average (ms) | Median (ms)
--------------|--------------|--------------
- Generators  |  3.060e+01   |  3.062e+01
- Flint Dense |  7.861e+01   |  7.860e+01
-Size 1024x1024 :
- Operation   | Average (ms) | Median (ms)
--------------|--------------|--------------
- Generators  |  7.722e+01   |  7.738e+01
- Flint Dense |  5.469e+02   |  5.474e+02
-Size 2048x2048 :
- Operation   | Average (ms) | Median (ms)
--------------|--------------|--------------
- Generators  |  2.008e+02   |  2.005e+02
- Flint Dense |  3.846e+03   |  3.850e+03
-Size 4096x4096 :
- Operation   | Average (ms) | Median (ms)
--------------|--------------|--------------
- Generators  |  5.455e+02   |  5.458e+02
- Flint Dense |  2.693e+04   |  2.694e+04
-\end{verbatim}
-
 
 As detailed by Victor Y. Pan in \textit{Structured Matrices and Polynomials} \cite[Chapter 5]{pan2001structured}, an alternative is the Morf-Bitmead-Anderson (MBA) algorithm. 
 Originally proposed by Morf (1980) and Bitmead and Anderson (1980), it achieves $\mathcal{O}(n \log^2 n)$ complexity for Toeplitz-like matrices. 
@@ -312,4 +277,4 @@ While the implementation here computes $A^{-1}$ explicitly, it is worth noting t
 Recent work by Khichane and Neiger~\cite{khichane2026matricesdisplacementstructuredeterministic} proposes a deterministic algebraic approach that reformulates the system in terms of polynomial arithmetic, solving it with $\tilde{\mathcal{O}}(r^{\omega-1}n)$ 
 complexity while bypassing explicit inversion altogether.
 
-\todo{ARDA: CONCLUSION}
+\todo{THINGS TO IMPROVE}
