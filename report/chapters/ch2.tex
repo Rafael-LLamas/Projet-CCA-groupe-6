@@ -167,35 +167,35 @@ We use the vector
 in order to retrieve the last column of the matrix, this vector is composed of 0 except for the last element of the column which is fixed to 1.
 
 \subsubsection{Multiplication Vecteur}
-To perform the matrix multiplication via their displacement generators, we need a function that multiplies a vector with displacement generators to avoid recomposing the matrices.
-
-First, we initialize our result to 0
-\begin{verbatim}
-    error = gr_mat_zero(Res, ctx);
-\end{verbatim}
-
-We part from the principle that a matrix can be represented by several polynomials.
-Thus, we determine that each column of our vector X is a polynomial. Each row of our matrices also corresponds to a polynomial.
-To obtain our result, we perform the following operations:
-
-\begin{verbatim} 
-  for (slong j = 0; j < X_cols; j++) {
-
-    error = gr_poly_reverse(ph, ph, m, ctx);
-    error = gr_poly_mul(p_tmp, ph, px, ctx);
-    error = gr_poly_shift_right(p_tmp, p_tmp, m - 1, ctx);
-    error = gr_poly_mul(p_tmp, pg, p_tmp, ctx);
-    }
- \end{verbatim}
-
-With: 
- \begin{itemize}
-    \item X\_cols le nombre de colonne de notre vecteur 
-    \item ph,pg et px les polynome de H,G et X
-    \item p\_temp le produit intermédiaire de ph et px
- \end{itemize}
-For finish, we put p\_temp in res.
-
+Perform the matrix multiplication with their displacement generators needs a function that multiplies a vector with displacement generators to avoid recomposing the matrices.
+\begin{equation} \label{eq:SigmaLUV}
+    C = \sum_{k=1}^{\alpha} L(g_k) \, U(h_k)\,V
+\end{equation}
+To do that, we takes the formula for the reconstruction and we transform our displacement generators into polynomials and make every operation into them.
+\begin{algorithm}[H]
+\caption{Multiplication de Matrice Structurée par un Vecteur/Matrice}
+\begin{algorithmic}[1]
+\Function{gr\_mat\_mul\_vector}{$G, H, V$}
+    \State $n \gets nbRows(G)$
+    \State $m \gets nbRows(H)$
+    \For{$j \gets 0$ \textbf{to} $nbCols(V)$}
+        \State $P_v \gets \sum_{r=0}^{m-1} V[r, j]  x^r$ 
+        \For{$k \gets 0$ \textbf{to} $nbCols(G)$}
+            \State $Pg \gets \sum_{r=0}^{n-1} G[r, k]  x^r$ 
+            \State $Ph \gets \sum_{r=0}^{m-1} H[r, k]  x^r$ 
+            \State $P_{h\_rev} \gets \text{Reverse}(P_h, m)$ 
+            \State $P_{tmp} \gets P_{h\_rev} P_x$ 
+            \State $P_{tmp\_shift} \gets P_{tmp} \gg (m - 1)$ 
+            \State $P_{res} \gets P_g P_{tmp\_shift}$ 
+            \For{$i \gets 0$ \textbf{to} $\text{Length}(P_{tmp2}) - 1$}
+                \State $C[i, j] \gets C[i, j] + \text{Coefficient}(P_{res}, i)$
+            \EndFor
+        \EndFor
+    \EndFor
+    \State \textbf{return} $Res$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
 \subsubsection{Exemple}
 We takes A and B, two randoms matrices, C the result we need to getof A and B.Every matrices are in $Z/_{13}Z$.
 \begin{equation}
