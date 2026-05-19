@@ -151,26 +151,36 @@ int benchmark_multiplication() {
 
     for (int i = 0; i < iterations; i++) {
       gr_mat_t A, B, C, X, Res_V, Res_V2, G_a, H_a, G_b, H_b, G_c, H_c;
-
-      gr_mat_init(A, ntemp, mtemp, ctx);
-      gr_mat_init(B, mtemp, ktemp, ctx);
-      gr_mat_init(C, ntemp, ktemp, ctx);
       gr_mat_init(X, mtemp, 1, ctx);
       gr_mat_init(Res_V, ntemp, 1, ctx);
-      gr_mat_init(Res_V2, ntemp, 1, ctx);
+      
 
       if (rank != -1) {
-        error = gr_mat_quasi_toeplitz_rank(A, rank, state, ctx);
-        error = gr_mat_quasi_toeplitz_rank(B, rank, state, ctx);
+        gr_mat_init(G_a, ntemp,rank , ctx);
+        gr_mat_init(H_a, mtemp,rank , ctx);
+        gr_mat_init(G_b, mtemp,rank , ctx);
+        gr_mat_init(H_b, ktemp,rank , ctx);
+        error = gr_mat_random_generator_quasi_toeplitz(G_a,H_a,rank,state,ctx);
+        error = gr_mat_random_generator_quasi_toeplitz(G_b,H_b,rank,state,ctx);
       } else {
-        error = gr_mat_random_toeplitz(A, state, ctx);
-        error = gr_mat_random_toeplitz(B, state, ctx);
+        gr_mat_init(G_a, ntemp,2 , ctx);
+        gr_mat_init(H_a, mtemp, 2, ctx);
+        gr_mat_init(G_b, mtemp,2 , ctx);
+        gr_mat_init(H_b, ktemp,2 , ctx);
+        error = gr_mat_random_generator_toeplitz(G_a,H_a,state,ctx);
+        error = gr_mat_random_generator_toeplitz(G_b,H_b,state,ctx);
+      }
+      if (flint){
+        gr_mat_init(A, ntemp, mtemp, ctx);
+        gr_mat_init(B, mtemp, ktemp, ctx);
+        gr_mat_init(C, ntemp, ktemp, ctx);
+        gr_mat_init(Res_V2, ntemp, 1, ctx);
+        error = gr_mat_reconstruct_A_v2(A, G_a, H_a, DISP_PLUS, ctx);
+        error = gr_mat_reconstruct_A_v2(B, G_b, H_b, DISP_PLUS, ctx);
       }
 
-      error = gr_mat_G_H(G_a, H_a, A, DISP_PLUS, ctx);
-      error = gr_mat_G_H(G_b, H_b, B, DISP_PLUS, ctx);
       for (slong r = 0; r < mtemp; r++)
-        error = gr_set(gr_mat_entry_ptr(X, r, 0, ctx), gr_mat_entry_srcptr(A, 0, 0, ctx), ctx);
+        error = gr_set(gr_mat_entry_ptr(X, r, 0, ctx), gr_mat_entry_srcptr(H_a, r, 0, ctx), ctx);
 
       double t1 = get_time_ms();
       error = gr_mat_mul_generator(G_c, H_c, G_a, H_a, G_b, H_b, ctx);
@@ -197,13 +207,14 @@ int benchmark_multiplication() {
 
       printf("\rSize %ldx%ld... [%d/%d]", ntemp, mtemp, i + 1, iterations);
       fflush(stdout);
-
-      gr_mat_clear(A, ctx);
+      if (flint){
+        gr_mat_clear(A, ctx);
       gr_mat_clear(B, ctx);
       gr_mat_clear(C, ctx);
+      gr_mat_clear(Res_V2, ctx);
+      }
       gr_mat_clear(X, ctx);
       gr_mat_clear(Res_V, ctx);
-      gr_mat_clear(Res_V2, ctx);
       gr_mat_clear(G_a, ctx);
       gr_mat_clear(H_a, ctx);
       gr_mat_clear(G_b, ctx);
@@ -237,6 +248,7 @@ int benchmark_multiplication() {
   flint_rand_clear(state);
   return error;
 }
+
 int benchmark_displacement() {
   FILE *csv = fopen("bench_auxiliary.csv", "w");
   slong sizes[] = {128, 512, 1024};
@@ -252,7 +264,7 @@ int benchmark_displacement() {
   int iterations = (iteration != -1) ? iteration : 5;
   int error = GR_SUCCESS;
 
-  fprintf(csv, "Size,Displacement_ms,GH_ms,Compression_ms,Reconstruction_ms\n");
+  fprintf(csv, "Size,Displacement_ms,GH_ms,Compression_ms,Reconstruction_ms,Reconstruction_v2_ms\n");
 
   gr_ctx_t ctx;
   flint_rand_t state;
@@ -264,20 +276,21 @@ int benchmark_displacement() {
 
   for (int s = 0; s < num_sizes; s++) {
     slong cur_n = sizes[s];
-    double t_disp = 0, t_gh = 0, t_rec = 0, t_comp = 0;
+    double t_disp = 0, t_gh = 0, t_rec = 0, t_comp = 0,t_rec_v2 = 0;
     ;
-    double t_cur_disp = 0, t_cur_gh = 0, t_cur_rec = 0, t_cur_comp = 0;
+    double t_cur_disp = 0, t_cur_gh = 0, t_cur_rec = 0, t_cur_comp = 0,t_cur_rec_v2 = 0;
     ;
     printf(ANSI_COLOR_CYAN "Size %ldx%ld :\n" ANSI_COLOR_RESET, cur_n, cur_n);
     printf(ANSI_COLOR_RED " %-12s " ANSI_COLOR_RESET "|" ANSI_COLOR_BLUE " %-12s " ANSI_COLOR_RESET "|" ANSI_COLOR_GREEN
-                          " %-12s " ANSI_COLOR_RESET "|" ANSI_COLOR_YELLOW " %-12s\n" ANSI_COLOR_RESET,
-           "Displace (ms)", "GH (ms)", "Compact (ms)", "Reconst (ms)");
-    printf(" --------------|--------------|--------------|--------------\n");
+                          " %-12s " ANSI_COLOR_RESET "|" ANSI_COLOR_YELLOW " %-12s" ANSI_COLOR_RESET "|" ANSI_COLOR_MAGENTA " %-12s\n" ANSI_COLOR_RESET,
+           "Displace (ms)", "GH (ms)", "Compact (ms)", "Reconst (ms)", "Reconst_v2 (ms)");
+    printf(" --------------|--------------|--------------|--------------|--------------\n");
     for (int i = 0; i < iterations; i++) {
-      gr_mat_t A, D, G, H, A_rec, T, U, W, V;
+      gr_mat_t A, D, G, H, A_rec, T, U, W, V,B_rec;
       gr_mat_init(A, cur_n, cur_n, ctx);
       gr_mat_init(D, cur_n, cur_n, ctx);
       gr_mat_init(A_rec, cur_n, cur_n, ctx);
+      gr_mat_init(B_rec, cur_n, cur_n, ctx);
 
       if (rank != -1) {
         error = gr_mat_quasi_toeplitz_rank(A, rank, state, ctx);
@@ -306,6 +319,10 @@ int benchmark_displacement() {
       error = gr_mat_reconstruct_A(A_rec, G, H, DISP_PLUS, ctx);
       t_cur_rec = (get_time_ms() - start);
 
+      start = get_time_ms();
+      error = gr_mat_reconstruct_A_v2(B_rec, G, H, DISP_PLUS, ctx);
+      t_cur_rec_v2 = (get_time_ms() - start);
+
       gr_mat_clear(A, ctx);
       gr_mat_clear(D, ctx);
       gr_mat_clear(G, ctx);
@@ -315,21 +332,24 @@ int benchmark_displacement() {
       gr_mat_clear(W, ctx);
       gr_mat_clear(V, ctx);
       gr_mat_clear(A_rec, ctx);
-      fprintf(csv, "%ld,%.4f,%.4f,%.4f,%.4f\n", cur_n, t_cur_disp, t_cur_gh, t_cur_comp, t_cur_rec);
+      gr_mat_clear(B_rec, ctx);
+      fprintf(csv, "%ld,%.4f,%.4f,%.4f,%.4f,%.4f\n", cur_n, t_cur_disp, t_cur_gh, t_cur_comp, t_cur_rec,t_cur_rec_v2);
       printf("\rSize %ldx%ld... [%d/%d]", cur_n, cur_n, i + 1, iterations);
       fflush(stdout);
       t_disp += t_cur_disp;
       t_gh += t_cur_gh;
       t_rec += t_cur_rec;
       t_comp += t_cur_comp;
+      t_rec_v2 += t_cur_rec_v2;
     }
 
     t_disp /= iterations;
     t_gh /= iterations;
     t_rec /= iterations;
     t_comp /= iterations;
+    t_rec_v2 /= iterations;
     printf("\r" ANSI_CLEAR_LINE);
-    printf("  %-.3e    |  %-.3e   |  %-.3e   |  %-.3e \n", t_disp, t_gh, t_comp, t_rec);
+    printf("  %-.3e    |  %-.3e   |  %-.3e   |  %-.3e |  %-.3e \n", t_disp, t_gh, t_comp, t_rec,t_rec_v2);
   }
 
   fclose(csv);
@@ -378,19 +398,31 @@ int benchmark_addition() {
 
     for (int i = 0; i < iterations; i++) {
       gr_mat_t C, A, B, G_a, G_b, H_a, H_b, G_c, H_c;
-      gr_mat_init(A, cur_n, cur_m, ctx);
-      gr_mat_init(B, cur_n, cur_m, ctx);
-      gr_mat_init(C, cur_n, cur_m, ctx);
+        
+
       if (rank != -1) {
-        error = gr_mat_quasi_toeplitz_rank(A, rank, state, ctx);
-        error = gr_mat_quasi_toeplitz_rank(B, rank, state, ctx);
+        gr_mat_init(G_a, cur_n, rank, ctx);
+          gr_mat_init(H_a, cur_m, rank, ctx);
+          gr_mat_init(G_b, cur_n, rank, ctx);
+          gr_mat_init(H_b, cur_m, rank, ctx);
+        error = gr_mat_random_generator_quasi_toeplitz(G_a,H_a,rank, state, ctx);
+        error = gr_mat_random_generator_quasi_toeplitz(G_b,H_b,rank, state, ctx);
 
       } else {
-        error = gr_mat_random_toeplitz(A, state, ctx);
-        error = gr_mat_random_toeplitz(B, state, ctx);
+        gr_mat_init(G_a, cur_n, 2, ctx);
+          gr_mat_init(H_a, cur_m, 2, ctx);
+          gr_mat_init(G_b, cur_n, 2, ctx);
+          gr_mat_init(H_b, cur_m, 2, ctx);
+        error = gr_mat_random_generator_toeplitz(G_a,H_a, state, ctx);
+        error = gr_mat_random_generator_toeplitz(G_b,H_b, state, ctx);
       }
-      error = gr_mat_G_H(G_a, H_a, A, DISP_PLUS, ctx);
-      error = gr_mat_G_H(G_b, H_b, B, DISP_PLUS, ctx);
+      if(flint){
+        gr_mat_init(A, cur_n, cur_m, ctx);
+        gr_mat_init(B, cur_n, cur_m, ctx);
+        gr_mat_init(C, cur_n, cur_m, ctx);
+        error = gr_mat_reconstruct_A_v2(A, G_a, H_a, DISP_PLUS, ctx);
+        error = gr_mat_reconstruct_A_v2(B, G_b, H_b, DISP_PLUS, ctx);
+      }
       double t1 = get_time_ms();
       error = gr_mat_addition_generateur(G_a, H_a, G_b, H_b, G_c, H_c, ctx);
       gen_times[i] = get_time_ms() - t1;
@@ -406,9 +438,12 @@ int benchmark_addition() {
       printf("\rSize %ldx%ld... [%d/%d]", cur_n, cur_m, i + 1, iterations);
       fflush(stdout);
 
-      gr_mat_clear(A, ctx);
+      if(flint){
+        gr_mat_clear(A, ctx);
       gr_mat_clear(B, ctx);
       gr_mat_clear(C, ctx);
+      }
+      
       gr_mat_clear(G_a, ctx);
       gr_mat_clear(H_a, ctx);
       gr_mat_clear(G_b, ctx);
@@ -466,11 +501,10 @@ int benchmark_inversion() {
     printf("-------------|--------------|--------------\n");
 
     for (int i = 0; i < iterations; i++) {
-      gr_mat_t A, B, G_a, G_b, H_a, H_b;
-      gr_ptr det;
+    gr_mat_t A, B, G_a, G_b, H_a, H_b;
       gr_mat_init(A, cur_n, cur_n, ctx);
       gr_mat_init(B, cur_n, cur_n, ctx);
-      GR_TMP_INIT(det, ctx);
+     
 
       if (rank != -1) {
         error = gr_mat_quasi_toeplitz_rank(A, rank, state, ctx);
@@ -482,7 +516,6 @@ int benchmark_inversion() {
       double t1 = get_time_ms();
       error = gr_mat_inverse_toeplitz(G_b, H_b, G_a, H_a, ctx);
       if (error) {
-        GR_TMP_CLEAR(det, ctx);
         gr_mat_clear(A, ctx);
         gr_mat_clear(B, ctx);
         gr_mat_clear(G_a, ctx);
@@ -503,7 +536,6 @@ int benchmark_inversion() {
       fprintf(csv, "%ld,%ld,%d,%.4f,%.4f\n", cur_n, cur_n, i, gen_times[i], flint_times[i]);
       printf("\rSize %ldx%ld... [%d/%d]", cur_n, cur_n, i + 1, iterations);
       fflush(stdout);
-      GR_TMP_CLEAR(det, ctx);
       gr_mat_clear(A, ctx);
       gr_mat_clear(B, ctx);
       gr_mat_clear(G_a, ctx);

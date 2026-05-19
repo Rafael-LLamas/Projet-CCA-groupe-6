@@ -629,6 +629,130 @@ int test_G_H_zero_matrix() {
   return status;
 }
 
+
+
+int test_toeplitz_reconstruction_v2() {
+  int i = 0;
+  int res = GR_SUCCESS;
+  flint_rand_t state;
+  flint_rand_init(state);
+  flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
+  while (i < 10) {
+     gr_ctx_t ctx;
+
+    gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
+
+    slong n = 5;
+    gr_mat_t A, G, H, B;
+    gr_mat_init(A, n, n, ctx);
+    gr_mat_init(B, n, n, ctx);
+
+    if (gr_mat_random_toeplitz(A, state, ctx) != GR_SUCCESS) {
+      flint_printf("[ERROR] gr_mat_random_toeplitz failed\n");
+      res = GR_TEST_FAIL;
+    }
+
+    if (gr_mat_G_H(G, H, A, DISP_PLUS, ctx) != GR_SUCCESS) {
+      flint_printf("[ERROR] gr_mat_G_H failed\n");
+      res = GR_TEST_FAIL;
+    }
+
+    if (gr_mat_reconstruct_A_v2(B, G, H, DISP_PLUS, ctx) != GR_SUCCESS) {
+      flint_printf("[ERROR] gr_mat_reconstruct_A_safe failed\n");
+      res = GR_TEST_FAIL;
+    }
+    if (gr_mat_equal(B, A, ctx) == T_TRUE);
+    else {
+      flint_printf("[FAILURE] Reconstructed B != original A.\n");
+      flint_printf("Original A:\n");
+      gr_mat_print(A, ctx);
+      flint_printf("\n");
+      flint_printf("Original G:\n");
+      gr_mat_print(G, ctx);
+      flint_printf("\n");
+      flint_printf("Original H:\n");
+      gr_mat_print(H, ctx);
+      flint_printf("\n");
+      flint_printf("Reconstructed B:\n");
+      gr_mat_print(B, ctx);
+      flint_printf("\n");
+      res = GR_TEST_FAIL;
+      i = 9999;
+    }
+
+    gr_mat_clear(A, ctx);
+    gr_mat_clear(G, ctx);
+    gr_mat_clear(H, ctx);
+    gr_mat_clear(B, ctx);
+    gr_ctx_clear(ctx);
+    i++;
+  }
+  flint_rand_clear(state);
+  return res;
+}
+
+int test_quasi_toeplitz_reconstruction_v2() {
+  int i = 0;
+  int res = GR_SUCCESS;
+  flint_rand_t state;
+  flint_rand_init(state);
+  flint_rand_set_seed(state, (ulong)time(NULL), (ulong)0x1234567890ABCDEF);
+  while (i < 10) {
+    flint_printf("\n\n:-------: Quasi-Toeplitz Full Round-Trip Reconstruction Test :-------:\n");
+    gr_ctx_t ctx;
+
+    gr_ctx_init_nmod(ctx, n_randprime(state, 64, 1));
+
+    slong m = 8, n = 8;
+    gr_mat_t A, G, H, B;
+    gr_mat_init(A, m, n, ctx);
+
+
+    gr_mat_init(B, m, n, ctx);
+
+
+    if (gr_mat_random_quasi_toepitz(A, state, ctx) != GR_SUCCESS) {
+      flint_printf("[ERROR] random_quasi_toeplitz failed\n");
+      res = GR_TEST_FAIL;
+    }
+    if (gr_mat_G_H(G, H, A, DISP_PLUS, ctx) != GR_SUCCESS) {
+      flint_printf("[ERROR] gr_mat_G_H failed\n");
+      res = GR_TEST_FAIL;
+    }
+    if (gr_mat_reconstruct_A_v2(B, G, H, DISP_PLUS, ctx) != GR_SUCCESS) {
+      flint_printf("[ERROR] gr_mat_reconstruct_A_safe failed\n");
+      res = GR_TEST_FAIL;
+    }
+
+    if (gr_mat_equal(B, A, ctx) == T_TRUE); 
+    else {
+      flint_printf("[FAILURE] Reconstructed B != original A.\n");
+      flint_printf("Original A:\n");
+      gr_mat_print(A, ctx);
+      flint_printf("\n");
+      flint_printf("Original G:\n");
+      gr_mat_print(G, ctx);
+      flint_printf("\n");
+      flint_printf("Original H:\n");
+      gr_mat_print(H, ctx);
+      flint_printf("\n");
+      flint_printf("Reconstructed B:\n");
+      gr_mat_print(B, ctx);
+      flint_printf("\n");
+      res = GR_TEST_FAIL;
+      i = 9999;
+    }
+    gr_mat_clear(A, ctx);
+    gr_mat_clear(G, ctx);
+    gr_mat_clear(H, ctx);
+    gr_mat_clear(B, ctx);
+    gr_ctx_clear(ctx);
+    i++;
+  }
+  flint_rand_clear(state);
+  return res;
+}
+
 void usage(char *argv[]) {
   fprintf(stderr, "Usage: %s <test_name>\n", argv[0]);
   fprintf(stderr, "Available tests:\n");
@@ -645,6 +769,7 @@ int main(int argc, char *argv[]) {
     usage(argv);
     return GR_UNABLE;
   }
+
   // start test
   fprintf(stderr, "=> Start test \"%s\"\n", argv[1]);
   int ok = GR_SUCCESS;
@@ -666,6 +791,10 @@ int main(int argc, char *argv[]) {
     ok = test_G_H_2x2_execution();
   } else if (strcmp("G_H_zero_matrix", argv[1]) == 0) {
     ok = test_G_H_zero_matrix();
+  } else if (strcmp("toeplitz_reconstruction_v2", argv[1]) == 0) {
+    ok = test_toeplitz_reconstruction_v2();
+  } else if (strcmp("quasi_toeplitz_reconstruction_v2", argv[1]) == 0) {
+    ok = test_quasi_toeplitz_reconstruction_v2();
   } else {
     fprintf(stderr, "Error: test \"%s\" not found!\n", argv[1]);
     exit(EXIT_FAILURE);

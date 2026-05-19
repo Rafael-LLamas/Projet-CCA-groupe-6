@@ -327,37 +327,53 @@ int gr_mat_reconstruct_A_v2(gr_mat_t A, gr_mat_t G, gr_mat_t H, disp_type_t type
         status |= gr_set(gr_mat_entry_ptr(A, i, j, ctx), sum_res, ctx);
       }
     }
-
+    gr_heap_clear(sum_res, ctx);
+    gr_heap_clear(temp, ctx);
   } else { // DISP_PLUS
     slong n = gr_mat_nrows(G, ctx);
     slong m = gr_mat_nrows(H, ctx);
-    slong r = gr_mat_ncols(G, ctx);
-    gr_poly_t pg, ph, ptemp, pA;
-    status |= gr_mat_zero(A, ctx);
-    for (int k = 0; k < r; k++) {
-      gr_poly_init(pg, ctx);
-      gr_poly_init(ph, ctx);
-      gr_poly_init(ptemp, ctx);
-      gr_poly_init(pA, ctx);
-      gr_poly_fit_length(pg, n, ctx);
-      for (int i = 0; i < n; i++) {
-        status |= gr_set(gr_poly_coeff_ptr(pg, i, ctx), gr_mat_entry_srcptr(G, i, k, ctx), ctx);
-      }
-      gr_poly_fit_length(ph, m, ctx);
-      for (int j = 0; j < m; j++) {
-        status |= gr_set(gr_poly_coeff_ptr(ph, j, ctx), gr_mat_entry_srcptr(H, j, k, ctx), ctx);
-      }
-      status |= gr_poly_reverse(ph, ph, m, ctx);
-      status |= gr_poly_mul(pA, pg, ph, ctx);
-      if (gr_poly_length(pA, ctx) > n) _gr_poly_set_length(pA, n, ctx);
-      for (slong i = 0; i < gr_poly_length(pA, ctx); i++) {
-        status |= gr_add(gr_mat_entry_ptr(A, i, k, ctx), gr_mat_entry_srcptr(A, i, k, ctx),
-                         gr_poly_coeff_srcptr(pA, i, ctx), ctx);
-      }
+    slong alpha = gr_mat_ncols(G, ctx);
+    status = gr_mat_zero(A, ctx);
+    if (status) return status;
+    gr_poly_t pg, ph, p_tmp;
+    for (slong k = 0; k < alpha; k++) {
+        gr_poly_init(pg, ctx);
+        gr_poly_fit_length(pg, n, ctx);
+        for (slong r = 0; r < n; r++) {
+            status |= gr_set(gr_poly_coeff_ptr(pg, r, ctx),
+                            gr_mat_entry_srcptr(G, r, k, ctx), ctx);
+        }
+        _gr_poly_set_length(pg, n, ctx);
+        for (slong j = 0; j < m; j++) {
+            slong len = FLINT_MIN(j + 1, n);
+            gr_poly_init(ph, ctx);
+            gr_poly_fit_length(ph, len, ctx);
+            for (slong r = 0; r < len; r++) {
+                status |= gr_set(gr_poly_coeff_ptr(ph, r, ctx),
+                                gr_mat_entry_srcptr(H, j - r, k, ctx), ctx);
+            }
+            _gr_poly_set_length(ph, len, ctx);
+            gr_poly_init(p_tmp, ctx);
+            status |= gr_poly_mul(p_tmp, pg, ph, ctx);
+            if (gr_poly_length(p_tmp, ctx) > n)
+                _gr_poly_set_length(p_tmp, n, ctx);
+            for (slong i = 0; i < gr_poly_length(p_tmp, ctx); i++) {
+                status |= gr_add(gr_mat_entry_ptr(A, i, j, ctx),
+                                gr_mat_entry_srcptr(A, i, j, ctx),
+                                gr_poly_coeff_srcptr(p_tmp, i, ctx), ctx);
+            }
+            gr_poly_clear(ph, ctx);
+            gr_poly_clear(p_tmp, ctx);
+
+            if (status) {
+                gr_poly_clear(pg, ctx);
+                return status;
+            }
+        }
+        gr_poly_clear(pg, ctx);
     }
   }
 
-  gr_heap_clear(sum_res, ctx);
-  gr_heap_clear(temp, ctx);
+  
   return status;
 }
