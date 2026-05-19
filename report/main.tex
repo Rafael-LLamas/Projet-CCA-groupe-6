@@ -1,4 +1,4 @@
-\documentclass{article}
+\documentclass[a4paper, 11pt, oneside]{report}
 
 % --- PACKAGES ---
 \usepackage[utf8]{inputenc}
@@ -7,24 +7,50 @@
 \usepackage{geometry}
 \usepackage{fancyhdr}
 \usepackage{hyperref}
-\usepackage{amsmath}
-\usepackage{amssymb}
+\usepackage{amsmath, amssymb, amsthm}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
-\usepackage{amsmath}
-\usepackage{amsthm}
 \usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{titlesec}
+\usepackage{microtype}
+
+% --- COLOR DEFINITIONS (Monotone) ---
+\definecolor{primaryDark}{RGB}{0, 0, 0}
+\definecolor{secondaryGrey}{RGB}{90, 90, 90}
+\definecolor{linkGrey}{RGB}{40, 40, 100}
+
+% --- HYPERREF SETUP ---
+\hypersetup{
+    colorlinks=true,
+    linkcolor=primaryDark,
+    filecolor=primaryDark,      
+    urlcolor=linkGrey,
+    citecolor=primaryDark,
+}
 
 % --- COMMANDS ---
 \newcommand{\todo}[1]{\textbf{\textcolor{blue}{[TODO: #1]}}}
 
+% --- STYLES (Bold, Wide, Monotone) ---
+\titleformat{\chapter}[hang]
+  {\normalfont\huge\sffamily\bfseries\color{primaryDark}}{\thechapter\quad}{0pt}{\huge\sffamily\bfseries}
+\titlespacing*{\chapter}{0pt}{-20pt}{20pt}
+
+\titleformat{\section}
+  {\normalfont\Large\sffamily\bfseries\color{primaryDark}}{\thesection\quad}{0pt}{}
+
+\titleformat{\subsection}
+  {\normalfont\large\sffamily\bfseries\color{primaryDark}}{\thesubsection\quad}{0pt}{}
+
 % --- PAGE SETTINGS ---
-\geometry{margin=3cm}
+\geometry{margin=2.5cm, top=3cm, bottom=3cm}
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[L]{\textbf{Project CCA}}
-\fancyhead[R]{Ali Arda BARUT, Rafael LLamas}
-\fancyfoot[C]{\thepage}
+\fancyhead[L]{\small\color{secondaryGrey}\sffamily\textbf{Project CCA}}
+\fancyhead[R]{\small\color{secondaryGrey}\sffamily Ali Arda BARUT, Rafael Llamas}
+\fancyfoot[C]{\small\color{secondaryGrey}\thepage}
+\renewcommand{\headrulewidth}{0.4pt} % Adds a subtle line under the header
 
 % --- DOCUMENT ---
 \begin{document}
@@ -46,8 +72,8 @@
 \newpage
 
 % introduction
-\input{chapters/ch0.tex}
 \input{chapters/introduction.tex}
+\input{chapters/definitions.tex}
 \input{chapters/ch2.tex}
 
 \input{chapters/compression.tex}

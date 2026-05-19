@@ -1,0 +1,168 @@
+\section{Foundations of Toeplitz and Quasi-Toeplitz Structures}
+
+\subsection{Toeplitz Matrices}
+
+A Toeplitz matrix is characterized by the property that all elements along any given diagonal are identical.
+For a matrix $A \in \mathbb{K}^{n \times m}$, it satisfies the condition $A_{i,j} = A_{i+1, j+1}$.
+In other words, a Toeplitz matrix is one in which each element in the first row and first column descends diagonally.
+It can be represented by a sequence of elements $\{a_k\}$ such that:
+
+\begin{equation*}
+    A =
+    \begin{pmatrix}
+        a_{(0,0)}     & a_{(0,1)}   & a_{(0,2)}   & \cdots &          &           &           & \cdots    & a_{(0,(m-1))}    \\
+        a_{(1,0)}     & a_{(0,0)}   & a_{(0,1)}   & \ddots &          &           &           & \cdots    & a_{(0,(m-2))}    \\
+        a_{(2,0)}     & a_{(1,0)}   & a_{(0,0)}   & \ddots & \ddots   &           &           & \cdots    & a_{(0,(m-3)}    \\
+        \vdots        & \vdots      & \vdots      & \ddots & \ddots   & \ddots    &           &           & \vdots        \\
+        a_{((n-1),0)}   & a_{((n-2),0)} & a_{((n-3),0)} & \cdots & a_{(0,0)}& a_{(0,1)} & a_{(0,2)} & \cdots    & a_{(0,m-(n-1))}
+    \end{pmatrix}
+\end{equation*}
+
+\[
+    A_{i,j} = a_{i-j}, \quad 0 \le i < n,\; 0 \le j < m
+\]
+
+
+\subsubsection{Quasi-Toeplitz Matrices}
+
+A Quasi-Toeplitz matrix generalizes the Toeplitz structure by allowing a correction term of finite rank.
+Formally, a matrix $A$ is Quasi-Toeplitz if it can be written as $A = T + E$, 
+where $T$ is a Toeplitz matrix and $E$ is a correction matrix with $\text{rank}(E) < \infty$ \cite{Bini_2017}.
+
+
+\subsubsection{Displacement Matrices}
+
+For a matrix $A \in \mathbb{K}^{n \times m}$, we define the displacement matrix $\nabla A$ using:
+\begin{equation}
+    \label{eq:displacement_formula}
+    \nabla A = A - Z A Z^T
+\end{equation}
+where $Z$ represents the lower shift matrix and $Z^T$ represents the upper shift matrix.
+Essentially, $Z$ is a matrix with ones on the first sub-diagonal and zeros everywhere else:
+\begin{equation*}
+    Z = \begin{pmatrix}
+        0      & 0      & 0      & \cdots & 0      \\
+        1      & 0      & 0      & \cdots & 0      \\
+        0      & 1      & 0      & \cdots & 0      \\
+        \vdots & \vdots & \ddots & \ddots & \vdots \\
+        0      & 0      & \cdots & 1      & 0
+    \end{pmatrix}
+    Z^T = \begin{pmatrix}
+        0      & 1      & 0      & \cdots & 0      \\
+        0      & 0      & 1      & \cdots & 0      \\
+        \vdots & \vdots & \ddots & \ddots & \vdots \\
+        0      & 0      & \cdots & 0      & 1      \\
+        0      & 0      & \cdots & 0      & 0
+    \end{pmatrix}
+\end{equation*}
+Multiplying a matrix $A$ by $Z$ from the left ($ZA$) shifts the rows of $A$ down by one (zeros at the top).
+Multiplying by $Z^T$ from the right ($AZ^T$) shifts the columns to the right, (zeros at the first column).
+Resulting in an operation $ZAZ^T$ that shifts the entire matrix $A$ one step to the bottom-right.
+
+
+\subsubsection{Mathematical Approach}
+For a generic Toeplitz matrix of size $n \times m$, this subtraction results in zeros everywhere except for the first row and the first column.
+\begin{equation*}
+    \nabla A = \begin{pmatrix}
+        y_0     & x_1    & x_2    & \cdots & x_{m-1} \\
+        y_1     & 0      & 0      & \cdots & 0       \\
+        y_2     & 0      & 0      & \cdots & 0       \\
+        \vdots  & \vdots & \vdots & \ddots & \vdots  \\
+        y_{n-1} & 0      & 0      & \cdots & 0
+    \end{pmatrix} \in \mathbb{K}^{n \times m}
+\end{equation*}
+This allows us to represent the $n \times m$ matrix using only $O(n + m)$ elements rather than storing the full $O(nm)$ dense matrix.
+
+
+\subsubsection{Computational Approach}
+
+While the definition in Equation \eqref{eq:displacement_formula} suggests a matrix on matrix subtraction with overhead, 
+the structured nature of $A$ allows for a more efficient computation. 
+By leveraging the Toeplitz structure, displacement $\nabla A$ can be computed via a nested loop with $O(nm)$ complexity:
+
+\begin{equation} \label{imp:phi_plus}
+    (\nabla A)_{i,j} =
+    \begin{cases}
+        A_{i,j}                & \text{if } i=0 \text{ or } j=0 \\
+        A_{i,j} - A_{i-1, j-1} & \text{otherwise}
+    \end{cases}
+\end{equation}
+
+In practice, we enable optimization through pointer arithmetics. 
+By iterating from the bottom-right index $(n, m)$ toward the origin $(0, 0)$, the displacement can be calculated in-place.
+
+\subsection{Generator Matrices}
+For a Toeplitz matrix, $\nabla A$ has low rank $\alpha \leq 2$, called the displacement rank. 
+This allows $A$ to be stored compactly via two generator matrices $G, H \in \mathbb{R}^{n \times \alpha}$ satisfying $\nabla A = G H^T$.
+
+To reconstruct $A$ from its generators, we define, for a column vector $v = [v_0, \dots, v_{n-1}]^T$, the lower triangular Toeplitz matrix:
+
+\begin{equation*}
+    L(v) = \begin{pmatrix}
+        v_0 & 0 & \cdots & 0 \\
+        v_1 & v_0 & \cdots & 0 \\
+        \vdots & \ddots & \ddots & \vdots \\
+        v_{n-1} & \cdots & v_1 & v_0
+    \end{pmatrix},
+\end{equation*}
+
+and the upper triangular Toeplitz matrix $U(v) = L(v)^T$. Denoting the 
+columns of $G$ and $H$ by $g_k$ and $h_k$ respectively, Proposition~10.5 
+of~\cite{aecf-2017-pdf} states that:
+\begin{equation} \label{eq:SigmaLU}
+    G H^T = \nabla A \quad \iff \quad A = \sum_{k=1}^{\alpha} L(g_k)\, U(h_k).
+\end{equation}
+
+\subsection{Displacement Operators}
+
+We define two displacements operators:
+
+\begin{equation*}
+    \begin{aligned}
+        \phi_+(A) &= A - Z A Z^T = \nabla A \\
+        \phi_-(A) &= A - Z^T A Z
+    \end{aligned}
+\end{equation*}
+
+where $Z$ is the downshift matrix defined in the previous section. 
+The two operators differ in the direction of the operation: $\phi_+$ operates by $Z$ (a downshift), while $\phi_-$ operates by $Z^T$ (an upshift). 
+For a Toeplitz matrix $A$, both operators yield a low-rank result, with $\text{rank}(\phi_\pm(A)) \leq 2$.
+Computationally, it follows the same path as the calculation of $\nabla A$. Main difference being we can run this time in increasing order:
+
+\begin{equation} \label{imp:phi_minus}
+    \phi_-(A)_{i,j} =
+    \begin{cases}
+        A_{i,j}                & \text{if } i=n-1 \text{ or } j=m-1 \\
+        A_{i,j} - A_{i+1, j+1} & \text{otherwise}
+    \end{cases}
+\end{equation}
+
+Where \texttt{n} and \texttt{m} are respectfully the number of rows and columns of matrix A.
+
+\subsection{Conclusion \& Implementation}
+
+We conclude the section of the definitions.
+Implementations of these concepts can be found in:
+
+\begin{verbatim}
+Project
+\   src
+|   \   displacement_matrices
+|   |   |   displacement_matrices.c
+|   |   |   displacement_matrices.h
+\end{verbatim}
+
+\paragraph{gr\_mat\_displacement(gr\_mat\_t D, gr\_mat\_t A, disp\_type\_t type, gr\_ctx\_t ctx)}
+Is the function taking as parameter the matrix $A$ and returns into the matrix $D$, indicating destination, the displacement matrix of $A$.
+According to the type of displacement we pass via the parameter \texttt{type}, it calculates the implementations \eqref{imp:phi_plus} or \eqref{imp:phi_minus}.
+
+\paragraph{int gr\_mat\_G\_H(gr\_mat\_t G, gr\_mat\_t H, gr\_mat\_t A, disp\_type\_t type, gr\_ctx\_t ctx))}
+Is the function that computes the generator matrices $G$ and $H^T$ for an input matrix $A$.
+Based on the displacement equations discussed previously, the equation \eqref{eq:SigmaLU}, the function first calculates the displacement matrix according to the specified type of displacement.
+Since the displacement of a structured matrix (like a Toeplitz matrix) inherently results in a matrix with a low rank ($\alpha$),
+$D$ can be factored into two smaller matrices such that $D = G H^T$.
+The function achieves this by performing an LU decomposition on the displacement matrix $D$. It then extracts the independent columns to form $G$ and the corresponding rows to form $H^T$.
+This is where the storage economy for structured matrices come from.
+
+\paragraph{int gr\_mat\_reconstruct\_A(gr\_mat\_t A, gr\_mat\_t G, gr\_mat\_t H, disp\_type\_t type, gr\_ctx\_t ctx)}
+\todo{RAFAEL -> V2 VERSION}
