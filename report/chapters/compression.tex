@@ -42,28 +42,27 @@ Note that calling \textsc{gr\_mat\_generator\_compress\_aux} twice with swapped 
 as can be verified from the LU factorization.
 
 \begin{proof}
-We show that $G_D H_D^T = G H^T$, that the auxiliary function 
-preserves the generator product.
-Since $U$ has rank $r$, its last $k - r$ rows are zero by LU decomposition. 
-Therefore the product $LU$ only depends on the first $r$ columns of $L$ and rows of $U$: $LU = L_{*,[0:r-1]}\, U_{[0:r-1],*}$.
+We show that the second call to the auxiliary function preserves the generator product, meaning $H_D G_D^T = H_1 G_1^T$. 
 
-\vspace{0.1cm}
-
-Starting from $PG^T = LU$ and multiplying both sides on the left by $P^T$:
-\[
-    G^T = P^T L_{*,[0:r-1]}\, U_{[0:r-1],*} \quad \text{($P^T \times P = I$ since $P$ is a permutation matrix)}
-\]
-\[
-    G = \bigl(U_{[0:r-1],*}\bigr)^T L_{*,[0:r-1]}^T\, P.
-\]
-We now have the definitions $G_D = \bigl(U_{[0:r-1],*}\bigr)^T$ 
-and $H_D = H P^T L_{*,[0:r-1]}$ and expand $G_D H_D^T$:
+First argument is $H_1$, the LU decomposition is performed on $H_1^T$ giving $P H_1^T = L U$. 
+Since $U$ has rank $r$, the product only depends on the first $r$ columns and rows: $LU = L_{*,[0:r-1]}\, U_{[0:r-1],*}$.
+Starting from $P H_1^T = LU$ and multiplying both sides on the left by $P^T$:
 \begin{align*}
-    G_D H_D^T 
-    &= \bigl(U_{[0:r-1],*}\bigr)^T \bigl(H P^T L_{*,[0:r-1]}\bigr)^T \\
-    &= \bigl(U_{[0:r-1],*}\bigr)^T L_{*,[0:r-1]}^T\, P\, H^T \\
-    &= G H^T.
+    H_1^T &= P^T L_{*,[0:r-1]}\, U_{[0:r-1],*} \\
+    H_1 &= \bigl(U_{[0:r-1],*}\bigr)^T L_{*,[0:r-1]}^T\, P
 \end{align*}
+Based on the swapped inputs to the auxiliary function, returned generators are assigned as $H_D = \bigl(U_{[0:r-1],*}\bigr)^T$ and $G_D = G_1 P^T L_{*,[0:r-1]}$. 
+Taking the transpose of $G_D$:
+\[
+    G_D^T = \bigl(G_1 P^T L_{*,[0:r-1]}\bigr)^T = L_{*,[0:r-1]}^T\, P\, G_1^T
+\]
+For $H_D G_D^T$, we see $H_1$ form:
+\begin{align*}
+    H_D G_D^T &= \bigl(U_{[0:r-1],*}\bigr)^T \Bigl( L_{*,[0:r-1]}^T\, P\, G_1^T \Bigr) \\
+              &= \Bigl( \bigl(U_{[0:r-1],*}\bigr)^T L_{*,[0:r-1]}^T\, P \Bigr) G_1^T \\
+              &= H_1 G_1^T.
+\end{align*}
+Since $H_D G_D^T = H_1 G_1^T$, transposing gives us $G_D H_D^T = G_1 H_1^T$.
 \end{proof}
 
 Computing the LU factorization of the transposed generator $G^T \in \mathbb{K}^{r \times n}$ requires $\mathcal{O}(r^2 n)$ operations.
