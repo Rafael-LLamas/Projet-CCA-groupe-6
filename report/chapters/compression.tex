@@ -51,7 +51,7 @@ Starting from $P H_1^T = LU$ and multiplying both sides on the left by $P^T$:
     H_1^T &= P^T L_{*,[0:r-1]}\, U_{[0:r-1],*} \\
     H_1 &= \bigl(U_{[0:r-1],*}\bigr)^T L_{*,[0:r-1]}^T\, P
 \end{align*}
-Based on the swapped inputs to the auxiliary function, returned generators are assigned as $H_D = \bigl(U_{[0:r-1],*}\bigr)^T$ and $G_D = G_1 P^T L_{*,[0:r-1]}$. 
+Based on the swapped inputs to the auxiliary function, returned generators are given as $H_D = \bigl(U_{[0:r-1],*}\bigr)^T$ and $G_D = G_1 P^T L_{*,[0:r-1]}$. 
 Taking the transpose of $G_D$:
 \[
     G_D^T = \bigl(G_1 P^T L_{*,[0:r-1]}\bigr)^T = L_{*,[0:r-1]}^T\, P\, G_1^T
@@ -66,8 +66,8 @@ Since $H_D G_D^T = H_1 G_1^T$, transposing gives us $G_D H_D^T = G_1 H_1^T$.
 \end{proof}
 
 Computing the LU factorization of the transposed generator $G^T \in \mathbb{K}^{\alpha \times n}$ requires $\mathcal{O}(\alpha^2 n)$ operations. 
-Extracting $U$ and applying the permutation matrix $P^T$ to $H$ is in $\mathcal{O}(\alpha n)$\footnote{In FLINT\cite{flint331}, the permutation matrix is represented as an array of indices. We do a swapping operation rather than a full matrix multiplication.}.
-Computing $H_{D} = H P^T \times L_{*,[0:r-1]}$ contains a multiplication of a $n \times \alpha$ matrix by a $\alpha \times r$ matrix. Using standard matrix multiplication, this takes $\mathcal{O}(n \alpha r)$ operations. 
-Our implementation uses loops to extract the selected amount of rows and columns, but their complexities are strictly bounded by $\mathcal{O}(n \alpha r)$.
+Extracting $U$ and applying the permutation matrix $P^T$ to $H$ is in $O(\alpha n)$\footnote{In FLINT\cite{flint331}, the permutation matrix is represented as an array of indices. We do a swapping operation rather than a full matrix multiplication.}.
+Computing $H_{D} = H P^T \times L_{*,[0:r-1]}$ contains a multiplication of a $n \times \alpha$ matrix by a $\alpha \times r$ matrix. Using standard matrix multiplication, this takes $O(n \alpha r)$ operations. 
+Our implementation uses loops to extract the selected amount of rows and columns, but their complexities are strictly bounded by $\O(n \alpha r)$.
 
-We can generalize this complexity: for any generator matrices in $\mathbb{K}^{n \times m}$ compressing to rank $r$, the overall time complexity for the generator compression is dominated by the matrix multiplication and is bounded by $\mathcal{O}(r n m)$.
+We can generalize this complexity: for any generator matrices in $\mathbb{K}^{n \times m}$ compressing to rank $r$, the overall time complexity for the generator compression is dominated by the matrix multiplication and is bounded by $O(r n m)$.

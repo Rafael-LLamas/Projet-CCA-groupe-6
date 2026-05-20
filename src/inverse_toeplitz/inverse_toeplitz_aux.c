@@ -3,6 +3,7 @@
 #include "flint/gr.h"
 #include "flint/gr_mat.h"
 #include "flint/gr_types.h"
+#include "flint/gr_poly.h"
 
 // HELPERS ---------------------------------
 
@@ -11,12 +12,11 @@ int shift_vec(gr_mat_t out, gr_mat_t v, slong n, gr_ctx_t ctx) {
   int status = GR_SUCCESS;
   status |= gr_mat_zero(out, ctx);
   for (slong i = 1; i < n; i++)
-
     status |= gr_set(gr_mat_entry_ptr(out, i, 0, ctx), gr_mat_entry_srcptr(v, i - 1, 0, ctx), ctx);
   return status;
 }
 
-// reconstructs a single cell (i, j) from generators G and H
+// reconstructs a single cell (i, j) from generators G and H (sigma LU)
 int get_disp_cell(gr_ptr res, gr_mat_t G, gr_mat_t H, slong i, slong j, gr_ctx_t ctx) {
   int status = GR_SUCCESS;
   slong rank = gr_mat_ncols(G, ctx);
@@ -36,37 +36,85 @@ int get_disp_cell(gr_ptr res, gr_mat_t G, gr_mat_t H, slong i, slong j, gr_ctx_t
   return status;
 }
 
-// calculate v_a
-int calculate_v_a(gr_mat_t v_a, gr_mat_t G, gr_mat_t H, slong n1, slong rank, gr_ctx_t ctx) {
-  int status = GR_SUCCESS;
-  for (slong i = 0; i < n1; i++) status |= get_disp_cell(gr_mat_entry_ptr(v_a, i, 0, ctx), G, H, i, n1 - 1, ctx);
-  return status;
-}
-
-// calculate r_a
-int calculate_r_a(gr_mat_t r_a, gr_mat_t G, gr_mat_t H, slong n1, slong rank, gr_ctx_t ctx) {
-  int status = GR_SUCCESS;
-  for (slong j = 0; j < n1; j++) status |= get_disp_cell(gr_mat_entry_ptr(r_a, j, 0, ctx), G, H, n1 - 1, j, ctx);
-  return status;
-}
-
 // calculate scalar s_a
 int calculate_s_a(gr_ptr s_a, gr_mat_t G, gr_mat_t H, slong n1, slong rank, gr_ctx_t ctx) {
   return get_disp_cell(s_a, G, H, n1 - 1, n1 - 1, ctx);
 }
 
-// calculate v_c (coords: n1 + l)
-int calculate_v_c(gr_mat_t v_c, gr_mat_t G, gr_mat_t H, slong n1, slong n2, slong rank, gr_ctx_t ctx) {
+int poly_extract(gr_mat_t out, gr_mat_t G, gr_mat_t H, slong rank, 
+                      slong g_len, int g_rev, 
+                      slong h_len, int h_rev, 
+                      slong rev_offset, slong out_offset, slong out_len, gr_ctx_t ctx) {
   int status = GR_SUCCESS;
-  for (slong l = 0; l < n2; l++) status |= get_disp_cell(gr_mat_entry_ptr(v_c, l, 0, ctx), G, H, n1 + l, n1 - 1, ctx);
+  gr_poly_t g_poly, h_poly, prod_poly, sum_poly;
+  gr_poly_init(g_poly, ctx);
+  gr_poly_init(h_poly, ctx);
+  gr_poly_init(prod_poly, ctx);
+  gr_poly_init(sum_poly, ctx);
+  status |= gr_poly_zero(sum_poly, ctx);
+
+  for (slong k = 0; k < rank; k++) {
+    status |= gr_poly_zero(g_poly, ctx);
+    status |= gr_poly_zero(h_poly, ctx);
+
+    // Pack G (Direct or Reversed)
+    for (slong i = 0; i < g_len; i++) {
+      slong row = g_rev ? (rev_offset - i) : i;
+      status |= gr_poly_set_coeff_scalar(g_poly, i, gr_mat_entry_srcptr(G, row, k, ctx), ctx);
+    }
+    // Pack H (Direct or Reversed)
+    for (slong i = 0; i < h_len; i++) {
+      slong row = h_rev ? (rev_offset - i) : i;
+      status |= gr_poly_set_coeff_scalar(h_poly, i, gr_mat_entry_srcptr(H, row, k, ctx), ctx);
+    }
+    
+    // multiply and then accumulate
+    status |= gr_poly_mul(prod_poly, g_poly, h_poly, ctx);
+    status |= gr_poly_add(sum_poly, sum_poly, prod_poly, ctx);
+  }
+
+  // Extract the target slice to the output vector
+  status |= gr_mat_zero(out, ctx);
+  for (slong i = 0; i < out_len; i++) {
+    gr_ptr coeff = gr_poly_coeff_ptr(sum_poly, out_offset + i, ctx);
+    if (coeff != NULL) status |= gr_set(gr_mat_entry_ptr(out, i, 0, ctx), coeff, ctx);
+  }
+
+  gr_poly_clear(g_poly, ctx);
+  gr_poly_clear(h_poly, ctx);
+  gr_poly_clear(prod_poly, ctx);
+  gr_poly_clear(sum_poly, ctx);
   return status;
 }
 
-// calculate r_b (coords: n1 + m)
+int calculate_v_a(gr_mat_t v_a, gr_mat_t G, gr_mat_t H, slong n1, slong rank, gr_ctx_t ctx) {
+  // G: direct (n1), H: reversed (n1). Output starts at 0, length n1.
+  return poly_extract(v_a, G, H, rank, n1, 0, n1, 1, n1 - 1, 0, n1, ctx);
+}
+
+int calculate_r_a(gr_mat_t r_a, gr_mat_t G, gr_mat_t H, slong n1, slong rank, gr_ctx_t ctx) {
+  // G: reversed (n1), H: direct (n1). Output starts at 0, length n1.
+  return poly_extract(r_a, G, H, rank, n1, 1, n1, 0, n1 - 1, 0, n1, ctx);
+}
+
+int calculate_v_c(gr_mat_t v_c, gr_mat_t G, gr_mat_t H, slong n1, slong n2, slong rank, gr_ctx_t ctx) {
+  // G: direct (n1+n2), H: reversed (n1). Output starts at n1, length n2.
+  return poly_extract(v_c, G, H, rank, n1 + n2, 0, n1, 1, n1 - 1, n1, n2, ctx);
+}
+
 int calculate_r_b(gr_mat_t r_b, gr_mat_t G, gr_mat_t H, slong n1, slong n2, slong rank, gr_ctx_t ctx) {
-  int status = GR_SUCCESS;
-  for (slong m = 0; m < n2; m++) status |= get_disp_cell(gr_mat_entry_ptr(r_b, m, 0, ctx), G, H, n1 - 1, n1 + m, ctx);
-  return status;
+  // G: reversed (n1), H: direct (n1+n2). Output starts at n1, length n2.
+  return poly_extract(r_b, G, H, rank, n1, 1, n1 + n2, 0, n1 - 1, n1, n2, ctx);
+}
+
+int calculate_pack_v_c(gr_mat_t v_c, gr_mat_t G_z, gr_mat_t H_z, slong n1, slong n2, slong rank, gr_ctx_t ctx) {
+  // G: direct (n2), H: reversed (n1). Output starts at 0, length n2.
+  return poly_extract(v_c, G_z, H_z, rank, n2, 0, n1, 1, n1 - 1, 0, n2, ctx);
+}
+
+int calculate_pack_r_b(gr_mat_t r_b, gr_mat_t G_y, gr_mat_t H_y, slong n1, slong n2, slong rank, gr_ctx_t ctx) {
+  // G: reversed (n1), H: direct (n2). Output starts at 0, length n2.
+  return poly_extract(r_b, G_y, H_y, rank, n1, 1, n2, 0, n1 - 1, 0, n2, ctx);
 }
 
 // MAIN SPLIT ---------------------------------
@@ -286,14 +334,8 @@ int gr_mat_pack_quadrants(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_x, gr_mat_t H_x
   status |= calculate_v_a(v_a, G_x, H_x, n1, rx, ctx); // v_a from block x
   status |= calculate_r_a(r_a, G_x, H_x, n1, rx, ctx); // r_a from block x
   status |= calculate_s_a(s_a, G_x, H_x, n1, rx, ctx); // s_a from block x
-
-  for (slong l = 0; l < n2; l++) { // v_c from block z
-    status |= get_disp_cell(gr_mat_entry_ptr(v_c, l, 0, ctx), G_z, H_z, l, n1 - 1, ctx);
-  }
-
-  for (slong m = 0; m < n2; m++) { // r_b from block y
-    status |= get_disp_cell(gr_mat_entry_ptr(r_b, m, 0, ctx), G_y, H_y, n1 - 1, m, ctx);
-  }
+  status |= calculate_pack_v_c(v_c, G_z, H_z, n1, n2, rz, ctx); // v_c from block z
+  status |= calculate_pack_r_b(r_b, G_y, H_y, n1, n2, ry, ctx); // r_b from block y
 
   // filling to G_D and H_D
   slong c1 = col_c;
