@@ -502,22 +502,28 @@ int benchmark_inversion() {
 
     for (int i = 0; i < iterations; i++) {
     gr_mat_t A, B, G_a, G_b, H_a, H_b;
-      gr_mat_init(A, cur_n, cur_n, ctx);
-      gr_mat_init(B, cur_n, cur_n, ctx);
-     
-
       if (rank != -1) {
-        error = gr_mat_quasi_toeplitz_rank(A, rank, state, ctx);
+        gr_mat_init(G_a, cur_n, rank, ctx);
+        gr_mat_init(H_a, cur_n, rank, ctx);
+        error = gr_mat_random_generator_quasi_toeplitz(G_a,H_a, rank, state, ctx);
       } else {
-        error = gr_mat_random_toeplitz(A, state, ctx);
+        gr_mat_init(G_a, cur_n, 2, ctx);
+        gr_mat_init(H_a, cur_n, 2, ctx);
+        error = gr_mat_random_generator_toeplitz(G_a,H_a, state, ctx);
+      }
+      if(flint){
+        gr_mat_init(A, cur_n, cur_n, ctx);
+        gr_mat_init(B, cur_n, cur_n, ctx);
+        error = gr_mat_reconstruct_A_v2(A,G_a,H_a,DISP_PLUS,ctx);
       }
 
-      error = gr_mat_G_H(G_a, H_a, A, DISP_PLUS, ctx);
       double t1 = get_time_ms();
       error = gr_mat_inverse_toeplitz(G_b, H_b, G_a, H_a, ctx);
       if (error) {
-        gr_mat_clear(A, ctx);
-        gr_mat_clear(B, ctx);
+        if(flint){
+          gr_mat_clear(A, ctx);
+          gr_mat_clear(B, ctx);
+        }
         gr_mat_clear(G_a, ctx);
         gr_mat_clear(H_a, ctx);
         gr_mat_clear(G_b, ctx);
@@ -536,8 +542,10 @@ int benchmark_inversion() {
       fprintf(csv, "%ld,%ld,%d,%.4f,%.4f\n", cur_n, cur_n, i, gen_times[i], flint_times[i]);
       printf("\rSize %ldx%ld... [%d/%d]", cur_n, cur_n, i + 1, iterations);
       fflush(stdout);
-      gr_mat_clear(A, ctx);
-      gr_mat_clear(B, ctx);
+      if(flint){
+          gr_mat_clear(A, ctx);
+          gr_mat_clear(B, ctx);
+        }
       gr_mat_clear(G_a, ctx);
       gr_mat_clear(H_a, ctx);
       gr_mat_clear(G_b, ctx);
