@@ -23,9 +23,8 @@ $D$ can be factored into two smaller matrices such that $D = G H^T$.
 The function achieves this by performing an LU decomposition on the displacement matrix $D$. It then extracts the independent columns to form $G$ and the corresponding rows to form $H^T$.
 This is where the storage economy for structured matrices come from.
 
-\paragraph{int gr\_mat\_reconstruct\_A(gr\_mat\_t A, gr\_mat\_t G, gr\_mat\_t H, disp\_type\_t type, gr\_ctx\_t ctx)}
-\todo{RAFAEL -> V2 VERSION}
-
+\paragraph{int gr\_mat\_reconstruct\_A\_v2(gr\_mat\_t A, gr\_mat\_t G, gr\_mat\_t H, disp\_type\_t type, gr\_ctx\_t ctx);}
+Is the function that reconstructs the original matrix $A$ from its generator matrices $G$ and $H$.
 
 \subsubsection*{\underline{Compression}}\label{annexe:compression}
 
@@ -38,3 +37,19 @@ Project
 \end{verbatim}
 
 \paragraph{int gr\_mat\_generator\_compress(gr\_mat\_t G\_d, gr\_mat\_t H\_d, gr\_ctx\_t ctx);} Is our function that implements the algorithms talked in chapter \ref{ch:compression}.
+
+\subsubsection*{\underline{Utility}}\label{annexe:utility}
+\begin{verbatim}
+Project
+\   src
+|   \   utility
+|   |   |   matrix_aux.c
+|   |   |   matrix_aux.h
+\end{verbatim}
+
+
+
+\paragraph{int gr\_mat\_apply\_Z(gr\_mat\_t Res, gr\_mat\_t M, gr\_ctx\_t ctx);}
+Function that we implement to apply the downshift matrix $Z$ to a matrix $M$ and store the result in $Res$.
+\paragraph{int gr\_mat\_apply\_Zt(gr\_mat\_t Res, gr\_mat\_t M, gr\_ctx\_t ctx);}
+Function that we implement to apply the transpose of the downshift matrix $Z^T$ to a matrix $M$ and store the result in $Res$.

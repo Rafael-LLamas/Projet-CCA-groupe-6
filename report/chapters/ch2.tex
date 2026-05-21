@@ -106,12 +106,16 @@ $n$ & Generators (ms) & Flint Dense (ms) \\
 4096 & 1.148e-01 & 29.18  \\
 \hline
 \end{tabular}
-\caption{Median runtimes over 5 runs}
+\caption{Median runtimes over 10 runs}
 \label{tab:bench_add}
 \end{table}
 
 (ici courbe des temps)
-blablabla...explication complexité...blablabla
+If we compare matrices of 128,1024 and 4096,we got :
+$T(128)\div 128 \approx 2.79e-05$,
+$T(1024)\div 1024 \approx 3.13e-05$,
+$T(4096)\div 4096 \approx 2.80e-05$.
+We can see that the time of addition is linear in the size of the matrix, so we can conclude that the complexity of the addition is $O(\alpha n)$.
 
 
 
@@ -135,16 +139,16 @@ This allows us to pass from $O(n^3)$ for the naive algorithm to $O( \alpha^2 \ti
     \State $W_{Temp} \gets \Call{gr\_mat\_apply\_Zt}{G}$
     \State $W \gets \Call{gr\_mat\_mul\_vector}{T,U,W_{Temp}}$
     \State $W \gets \Call{gr\_mat\_apply\_Z}{W}$
-
+    \newline
     \State $V \gets \Call{gr\_mat\_mul\_vector}{H,G,U}$
-
+    \newline
     \State $a \gets \Call{gr\_mat\_mul\_vector}{T,U,LastCol}$
     \State $a \gets \Call{gr\_mat\_apply\_Z}{a}$
-
+    \newline
     \State $b \gets \Call{gr\_mat\_mul\_vector}{H,G,LastCol}$
     \State $b \gets \Call{gr\_mat\_apply\_Z}{b}$
     \State $b \gets \Call{gr\_mat\_neg}{b}$
-
+    \newline
     \State $G_C \gets \Call{gr\_mat\_concat\_horizontal}{T,W,a}$
     \State $H_C \gets \Call{gr\_mat\_concat\_horizontal}{V,H,b}$
     \State \textbf{return} $G_C, H_C$
@@ -260,8 +264,7 @@ We need to calculate W and V before concatenating the generators of A and B to o
         2     & 12  
     \end{pmatrix}
 \end{equation}
-Puis faire la concatenation de T,W et $\alpha$ pour obtenir $RES_G$
-et la concatenation de  V,H et $\beta$ pour obtenir $RES_H$ (il faut faire la concatenation dans l'ordre que j'ai cité les éléments).
+Then we do the concatenation of T,W,a and V,H,-b to obtain $RES_G$ and $RES_H$ (we have to do the concatenation in the order that I cited the elements) 
 \begin{equation}
     RES_G =
     \begin{pmatrix}
@@ -299,8 +302,18 @@ $n$ & Generators (ms) & Flint Dense (ms) & Vector (ms) & Vector Flint (ms) \\
 4096 & 12.42 & 39810 & 2.063  & 17.63 \\
 \hline
 \end{tabular}
-\caption{Median runtimes over 5 runs}
+\caption{Median runtimes over 10 runs}
 \label{tab:bench_mul}
 \end{table}
 (ici courbe des temps)
-blablabla...explication complexité...blablabla
+For the multiplication with vector,if we compare matrices of 128,1024 and 4096,we got :
+$T(128)\div 128 \approx 9.5e-04$,
+$T(1024)\div 1024 \approx 6.2e-04$,
+$T(4096)\div 4096 \approx 5e-04$
+We can see that the time of multiplication with vector is linear in the size of the matrix, so we can conclude that the complexity of the multiplication with vector is $O(\alpha n)$.
+
+For the multiplication with generators, if we compare matrices of 128,1024 and 4096,we got :
+$T(128)\div 128^2 \approx 4.91e-03$,
+$T(1024)\div 1024^2 \approx 3.65e-03$,
+$T(4096)\div 4096^2 \approx 3.03e-03$.
+We can see that the time of multiplication with generators is linear in the square of the size of the matrix, so we can conclude that the complexity of the multiplication with generators is $O(\alpha^2 M(n))$.
