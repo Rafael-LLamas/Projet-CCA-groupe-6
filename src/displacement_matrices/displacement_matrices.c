@@ -327,8 +327,6 @@ int gr_mat_reconstruct_A_v2(gr_mat_t A, gr_mat_t G, gr_mat_t H, disp_type_t type
         status |= gr_set(gr_mat_entry_ptr(A, i, j, ctx), sum_res, ctx);
       }
     }
-    gr_heap_clear(sum_res, ctx);
-    gr_heap_clear(temp, ctx);
   } else { // DISP_PLUS
     slong n = gr_mat_nrows(G, ctx);
     slong m = gr_mat_nrows(H, ctx);
@@ -395,6 +393,7 @@ int gr_mat_reconstruct_A_v2(gr_mat_t A, gr_mat_t G, gr_mat_t H, disp_type_t type
     }
   }
 
-  
+      gr_heap_clear(sum_res, ctx);
+gr_heap_clear(temp, ctx);
   return status;
 }
