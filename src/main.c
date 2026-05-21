@@ -49,6 +49,7 @@ double get_time_ms() {
 int n = -1;
 int m = -1;
 int k = -1;
+int t = -1;
 int rank = -1;
 int iteration = -1;
 bool flint = false;
@@ -753,6 +754,12 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Error: -k needs to be > 0\n");
         return EXIT_FAILURE;
       }
+    }else if (strcmp(argv[i], "-t") == 0 && i + 1 < argc) {
+      t = atoi(argv[++i]);
+      if (t <= 0) {
+        fprintf(stderr, "Error: -n needs to be > 0\n");
+        return EXIT_FAILURE;
+      }
     }
   }
 
@@ -764,7 +771,10 @@ int main(int argc, char *argv[]) {
     getchar();
     return EXIT_SUCCESS;
   }
-
+  if(t > 0){
+    printf(ANSI_COLOR_BOLD ANSI_COLOR_YELLOW "Running benchmark with t = %d\n" ANSI_COLOR_RESET, t);
+    flint_set_num_threads(t);
+  }
   // --- EXECUTION DES COMMANDES ---
   // La commande est toujours le premier argument non-optionnel (argv[1])
   if (strcmp(argv[1], "benchmark") == 0) {
