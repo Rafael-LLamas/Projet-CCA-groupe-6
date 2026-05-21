@@ -1,10 +1,33 @@
+% \begin{frame}{Context}
+%   \begin{itemize}
+%     \item Operations on large structured matrices are often limited by memory bandwith.
+%     \item Standart operatons on $n^2$ elements lead to unnecessary computations.
+%   \end{itemize}
+%   \vspace{1em}
+%   \begin{block}{Goal}
+%     Optimize memory footprint and execution time on structured matrices by implementing displacement operators and generator-based representations.
+%   \end{block}
+% \end{frame}
+% 
+
 \begin{frame}{Context}
-  \begin{itemize}
-    \item Operations on large structured matrices are often limited by memory bandwith.
-    \item Standart operatons on $n^2$ elements lead to unnecessary computations.
-  \end{itemize}
-  \vspace{1em}
-  \begin{block}{Goal}
-    Optimize memory footprint and execution time on structured matrices by implementing displacement operators and generator-based representations.
-  \end{block}
+    \begin{block}{Toeplitz Matrix $A_{1}$}
+    \[
+        A_{1} = \begin{pmatrix}
+        4 & 3 & 2 & 1 \\
+        5 & 4 & 3 & 2 \\
+        6 & 5 & 4 & 3 \\
+        7 & 6 & 5 & 4
+        \end{pmatrix}
+    \]
+    \end{block}
+    \begin{block}{Where do we see these structured matrices?}
+        \begin{itemize}
+          \item Sylvester matrix
+          \item Diagonal gradients
+          \item Quantum channel calculations in classical quantum simulations
+          \item Digital Signal Processing
+          \item \dots
+        \end{itemize}
+    \end{block}
 \end{frame}

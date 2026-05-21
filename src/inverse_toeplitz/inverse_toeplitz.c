@@ -55,8 +55,8 @@ int gr_mat_inverse_toeplitz(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, gr_mat_t H
     gr_mat_clear(H_b, ctx);
     gr_mat_clear(G_c, ctx);
     gr_mat_clear(H_c, ctx);
-    gr_mat_clear(G_d, ctx);
-    gr_mat_clear(H_d, ctx);
+    // gr_mat_clear(G_d, ctx);
+    // gr_mat_clear(H_d, ctx);
     return status;
   }
 

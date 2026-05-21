@@ -1,11 +1,32 @@
-\begin{frame}{Context}
-  \begin{block}{Where do we see these structured matrices?}
-      \begin{itemize}
-        \item Sylvester matrix
-        \item Diagonal gradients
-        \item Quantum channel calculations in classical quantum simulations
-        \item Digital Signal Processing
-        \item \dots
-      \end{itemize}
+\begin{frame}{Toeplitz Matrices}
+  \begin{definition}
+    A matrix $A \in \mathbb{K}^{n \times m}$ is \textbf{Toeplitz} if
+    $A_{i,j} = A_{i+1,j+1}$ for all valid $i, j$.
+  \end{definition}
+  \vspace{0.5em}
+  \[
+    A =
+    \begin{pmatrix}
+      a_0    & a_{-1} & \cdots & \cdots     & a_{-(m-1)}    \\
+      a_1    & a_0    & \cdots & \cdots     & a_{-(m-2)}    \\
+      \vdots & \ddots & \ddots & \ddots     & \vdots        \\
+      a_{n-1}& \cdots & a_1    & a_0        & a_{m-n}
+    \end{pmatrix}
+  \]
+
+  \begin{block}{Examples of Toeplitz Matrices}
+    \centering
+    $A_{1} = \begin{pmatrix}
+      4 & 3 & 2 & 1 \\
+      5 & 4 & 3 & 2 \\
+      6 & 5 & 4 & 3 \\
+      7 & 6 & 5 & 4
+    \end{pmatrix}$
+    \quad
+    $A_{2} = \begin{pmatrix}
+      120 & 432 & 584 & 394 & 159 \\
+      312 & 120 & 432 & 584 & 394 \\
+      985 & 312 & 120 & 432 & 584 
+    \end{pmatrix}$
   \end{block}
 \end{frame}

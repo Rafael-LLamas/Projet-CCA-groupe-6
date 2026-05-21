@@ -292,19 +292,20 @@ We can see that the matrix D is equal to C so our way to multiply the 2 matrices
 \subsubsection{Benchmark}
 The benchmark obtained highlights the following results:
 \begin{table}[h]
-\centering
-\begin{tabular}{r r r r r}
-\hline
-$n$ & Generators (ms) & Flint Dense (ms) & Vector (ms) & Vector Flint (ms) \\
-\hline
-128  & 6.289e-01  & 3.032 & 1.221e-01  & 3.217e-02  \\
-1024 & 3.736 & 984.2 & 6.383e-01  & 1.554 \\
-4096 & 12.42 & 39810 & 2.063  & 17.63 \\
-\hline
-\end{tabular}
-\caption{Median runtimes over 10 runs}
-\label{tab:bench_mul}
+    \centering
+    \begin{tabular}{r r r r r}
+        \hline
+        $n$ & Generators (ms) & Flint Dense (ms) & Vector (ms) & Vector Flint (ms) \\
+        \hline
+        128  & 6.289e-01  & 3.032 & 1.221e-01  & 3.217e-02  \\
+        1024 & 3.736 & 984.2 & 6.383e-01  & 1.554 \\
+        4096 & 12.42 & 39810 & 2.063  & 17.63 \\
+        \hline
+    \end{tabular}
+    \caption{Median runtimes over 10 runs}
+    \label{tab:bench_mul}
 \end{table}
+
 (ici courbe des temps)
 For the multiplication with vector,if we compare matrices of 128,1024 and 4096,we got :
 $T(128)\div 128 \approx 9.5e-04$,
