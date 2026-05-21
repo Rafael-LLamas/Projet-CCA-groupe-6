@@ -704,6 +704,8 @@ void usage(char *argv[]) {
                   "    - Run n iterations with the integer (needs to be positive > 0)\n");
   fprintf(stderr, "  " ANSI_COLOR_GREEN "-r (integer)" ANSI_COLOR_RESET
                   "    - Run matrix of rank n with the integer (needs to be positive > 0)\n");
+  fprintf(stderr, "  " ANSI_COLOR_GREEN "-t (integer)" ANSI_COLOR_RESET
+                  "    - Run the benchmark with n threads (need to be positive >0)\n");
   fprintf(stderr,
           "  " ANSI_COLOR_GREEN "-out" ANSI_COLOR_RESET "    - Run a new terminal (only work with Debian like's )\n");
   fprintf(stderr, "  " ANSI_COLOR_GREEN "-flint" ANSI_COLOR_RESET
@@ -772,8 +774,9 @@ int main(int argc, char *argv[]) {
     return EXIT_SUCCESS;
   }
   if(t > 0){
-    printf(ANSI_COLOR_BOLD ANSI_COLOR_YELLOW "Running benchmark with t = %d\n" ANSI_COLOR_RESET, t);
     flint_set_num_threads(t);
+    printf(ANSI_COLOR_BOLD ANSI_COLOR_YELLOW "Running benchmark with t = %d\n" ANSI_COLOR_RESET, flint_get_num_threads());
+    
   }
   // --- EXECUTION DES COMMANDES ---
   // La commande est toujours le premier argument non-optionnel (argv[1])
