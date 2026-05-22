@@ -112,12 +112,14 @@ $n$ & Generators (ms) & Flint Dense (ms) \\
 \label{tab:bench_add}
 \end{table}
 
-(ici courbe des temps)
+
 If we compare matrices of 128,1024 and 4096,we got :
-$T(128)\div 128 \approx 2.79e-05$,
-$T(1024)\div 1024 \approx 3.13e-05$,
-$T(4096)\div 4096 \approx 2.80e-05$.
-We can see that the time of addition is linear in the size of the matrix, so we can conclude that the complexity of our implementations is $O(\alpha n)$.
+$T(1024)\div T(128) \approx 8.96$,
+$T(4096)\div T(1024) \approx 3.58$.
+For $O(\alpha n)$ we expect ratios of 8 and 4 respectively.8.96 is close to the expected value. 3.58 show more deviation from 4, that can be explained by the low cost of the operation making the measurements highly sensitive to external factors.
+Overall, these result are consistent with the theorical complexity $O(\alpha n)$.
+
+
 
 
 
@@ -286,9 +288,9 @@ The benchmark obtained highlights the following results:
         \hline
         $n$ & Generators (ms) & Flint Dense (ms) & Vector (ms) & Vector Flint (ms) \\
         \hline
-        128  & 0.6289  & 3.032 & 0.1221  & 0.03217  \\
-        1024 & 3.736 & 984.2 & 0.6383  & 1.554 \\
-        4096 & 12.42 & 39810 & 2.063  & 17.63 \\
+        128  & 0.3493  & 2.461 & 0.03261  & 0.01987  \\
+        1024 & 2.460 & 77.69 & 0.3166  & 1.017 \\
+        4096 & 9.991 & 38150 & 1.054  & 18.41 \\
         \hline
     \end{tabular}
     \caption{Average runtimes over 10 runs}
@@ -296,17 +298,18 @@ The benchmark obtained highlights the following results:
 \end{table}
 
 
-(ici courbe des temps)
-
-For the multiplication with vector,if we compare matrices of 128,1024 and 4096,we got :
-$T(128)\div 128 \approx 9.5e-04$,
-$T(1024)\div 1024 \approx 6.2e-04$,
-$T(4096)\div 4096 \approx 5e-04$
-We can see that the time of multiplication with vector is linear in the size of the matrix, so we can conclude that the complexity of the multiplication with vector is $O(\alpha n)$.
+For the multiplication with vector,if we compare matrices of 128,1024 and 4096,we get:
+$T(1024)\div T(128) \approx 9.709$,
+$T(4096)\div T(1024) \approx 3.329$.
+For $O(\alpha M(n))$ we expected 9.14 and 4.4 respectively.The first ratio is close to the expected value, while the second shows more deviation.
+This can be explained by the cost of copying values into polynomials, which is $O(\alpha n)$ and is not yet negligible compared to M(n).
+We tried with bigger value and got the same problems but we can confirm that the complexity is $O(\alpha M(n))$ asymptotically.
+A possible improvement would be to copy the values into polynomials more efficiently, which would reduce the overhead and make the convergence visible for smaller values of n. 
 \newline
 
-For the multiplication with generators, if we compare matrices of 128,1024 and 4096,we got :
-$T(128)\div 128^2 \approx 4.91e-03$,
-$T(1024)\div 1024^2 \approx 3.65e-03$,
-$T(4096)\div 4096^2 \approx 3.03e-03$.
-We can see that the time of multiplication with generators is linear in the square of the size of the matrix, so we can conclude that the complexity of the multiplication with generators is $O(\alpha^2 M(n))$.
+For the multiplication with generators, if we compare matrices of 128,1024 and 4096,we get:
+$T(1024)\div T(128) \approx 7.06$,
+$T(4096)\div T(1024) \approx 4.06$.
+For $O(\alpha^2 M(n))$ we expected 9.14 and 4.4 respectively. The second ratio is close to 4.4 but the first shows more deviation.
+As the matrix multiplication calls the vector multiplication internally, it suffers from the same overhead of copying values into polynomials $O(\alpha^2 n)$,which is not yet negligible compared to M(n) for small values of n.
+The complexity is therefore $O(\alpha^2 M(n))$ asymptotically respected.
