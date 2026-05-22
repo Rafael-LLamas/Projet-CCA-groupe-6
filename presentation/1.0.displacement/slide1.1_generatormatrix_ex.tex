@@ -1,23 +1,38 @@
-\begin{frame}{Example - Displacement}
-      \begin{block}{Toeplitz Matrix $A$}
+\begin{frame}{Displacement}
+
+  \begin{columns}
+  
+    \begin{column}{0.5\textwidth}
+    
+      \begin{block}{Displacement Operator}
         \[
-          A = \begin{pmatrix}
-            4 & 3 & 2 & 1 \\
-            5 & 4 & 3 & 2 \\
-            6 & 5 & 4 & 3 \\
-            7 & 6 & 5 & 4
-          \end{pmatrix}
+          \nabla A = A - Z A Z^T = G H^T
         \]
+        For Toeplitz: $\mathrm{rank}(\nabla A) \leq 2$
       \end{block}
-      \begin{block}{Displacement $\nabla A = A - ZAZ^T$}
-        \[
-          \nabla A = \begin{pmatrix}
-            4 & 3 & 2 & 1 \\
-            5 & 0 & 0 & 0 \\
-            6 & 0 & 0 & 0 \\
-            7 & 0 & 0 & 0
-          \end{pmatrix}
-        \]
-        Only first row and column stays. $\mathrm{rank} = 2$.
-      \end{block}
+      
+    \end{column}
+    
+  \end{columns}
+  
+  \vspace{1em}
+
+  \begin{block}{Displacement $\nabla A = A - ZAZ^T$}
+    \centering
+    $A_{1} = \begin{pmatrix}
+        4 & 3 & 2 & 1 \\
+        5 & 4 & 3 & 2 \\
+        6 & 5 & 4 & 3 \\
+        7 & 6 & 5 & 4
+    \end{pmatrix}$
+    \quad
+    $\nabla A_{1} = \begin{pmatrix}
+        4 & 3 & 2 & 1 \\
+        5 & 0 & 0 & 0 \\
+        6 & 0 & 0 & 0 \\
+        7 & 0 & 0 & 0
+    \end{pmatrix}$
+  \end{block}
+Only first row and column stays. $\mathrm{rank} = 2$.
+  
 \end{frame}
