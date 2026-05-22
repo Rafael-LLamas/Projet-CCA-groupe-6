@@ -1,10 +1,12 @@
-\section{Operation}
-
+\section{Basic operation}
+\subsection{Introduction}
+(here to define context + utility)
+We need $A\simeq(T,U)$ and $B\simeq(G,H)$ matrices in ???? with T,U (resp. G,H) the displacement generators of A (resp. B) following the properties describe before.
 \subsection{Addition}
-\subsubsection{Introduction}
+\subsubsection{Algorithm}
 With the displacement generators, we can simplify the addition of 2 matrices and thus reduce its cost by concatenating the generators of the 2 matrices.
-From the property 10.7 and 10.8, we can pass from $O(n^2)$ for the naive algorithm to $O( \alpha \times M(n) )$ for the version that we implement.
-We need A=(T,U) and B=(G,H)
+From the property 10.7 and 10.8, we can pass from $O(n^2)$ for the naive algorithm to $O( \alpha \times n)$ with this algorithm.
+
  \begin{algorithm}[H]
 \caption{Generator Addition}
 \begin{algorithmic}[1]
@@ -17,8 +19,8 @@ We need A=(T,U) and B=(G,H)
 \end{algorithmic}
 \end{algorithm}
 
- \subsubsection{Exemple}
-We takes A and B, two randoms matrices, C the result we need to getof A and B.Every matrices are in $Z/_{13}Z$.
+ \subsubsection{Example}
+We takes A and B, two randoms matrices, C the result of A and B.Every matrices are in $Z/_{13}Z$.
 \begin{equation}
     A =
     \begin{pmatrix}
@@ -101,12 +103,12 @@ The benchmark obtained highlights the following results:
 \hline
 $n$ & Generators (ms) & Flint Dense (ms) \\
 \hline
-128  & 3.577e-03  & 1.373e-02   \\
-1024 & 3.205e-02 & 2.52  \\
-4096 & 1.148e-01 & 29.18  \\
+128  & 0.003577  & 0.01373   \\
+1024 & 0.03205 & 2.52  \\
+4096 & 0.1148 & 29.18  \\
 \hline
 \end{tabular}
-\caption{Median runtimes over 10 runs}
+\caption{Average runtimes over 10 runs}
 \label{tab:bench_add}
 \end{table}
 
@@ -115,12 +117,42 @@ If we compare matrices of 128,1024 and 4096,we got :
 $T(128)\div 128 \approx 2.79e-05$,
 $T(1024)\div 1024 \approx 3.13e-05$,
 $T(4096)\div 4096 \approx 2.80e-05$.
-We can see that the time of addition is linear in the size of the matrix, so we can conclude that the complexity of the addition is $O(\alpha n)$.
+We can see that the time of addition is linear in the size of the matrix, so we can conclude that the complexity of our implementations is $O(\alpha n)$.
 
 
 
 \subsection{Multiplication}
-\subsubsection{Introduction}
+\subsubsection{Multiplication Vector}
+Perform the matrix multiplication with their displacement generators needs a function that multiplies a vector with displacement generators to avoid recomposing the matrices.
+\begin{equation} \label{eq:SigmaLUV}
+    C = \sum_{k=1}^{\alpha} L(g_k) \, U(h_k)\,V
+\end{equation}
+To do that, we takes the formula for the reconstruction and we transform our displacement generators into polynomials and make every operation into them.
+\begin{algorithm}[H]
+\caption{Multiplication of displacement generators with a vector}
+\begin{algorithmic}[1]
+\Function{gr\_mat\_mul\_vector}{$G, H, V$}
+    \State $n \gets nbRows(G)$
+    \State $m \gets nbRows(H)$
+    \For{$j \gets 0$ \textbf{to} $nbCols(V)$}
+        \State $P_v \gets \sum_{r=0}^{m-1} V[r, j]  x^r$ 
+        \For{$k \gets 0$ \textbf{to} $nbCols(G)$}
+            \State $Pg \gets \sum_{r=0}^{n-1} G[r, k]  x^r$ 
+            \State $Ph \gets \sum_{r=0}^{m-1} H[r, k]  x^r$ 
+            \State $P_{h\_rev} \gets \text{Reverse}(P_h, m)$ 
+            \State $P_{tmp} \gets P_{h\_rev} P_x$ 
+            \State $P_{tmp\_shift} \gets P_{tmp} \gg (m - 1)$ 
+            \State $P_{res} \gets P_g P_{tmp\_shift}$ 
+            \For{$i \gets 0$ \textbf{to} $\text{Length}(P_{tmp2}) - 1$}
+                \State $C[i, j] \gets C[i, j] + \text{Coefficient}(P_{res}, i)$
+            \EndFor
+        \EndFor
+    \EndFor
+    \State \textbf{return} $Res$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+\subsubsection{Multiplication matrices}
 With displacement generators we also can simplify the multiplication of 2 matrices and thus reduce its cost by concatenating the generators of the 2 matrices.
 - The displacement generators A=(T,U) and B=(G,H) 
 
@@ -155,53 +187,10 @@ This allows us to pass from $O(n^3)$ for the naive algorithm to $O( \alpha^2 \ti
 \EndFunction
 \end{algorithmic}
 \end{algorithm}
-We use the vector 
-\begin{equation}
-    LastCol =
-    \begin{pmatrix}
-        0 \\
-        0 \\
-        . \\
-        . \\
-        . \\
-        0 \\
-        1
-    \end{pmatrix}
-\end{equation}
-in order to retrieve the last column of the matrix, this vector is composed of 0 except for the last element of the column which is fixed to 1.
+We use the vector $LastCol = (0,.........,0,1)^T$, with the numbers of rows of the matrix you to retrieve the last column. This vector is composed with 0 except for the last element which is fixed to 1.
 
-\subsubsection{Multiplication Vecteur}
-Perform the matrix multiplication with their displacement generators needs a function that multiplies a vector with displacement generators to avoid recomposing the matrices.
-\begin{equation} \label{eq:SigmaLUV}
-    C = \sum_{k=1}^{\alpha} L(g_k) \, U(h_k)\,V
-\end{equation}
-To do that, we takes the formula for the reconstruction and we transform our displacement generators into polynomials and make every operation into them.
-\begin{algorithm}[H]
-\caption{Multiplication de Matrice Structurée par un Vecteur/Matrice}
-\begin{algorithmic}[1]
-\Function{gr\_mat\_mul\_vector}{$G, H, V$}
-    \State $n \gets nbRows(G)$
-    \State $m \gets nbRows(H)$
-    \For{$j \gets 0$ \textbf{to} $nbCols(V)$}
-        \State $P_v \gets \sum_{r=0}^{m-1} V[r, j]  x^r$ 
-        \For{$k \gets 0$ \textbf{to} $nbCols(G)$}
-            \State $Pg \gets \sum_{r=0}^{n-1} G[r, k]  x^r$ 
-            \State $Ph \gets \sum_{r=0}^{m-1} H[r, k]  x^r$ 
-            \State $P_{h\_rev} \gets \text{Reverse}(P_h, m)$ 
-            \State $P_{tmp} \gets P_{h\_rev} P_x$ 
-            \State $P_{tmp\_shift} \gets P_{tmp} \gg (m - 1)$ 
-            \State $P_{res} \gets P_g P_{tmp\_shift}$ 
-            \For{$i \gets 0$ \textbf{to} $\text{Length}(P_{tmp2}) - 1$}
-                \State $C[i, j] \gets C[i, j] + \text{Coefficient}(P_{res}, i)$
-            \EndFor
-        \EndFor
-    \EndFor
-    \State \textbf{return} $Res$
-\EndFunction
-\end{algorithmic}
-\end{algorithm}
-\subsubsection{Exemple}
-We takes A and B, two randoms matrices, C the result we need to getof A and B.Every matrices are in $Z/_{13}Z$.
+\subsubsection{Example}
+We takes A and B, two randoms matrices, C the result of A and B.Every matrices are in $Z/_{13}Z$.
 \begin{equation}
     A =
     \begin{pmatrix}
@@ -279,7 +268,7 @@ Then we do the concatenation of T,W,a and V,H,-b to obtain $RES_G$ and $RES_H$ (
         2     & 12     & 0  & 0 & 10
     \end{pmatrix}
 \end{equation}
-La matrice que l'on a obtenue D :
+The matrix that we get D :
 \begin{equation}
     D =
     \begin{pmatrix}
@@ -297,21 +286,24 @@ The benchmark obtained highlights the following results:
         \hline
         $n$ & Generators (ms) & Flint Dense (ms) & Vector (ms) & Vector Flint (ms) \\
         \hline
-        128  & 6.289e-01  & 3.032 & 1.221e-01  & 3.217e-02  \\
-        1024 & 3.736 & 984.2 & 6.383e-01  & 1.554 \\
+        128  & 0.6289  & 3.032 & 0.1221  & 0.03217  \\
+        1024 & 3.736 & 984.2 & 0.6383  & 1.554 \\
         4096 & 12.42 & 39810 & 2.063  & 17.63 \\
         \hline
     \end{tabular}
-    \caption{Median runtimes over 10 runs}
+    \caption{Average runtimes over 10 runs}
     \label{tab:bench_mul}
 \end{table}
 
+
 (ici courbe des temps)
+
 For the multiplication with vector,if we compare matrices of 128,1024 and 4096,we got :
 $T(128)\div 128 \approx 9.5e-04$,
 $T(1024)\div 1024 \approx 6.2e-04$,
 $T(4096)\div 4096 \approx 5e-04$
 We can see that the time of multiplication with vector is linear in the size of the matrix, so we can conclude that the complexity of the multiplication with vector is $O(\alpha n)$.
+\newline
 
 For the multiplication with generators, if we compare matrices of 128,1024 and 4096,we got :
 $T(128)\div 128^2 \approx 4.91e-03$,
