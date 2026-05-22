@@ -1,12 +1,25 @@
-Url of the project: \url{https://github.com/Rafael-LLamas/Projet-CCA-groupe-6}
 \section{Introduction}
 
-In computational numerical linear algebra, 
-dense matrices often present a computational bottleneck, 
-scaling quadratically in terms of memory usage ($O(nm)$) on a matrix with $n$ rows and $m$ columns
-and cubically in terms of time complexity ($O(n^3)$) for standard operations. 
-However, these structured matrices are utilised by a wide class of systems
-such as signal processing\cite{7400965}\cite{signals5030021} applications and classical quantum simulation\cite{10.1098/rsos.160906}.
-In these systems, the elements are arranged in repeating, deterministic patterns. 
-Designing algorithms that take advantage of this pattern can bypass the fundamental 
+In computational numerical linear algebra,
+dense matrices often present a computational bottleneck,
+scaling quadratically in terms of memory usage ($O(nm)$) for a matrix
+with $n$ rows and $m$ columns
+and cubically in terms of time complexity ($O(n^3)$) for standard operations.
+However, in many real-world life applications such as signal
+processing\cite{7400965}\cite{signals5030021}
+and classical simulation of quantum
+systems\cite{10.1098/rsos.160906}, these dense matrices are not totally random.
+The elements are arranged in repeating, deterministic patterns.
+Designing algorithms that take advantage of this pattern can bypass
+the fundamental
 limitations of dense linear algebra.
+
+To exploit these patterns, we apply a displacement operation to
+determine how much a matrix deviates from a perfect diagonal structure.
+For a highly structured matrix, this displacement results in a low rank.
+This demonstrates that it is possible to represent a dense matrix
+using two smaller, more compact matrices.
+Performing operations on these matrices reduces both storage and
+computation requirements.
+The aim of this project is to explore and implement elementary
+operations on quasi-Toeplitz matrices using these displacement operators.

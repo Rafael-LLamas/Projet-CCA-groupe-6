@@ -1,138 +1,168 @@
-\subsection{Foundations of Toeplitz and Quasi-Toeplitz Structures}
+\subsection{Foundations of Toeplitz and quasi-Toeplitz Structures}
+
+In order to mathematically formalise the concepts introduced above,
+we must first define these structured patterns.
+This section outlines the properties of Toeplitz and quasi-Toeplitz matrices
+and introduces the displacement operators necessary for extracting
+their generators.
 
 \subsubsection{Toeplitz Matrices}
 
-A Toeplitz matrix is characterized by the property that all elements along any given diagonal are identical.
-For a matrix $A \in \mathbb{K}^{n \times m}$, it satisfies the condition $A_{i,j} = A_{i+1, j+1}$.
-In other words, a Toeplitz matrix is one in which each element in the first row and first column descends diagonally.
+A Toeplitz matrix is characterized by the property that all elements
+along any given diagonal are identical.
+For a matrix $A \in \mathbb{K}^{n \times m}$, it satisfies the
+condition $A_{i,j} = A_{i+1, j+1}$.
+In other words, a Toeplitz matrix is one in which each element in the
+first row and first column descends diagonally.
 It can be represented by a sequence of elements $\{a_k\}$ such that:
 
 \begin{equation*}
-    A =
-    \begin{pmatrix}
-        a_{0,0}     & a_{0,1}       & \cdots     & \cdots    &           & \cdots    & a_{0,(m-3)}  & a_{0,(m-2)} & a_{0,(m-1)}    \\
-        a_{1,0}     & a_{0,0}       & a_{0,1}     & \ddots    &           &           & \cdots        & a_{0,(m-3)}  & a_{0,(m-2)}    \\
-        \vdots     & a_{1,0}       & a_{0,0}     & \ddots    & \ddots    &           &               & \cdots        & a_{0,(m-3)}    \\
-        \vdots        & \vdots          & \vdots        & \ddots    & \ddots    & \ddots    &               &               & \vdots        \\
-        a_{(n-1),0} & a_{(n-2),0}   & a_{(n-3),0} & \cdots    & a_{0,0} & a_{0,1} & a_{0,2}     & \cdots        & a_{0,m-(n-1)}
-    \end{pmatrix}
+  A =
+  \begin{pmatrix}
+    a_0     & a_{-1} & \cdots   &        &        &       & & a_{-(m-1)} \\
+    a_1     & a_0    & a_{-1}   &        &        &       & &a_{1-(m-1)} \\
+    \vdots  & a_1    & a_0      & \ddots &        &       & & a_{2-(m-1)} \\
+    \vdots  &        & \ddots   & \ddots & \ddots &       & & \vdots     \\
+    a_{n-1} & \cdots & \cdots   & a_1    & a_0    & a_{-1}&\cdots&
+    a_{(n-1)-(m-1)}
+  \end{pmatrix}
 \end{equation*}
 
 \[
-    A_{i,j} = a_{i-j}, \quad 0 \le i < n,\; 0 \le j < m
+  A_{i,j} = a_{i-j}, \quad 0 \le i < n,\; 0 \le j < m
 \]
 
+\subsubsection{Displacement Operators}
 
-\subsubsection{Quasi-Toeplitz Matrices}
+Despite the perfect Toeplitz matrix defined above, the pattern of
+real-world operations is often slightly corrupted. Matrices that
+deviate slightly from pure Toeplitz form are referred to as
+quasi-Toeplitz or Toeplitz-like matrices.
+Operational evaluation of these matrices is achieved through
+displacement. For a matrix $A \in \mathbb{K}^{n \times m}$, we define
+the displacement matrix $\phi_+(A)$ using:
 
-A Quasi-Toeplitz matrix generalizes the Toeplitz structure by allowing a correction term of finite rank.
-Formally, a matrix $A$ is Quasi-Toeplitz if it can be written as $A = T + E$, 
-where $T$ is a Toeplitz matrix and $E$ is a correction matrix with $\text{rank}(E) < \infty$ \cite{Bini_2017}.
-
-
-\subsubsection{Displacement Matrices}
-
-For a matrix $A \in \mathbb{K}^{n \times m}$, we define the displacement matrix $\nabla A$ using:
 \begin{equation}
-    \label{eq:displacement_formula}
-    \nabla A = A - Z A Z^T
+  \label{eq:displacement_formula}
+  \phi_+(A) = A - Z A Z^T
 \end{equation}
-where $Z$ represents the lower shift matrix and $Z^T$ represents the upper shift matrix.
-Essentially, $Z$ is a matrix with ones on the first sub-diagonal and zeros everywhere else:
+where $Z$ represents the lower shift matrix and $Z^T$ represents the
+upper shift matrix.
+Essentially, $Z$ is a matrix with ones on the first sub-diagonal and
+zeros everywhere else:
 \begin{equation*}
-    Z = 
-    \begin{pmatrix}
-        0      & 0      & 0      & \cdots & \cdots & 0      \\
-        1      & 0      & 0      & \cdots & \cdots & 0      \\
-        0      & 1      & 0      & \cdots & \cdots & 0      \\
-        \vdots & \vdots & \ddots & \ddots &        & \vdots \\
-        \vdots & \vdots &        & \ddots & \ddots & \vdots \\
-        0      & 0      & \cdots & \cdots & 1      & 0
-    \end{pmatrix} \in \mathbb{K}^{n \times n},
-    \quad
-    Z^T = 
-    \begin{pmatrix}
-        0      & 1      & 0      & \cdots & \cdots & 0      \\
-        0      & 0      & 1      & \cdots & \cdots & 0      \\
-        0      & 0      & 0      & \ddots &        & \vdots \\
-        \vdots & \vdots & \vdots &        & \ddots & \vdots \\
-        0      & 0      & 0      & \cdots & \cdots & 1      \\
-        0      & 0      & 0      & \cdots & \cdots & 0
-    \end{pmatrix} \in \mathbb{K}^{m \times m}
+  Z =
+  \begin{pmatrix}
+    0       &           &   &  \\
+    1       &           &   &  \\
+    & \ddots    &   &  \\
+    &           & 1 & 0
+  \end{pmatrix} \in \mathbb{K}^{n \times n}
+  \quad
+  Z^{T} =
+  \begin{pmatrix}
+    0       & 1         &       &  \\
+    &           &\ddots &  \\
+    &           &       & 1\\
+    &           &       & 0
+  \end{pmatrix} \in \mathbb{K}^{m \times m}
 \end{equation*}
 
 % We can approach this multiplication in words:
-% Multiplying the matrix $A$ by $Z$ from the left ($ZA$) shifts the rows down by one (zeros at the top).
-% Multiplying by $Z^T$ from the right ($AZ^T$) shifts the columns to the right, (zeros at the first column).
-% Resulting in an operation $ZAZ^T$ that shifts the entire matrix $A$ one step to the bottom-right.
+% Multiplying the matrix $A$ by $Z$ from the left ($ZA$) shifts the
+% rows down by one (zeros at the top).
+% Multiplying by $Z^T$ from the right ($AZ^T$) shifts the columns to
+% the right, (zeros at the first column).
+% Resulting in an operation $ZAZ^T$ that shifts the entire matrix $A$
+% one step to the bottom-right.
 
-\subsubsection{Mathematical Approach}
-For a generic Toeplitz matrix of size $n \times m$, this subtraction results in zeros everywhere except for the first row and the first column.
+For a generic Toeplitz matrix of size $n \times m$, this subtraction
+results in zeros everywhere except for the first row and the first column.
+This will allow us to represent the matrix using only
+$n+m$ elements.
+
 \begin{equation*}
-    \nabla A = \begin{pmatrix}
-        y_0     & x_1    & x_2    & \cdots & x_{m-1} \\
-        y_1     & 0      & 0      & \cdots & 0       \\
-        y_2     & 0      & 0      & \cdots & 0       \\
-        \vdots  & \vdots & \vdots & \ddots & \vdots  \\
-        y_{n-1} & 0      & 0      & \cdots & 0
-    \end{pmatrix} \in \mathbb{K}^{n \times m}
+  \phi_+(A) =
+  \begin{pmatrix}
+    a_0     & a_{-1}    & a_{-2}    & \cdots & a_{-(m-1)} \\
+    a_1     & 0      & 0      & \cdots & 0       \\
+    a_2     & 0      & 0      & \cdots & 0       \\
+    \vdots  & \vdots & \vdots & \ddots & \vdots  \\
+    a_{n-1} & 0      & 0      & \cdots & 0
+  \end{pmatrix} \in \mathbb{K}^{n \times m}
 \end{equation*}
-This allows us to represent the $n \times m$ matrix using only $O(n + m)$ elements rather than storing the full $O(nm)$ dense matrix.
 
-
-\subsubsection{Computational Approach}
-
-While the definition in Equation \eqref{eq:displacement_formula} suggests a matrix on matrix subtraction with overhead, 
-the structured nature of $A$ allows for a more efficient computation. 
-By leveraging the Toeplitz structure, displacement $\nabla A$ can be computed via a loop:
+While the definition in equation \eqref{eq:displacement_formula}
+suggests a matrix on matrix subtraction with overhead,
+the structured nature of $A$ allows for a more efficient computation.
+By leveraging the Toeplitz structure, displacement $\phi_+(A)$ can be
+computed via a loop:
 
 \begin{equation} \label{imp:phi_plus}
-    (\nabla A)_{i,j} =
-    \begin{cases}
-        A_{i,j}                & \text{if } i=0 \text{ or } j=0 \\
-        A_{i,j} - A_{i-1, j-1} & \text{otherwise}
-    \end{cases}
+  (\phi_+(A))_{i,j} =
+  \begin{cases}
+    A_{i,j}                & \text{if } i=0 \text{ or } j=0 \\
+    A_{i,j} - A_{i-1, j-1} & \text{otherwise}
+  \end{cases}
 \end{equation}
 
 In practice, we enable optimization through pointer arithmetics.
-By iterating from the bottom-right index $(n, m)$ toward the origin $(0, 0)$, the displacement can be calculated in-place,
+By iterating from the bottom-right index $(n, m)$ toward the origin
+$(0, 0)$, the displacement can be calculated in-place,
 resulting a complexity bound of $O(nm)$.
 
 \subsubsection{Generator Matrices and Reconstruction}
-While the displacement matrix $\nabla A$ physically occupies an $n \times m$ dense layout with the 0s, 
-its low displacement rank ($\alpha \le 2$) allows $A$ to be compressed and stored via a pair of smaller matrices known as generators, 
-denoted as $G \in \mathbb{K}^{n \times \alpha}$ and $H \in \mathbb{K}^{m \times \alpha}$, which satisfy:
+The displacement matrix $\phi_+(A)$ physically occupies an $n
+\times m$ dense layout with the 0s,
+its low displacement rank ($\alpha \le$ 2 for Toeplitz) allows $A$ to be
+compressed and stored via a pair of smaller matrices known as generators,
+denoted as $G \in \mathbb{K}^{n \times \alpha}$ and $H \in
+\mathbb{K}^{m \times \alpha}$, which satisfy:
 \begin{equation}
-    \nabla A = G H^T
+  \phi_+(A) = G H^T
 \end{equation}
 
-To reconstruct the uncompressed operator $A$ directly from its generator columns $g_k$ and $h_k$ (for $k = 1, \dots, \alpha$), we formalize the families of lower and upper triangular Toeplitz operators. 
+To reconstruct the uncompressed operator $A$ directly from its
+generator columns $g_k$ and $h_k$ (for $k = 1, \dots, \alpha$), we
+formalize the families of lower and upper triangular Toeplitz operators.
 
-For a column vector $v = [v_0, v_1, \dots, v_{n-1}]^T \in \mathbb{K}^n$, we define the lower triangular Toeplitz operator $L_n(v) \in \mathbb{K}^{n \times n}$ as the square matrix.
-Let $U_{n,m}(w) \in \mathbb{K}^{n \times m}$ be the rectangular upper triangular Toeplitz operator generated by a vector $w = [w_0, w_1, \dots, w_{m-1}]^T \in \mathbb{K}^m$. 
-This operator is formed by taking the first $n$ rows of the fully square $m \times m$ upper triangular matrix $L_m(w)^T$:
+For a column vector $v = [v_0, v_1, \dots, v_{n-1}]^T \in
+\mathbb{K}^n$, we define the lower triangular Toeplitz operator
+$L_n(v) \in \mathbb{K}^{n \times n}$ as the square matrix.
+Let $U_{n,m}(w) \in \mathbb{K}^{n \times m}$ be the rectangular upper
+triangular Toeplitz operator generated by a vector $w = [w_0, w_1,
+\dots, w_{m-1}]^T \in \mathbb{K}^m$.
+This operator is formed by taking the first $n$ rows of the fully
+square $m \times m$ upper triangular matrix $L_m(w)^T$:
 
 \begin{equation*}
-    L_n(v) = \begin{pmatrix}
-        v_0    & 0      & 0      & \cdots & 0 \\
-        v_1    & v_0    & 0      & \cdots & 0 \\
-        v_2    & v_1    & v_0    & \cdots & 0 \\
-        \vdots & \vdots & \ddots & \ddots & \vdots \\
-        v_{n-1}& v_{n-2}& \cdots & v_1    & v_0
-    \end{pmatrix}
-    \quad
-    U_{n,m}(w) = \begin{pmatrix}
-        w_0    & w_1    & w_2    & \cdots & \cdots & w_{m-1} \\
-        0      & w_0    & w_1    & \cdots & \cdots & w_{m-2} \\
-        0      & 0      & w_0    & \cdots & \cdots & w_{m-3} \\
-        \vdots & \vdots & \ddots & \ddots &        & \vdots  \\
-        0      & 0      & \cdots & 0      & w_0    & \cdots  
-    \end{pmatrix}
+  L_n(v) =
+  \begin{pmatrix}
+    v_0     & 0       & 0      & \cdots & 0      \\
+    v_1     & v_0     & 0      & \cdots & 0      \\
+    v_2     & v_1     & v_0    & \cdots & 0      \\
+    \vdots  & \vdots  & \ddots & \ddots & \vdots \\
+    v_{n-1} & v_{n-2} & \cdots & v_1    & v_0
+  \end{pmatrix}
+  \quad
+  U_{n,m}(w) =
+  \begin{pmatrix}
+    w_0    & w_1    & w_2    & \cdots & \cdots & w_{m-1} \\
+    0      & w_0    & w_1    & \cdots & \cdots & w_{m-2} \\
+    0      & 0      & w_0    & \cdots & \cdots & w_{m-3} \\
+    \vdots & \vdots & \ddots & \ddots &        & \vdots  \\
+    0      & 0      & \cdots & 0      & w_0    & \cdots
+  \end{pmatrix}
 \end{equation*}
 
-By denoting the individual columns of the generators as $G = [g_1, \dots, g_\alpha]$ and $H = [h_1, \dots, h_\alpha]$, the displacement inversion theorem~\cite{aecf-2017-pdf} establishes that the full matrix $A$ can be synthesized as a sum of products of these triangular structures:
+By denoting the individual columns of the generators as $G = [g_1,
+\dots, g_\alpha]$ and $H = [h_1, \dots, h_\alpha]$, the displacement
+inversion theorem~\cite{aecf-2017-pdf} establishes that the full
+matrix $A$ can be synthesized as a sum of products of these
+triangular structures:
 \begin{equation} \label{eq:SigmaLU}
-    G H^T = \nabla A \quad \iff \quad A = \sum_{k=1}^{\alpha} L_n(g_k) \, U_{n,m}(h_k)
+  G H^T = \phi_+(A) \quad \iff \quad A = \sum_{k=1}^{\alpha} L_n(g_k)
+  \, U_{n,m}(h_k)
 \end{equation}
 
 \subsubsection{Displacement Operators}
@@ -140,23 +170,26 @@ By denoting the individual columns of the generators as $G = [g_1, \dots, g_\alp
 We define two displacements operators:
 
 \begin{equation*}
-    \begin{aligned}
-        \phi_+(A) &= A - Z A Z^T = \nabla A \\
-        \phi_-(A) &= A - Z^T A Z
-    \end{aligned}
+  \begin{aligned}
+    \phi_+(A) & = A - Z A Z^T \\
+    \phi_-(A) & = A - Z^T A Z
+  \end{aligned}
 \end{equation*}
 
-where $Z$ is the downshift matrix defined in the previous section. 
-The two operators differ in the direction of the operation: $\phi_+$ operates by $Z$ (a downshift), while $\phi_-$ operates by $Z^T$ (an upshift). 
-For a Toeplitz matrix $A$, both operators gives a low-rank result, with $\text{rank}(\phi_\pm(A)) \leq 2$.
-Computationally, it follows the same path as the calculation of $\nabla A$. Main difference being we can run this time in increasing order:
+where $Z$ is the downshift matrix defined in the previous section.
+The two operators differ in the direction of the operation: $\phi_+$
+operates by $Z$ (a downshift), while $\phi_-$ operates by $Z^T$ (an upshift).
+For a Toeplitz matrix $A$, both operators gives a low-rank result,
+with $\text{rank}(\phi_\pm(A)) \leq 2$.
+Computationally, it follows the same path as the calculation of
+$\phi_+(A)$. Main difference being we can run this time in increasing order:
 
 \begin{equation} \label{imp:phi_minus}
-    \phi_-(A)_{i,j} =
-    \begin{cases}
-        A_{i,j}                & \text{if } i=n-1 \text{ or } j=m-1 \\
-        A_{i,j} - A_{i+1, j+1} & \text{otherwise}
-    \end{cases}
+  \phi_-(A)_{i,j} =
+  \begin{cases}
+    A_{i,j}                & \text{if } i=n-1 \text{ or } j=m-1 \\
+    A_{i,j} - A_{i+1, j+1} & \text{otherwise}
+  \end{cases}
 \end{equation}
 
 Where $n$ and $m$ are respectfully the number of rows and columns of matrix A.

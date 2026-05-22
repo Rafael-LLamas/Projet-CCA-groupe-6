@@ -1,215 +1,356 @@
 \section{Inversion}
 
 \subsection{Algorithm}
-We present an implementation of Strassen's inversion method specifically adapted for displacement generators. 
-Strassen's approach relies on recursive block-matrix partitioning and Schur complements, 
+We present an implementation of Strassen's inversion method
+specifically adapted for displacement generators.
+Strassen's approach relies on recursive block-matrix partitioning and
+Schur complements,
 
 \begin{algorithm}[H]
-\caption{Strassen-type Inversion for Displacement Generators}
-\label{alg:strassen_generators}
-\begin{algorithmic}[1]
-\Procedure{StrassenInverseGenerators}{$G_A, H_A$}
-\caption{Strassen-type Inversion for Displacement Generators (adapted from \cite{aecf-2017-pdf})}
+  \caption{Strassen-type Inversion for Displacement Generators}
+  \label{alg:strassen_generators}
+  \begin{algorithmic}[1]
+    \Procedure{StrassenInverseGenerators}{$G_A, H_A$}
+
+    \caption{Strassen-type Inversion for Displacement Generators
+    (adapted from \cite{aecf-2017-pdf})}
+
     \If{$n = 1$} \Comment{\textbf{Step 1: Base Case}}
-            \State \textbf{return} $G_D$ $H_D$ representing the inverse of the scalar value of $A$ from $G_A, H_A$
+
+    \State \textbf{return} $G_D$ $H_D$ representing the inverse of
+    the scalar value of $A$ from $G_A, H_A$
+
     \EndIf
+
     \Statex
-    \State $G_a, H_a, \dots, G_d, H_d \gets \textsc{SplitQuadrants}(G_A, H_A)$ \Comment{\textbf{Step 2: Split into Quadrants}}
+
+    \State $G_a, H_a, \dots, G_d, H_d \gets
+    \textsc{SplitQuadrants}(G_A, H_A)$ \Comment{\textbf{Step 2: Split
+    into Quadrants}}
+
     \Statex \Comment{\textbf{Step 3: Recursion\#1}}
-    \State $G_e, H_e \gets \textsc{StrassenInverseGenerators}(G_a, H_a)$ \Comment{$e := a^{-1}$}
+
+    \State $G_e, H_e \gets \textsc{StrassenInverseGenerators}(G_a,
+    H_a)$ \Comment{$e := a^{-1}$}
+
     \Statex
-    \State $G_{ce}, H_{ce} \gets \textsc{Compress}(\textsc{Mul}(G_c, H_c, G_e, H_e))$ \Comment{\textbf{Step 4: Schur Complement}}
-    \State $G_{eb}, H_{eb} \gets \textsc{Compress}(\textsc{Mul}(G_e, H_e, G_b, H_b))$
-    \State $G_{ceb}, H_{ceb} \gets \textsc{Compress}(\textsc{Mul}(G_c, H_c, G_{eb}, H_{eb}) \times -1)$
-    \State $G_S, H_S \gets \textsc{Compress}(\textsc{Add}(G_d, H_d, G_{ceb}, H_{ceb}))$ \Comment{$S := d - ceb$}
+
+    \State $G_{ce}, H_{ce} \gets \textsc{Compress}(\textsc{Mul}(G_c,
+    H_c, G_e, H_e))$ \Comment{\textbf{Step 4: Schur Complement}}
+
+    \State $G_{eb}, H_{eb} \gets \textsc{Compress}(\textsc{Mul}(G_e,
+    H_e, G_b, H_b))$
+
+    \State $G_{ceb}, H_{ceb} \gets
+    \textsc{Compress}(\textsc{Mul}(G_c, H_c, G_{eb}, H_{eb}) \times -1)$
+
+    \State $G_S, H_S \gets \textsc{Compress}(\textsc{Add}(G_d, H_d,
+    G_{ceb}, H_{ceb}))$ \Comment{$S := d - ceb$}
+
     \Statex \Comment{\textbf{Step 5: Recursion\#2}}
-    \State $G_t, H_t \gets \textsc{StrassenInverseGenerators}(G_S, H_S)$ \Comment{$t := S^{-1}$}
+
+    \State $G_t, H_t \gets \textsc{StrassenInverseGenerators}(G_S,
+    H_S)$ \Comment{$t := S^{-1}$}
+
     \Statex
-    \State $G_{ebt}, H_{ebt} \gets \textsc{Compress}(\textsc{Mul}(G_{eb}, H_{eb}, G_t, H_t))$ \Comment{\textbf{Step 6: Strassen Assembly}}
-    \State $G_{tce}, H_{tce} \gets \textsc{Compress}(\textsc{Mul}(G_t, H_t, G_{ce}, H_{ce}))$
-    \State $G_{ebtce}, H_{ebtce} \gets \textsc{Compress}(\textsc{Mul}(G_{ebt}, H_{ebt}, G_{ce}, H_{ce}))$
+
+    \State $G_{ebt}, H_{ebt} \gets
+    \textsc{Compress}(\textsc{Mul}(G_{eb}, H_{eb}, G_t, H_t))$
+    \Comment{\textbf{Step 6: Strassen Assembly}}
+
+    \State $G_{tce}, H_{tce} \gets
+    \textsc{Compress}(\textsc{Mul}(G_t, H_t, G_{ce}, H_{ce}))$
+
+    \State $G_{ebtce}, H_{ebtce} \gets
+    \textsc{Compress}(\textsc{Mul}(G_{ebt}, H_{ebt}, G_{ce}, H_{ce}))$
+
     \Statex
-    \State $G_x, H_x \gets \textsc{Compress}(\textsc{Add}(G_e, H_e, G_{ebtce}, H_{ebtce}))$ \Comment{$x := e + ebtce$}
-    \State $G_y, H_y \gets \textsc{Negate}(G_{ebt}, H_{ebt})$ \Comment{$y := -ebt$}
-    \State $G_z, H_z \gets \textsc{Negate}(G_{tce}, H_{tce})$ \Comment{$z := -tce$}
+
+    \State $G_x, H_x \gets \textsc{Compress}(\textsc{Add}(G_e, H_e,
+    G_{ebtce}, H_{ebtce}))$ \Comment{$x := e + ebtce$}
+
+    \State $G_y, H_y \gets \textsc{Negate}(G_{ebt}, H_{ebt})$
+    \Comment{$y := -ebt$}
+
+    \State $G_z, H_z \gets \textsc{Negate}(G_{tce}, H_{tce})$
+    \Comment{$z := -tce$}
+
     \Statex
-    \State $G_{Inv}, H_{Inv} \gets \textsc{PackQuadrants}(G_x, H_x, G_y, H_y, G_z, H_z, G_t, H_t)$ \Comment{\textbf{Step 7: Pack}}
+
+    \State $G_{Inv}, H_{Inv} \gets \textsc{PackQuadrants}(G_x, H_x,
+    G_y, H_y, G_z, H_z, G_t, H_t)$ \Comment{\textbf{Step 7: Pack}}
+
     \State \textbf{return} \textsc{Compress}($G_{Inv}, H_{Inv}$)
-\EndProcedure
-\end{algorithmic}
+
+    \EndProcedure
+  \end{algorithmic}
 \end{algorithm}
 
-This algorithm is based on Algorithm 10.1 from \cite[Algorithme 10.1]{aecf-2017-pdf}. 
-Notice that we only operate on $\Phi_+$ displacement and bypassing $\Phi_-$ generators. 
+This algorithm is based on Algorithm 10.1 from \cite[Algorithme
+10.1]{aecf-2017-pdf}.
+Notice that we only operate on $\Phi_+$ displacement and bypassing
+$\Phi_-$ generators.
 
 \begin{proof}
-We proceed by induction on the size of the matrix $n = 2k$. Let $\Phi_+(X) = X - ZXZ^T$ be the displacement operator.
+  We proceed by induction on the size of the matrix $n = 2k$. Let
+  $\Phi_+(X) = X - ZXZ^T$ be the displacement operator.
 
-\paragraph{Base Case ($n=1$):} 
-For a scalar matrix $A = [a]$, the operator $Z$ is a $1 \times 1$ zero matrix. 
-The displacement of $A$ is $\Phi_+(A) = A - 0 \cdot A \cdot 0 = A$. 
-\paragraph{Inductive Step:} 
-Consider a matrix $A$ of size $2k \times 2k$ represented by $\Phi_+$ generators. 
-Inversion relies on splitting the sub-blocks $a, b, c, d$ which are represented by $\Phi_+$ displacements,
-recursive calls to invert top-left block $a$ ($e = a^{-1}$) and antoher for the Schur complement $t = S^{-1}$ and each outputs a $\Phi_+$ generator.
-Multiplication and addition algorithms are taking and returning a generator of $\Phi_+$ displacement.
-Each computation and the final assembly remain in $\Phi_+$ displacement.
+  \paragraph{Base Case ($n=1$):}
+  For a scalar matrix $A = [a]$, the operator $Z$ is a $1 \times 1$ zero matrix.
+  The displacement of $A$ is $\Phi_+(A) = A - 0 \cdot A \cdot 0 = A$.
+  \paragraph{Inductive Step:}
+  Consider a matrix $A$ of size $2k \times 2k$ represented by
+  $\Phi_+$ generators.
+  Inversion relies on splitting the sub-blocks $a, b, c, d$ which are
+  represented by $\Phi_+$ displacements,
+  recursive calls to invert top-left block $a$ ($e = a^{-1}$) and
+  antoher for the Schur complement $t = S^{-1}$ and each outputs a
+  $\Phi_+$ generator.
+  Multiplication and addition algorithms are taking and returning a
+  generator of $\Phi_+$ displacement.
+  Each computation and the final assembly remain in $\Phi_+$ displacement.
 
-Because the base case returns the inverse to $\Phi_+$ generators, and the arithmetics are on $\Phi_+$ generator operations, by induction, we maintain $\Phi_+$ displacement during the entire execution.
+  Because the base case returns the inverse to $\Phi_+$ generators,
+  and the arithmetics are on $\Phi_+$ generator operations, by
+  induction, we maintain $\Phi_+$ displacement during the entire execution.
 \end{proof}
 
 \subsection{Split and Pack quadrants from displacement generators}
 
-Any divide and conquer algorithm will divide the problem to create sub-problems to economise in complexity.
+Any divide and conquer algorithm will divide the problem to create
+sub-problems to economise in complexity.
 This algorithm calls for a dense matrix $A$ be split into four quadrants:
-$$ A = \begin{pmatrix} a & b \\ c & d \end{pmatrix} $$
+$$ A =
+\begin{pmatrix} a & b \\ c & d
+\end{pmatrix} $$
 
 Since we don't have direct access to the dense matrix $A$,
-any splitting and packing operation done will be on the generators $G_A$ and $H_A$ which represent the displacement matrix.
-When we attempt to evaluate the local displacement of a sub-block (for example, $\Phi_+(d)$), we cannot simply extract the rows from the global generators $G_A$ and $H_A$. 
-The global generators are corrupted by the boundary elements of $a$ that shifted into $b$ and $c$.
+any splitting and packing operation done will be on the generators
+$G_A$ and $H_A$ which represent the displacement matrix.
+When we attempt to evaluate the local displacement of a sub-block
+(for example, $\Phi_+(d)$), we cannot simply extract the rows from
+the global generators $G_A$ and $H_A$.
+The global generators are corrupted by the boundary elements of $a$
+that shifted into $b$ and $c$.
 We must correct these boundary crossings which we call bleeding.
 
 \vspace{0.2cm}
 
 \subsubsection{Splitting}
 
-During the split phase, we extract the local generators for sub-blocks $a, b, c, d$. 
-We begin by splitting the global generators $G_A, H_A \in \mathbb{R}^{n \times r}$ into top and bottom blocks of sizes $n_1 = ceil(n/2)$ and $n_2 = floor(n/2)$:
-$$G = \begin{pmatrix} G_{\text{TOP}} \\ G_{\text{BOTTOM}} \end{pmatrix}, \quad H = \begin{pmatrix} H_{\text{TOP}} \\ H_{\text{BOTTOM}} \end{pmatrix}$$
+During the split phase, we extract the local generators for
+sub-blocks $a, b, c, d$.
+We begin by splitting the global generators $G_A, H_A \in
+\mathbb{R}^{n \times r}$ into top and bottom blocks of sizes $n_1 =
+ceil(n/2)$ and $n_2 = floor(n/2)$:
+\begin{equation*}
+  G =
+  \begin{pmatrix} G_{\text{TOP}} \\ G_{\text{BOTTOM}}
+  \end{pmatrix}
+  \quad
+  H =
+  \begin{pmatrix} H_{\text{TOP}} \\ H_{\text{BOTTOM}}
+  \end{pmatrix}
+\end{equation*}
 
 \vspace{0.5em}
 \noindent\textbf{Block $\boldsymbol{a}$:}
-This block receives no shifted data from other quadrants. 
+This block receives no shifted data from other quadrants.
 Its generators are the global top halves:
 $$ G_{a} = G_{\text{TOP}}, \quad H_{a} = H_{\text{BOTTOM}} $$
 
 \vspace{0.5em}
 \noindent\textbf{Block $\boldsymbol{b}$:}
-The last column of block $a$, denoted $v_a$, shifts right into the first column of block $b$. 
-To correct this bleed, we must reconstruct $v_a$ from the global generators. 
-Naively evaluating the displacement sum for a boundary vector requires $O(n^2 r)$ operations. 
-However, this evaluation is equivalent to computing the coefficients of a polynomial multiplication.
-By packing the columns of $G$ and the reversed columns of $H$ into polynomials, we extract $v_a$ with polynomial multiplication in $O(r \cdot \mathcal{M}(n))$ time. 
-Once extracted, we shift $v_a$ down using the operator $Z_{n_1}$ and append it to $G_{\text{TOP}}$. 
-To apply this correction only to the first column of $b$, we append the vector $e_0^{(n_2)} = (1, 0, \dots, 0)^T$ to $H_{\text{bot}}$:
-$$ G_{b} = \begin{pmatrix} G_{\text{TOP}} & Z_{n_1} v_a \end{pmatrix}, \quad H_{b} = \begin{pmatrix} H_{\text{BOTTOM}} & e_0^{(n_2)} \end{pmatrix} $$
+The last column of block $a$, denoted $v_a$, shifts right into the
+first column of block $b$.
+To correct this bleed, we must reconstruct $v_a$ from the global generators.
+Naively evaluating the displacement sum for a boundary vector
+requires $O(n^2 r)$ operations.
+However, this evaluation is equivalent to computing the coefficients
+of a polynomial multiplication.
+By packing the columns of $G$ and the reversed columns of $H$ into
+polynomials, we extract $v_a$ with polynomial multiplication in $O(r
+\cdot \mathcal{M}(n))$ time.
+Once extracted, we shift $v_a$ down using the operator $Z_{n_1}$ and
+append it to $G_{\text{TOP}}$.
+To apply this correction only to the first column of $b$, we append
+the vector $e_0^{(n_2)} = (1, 0, \dots, 0)^T$ to $H_{\text{bot}}$:
+$$ G_{b} =
+\begin{pmatrix} G_{\text{TOP}} & Z_{n_1} v_a
+\end{pmatrix}, \quad H_{b} =
+\begin{pmatrix} H_{\text{BOTTOM}} & e_0^{(n_2)}
+\end{pmatrix} $$
 
 \vspace{0.5em}
 \noindent\textbf{Block $\boldsymbol{c}$:}
-Bleeding occurs to $c$ from above via the last row of $a$, denoted $r_a$. Using the same polynomial operation, we recover $r_a$. 
-Because $H$ generators represent the transposed displacement components, we apply the shift $Z_{n_1}$ to $r_a$ and append it to $H_{\text{TOP}}$:
-$$ G_{c} = \begin{pmatrix} G_{\text{BOTTOM}} & e_0^{(n_2)} \end{pmatrix}, \quad H_{c} = \begin{pmatrix} H_{\text{TOP}} & Z_{n_1} r_a \end{pmatrix} $$
+Bleeding occurs to $c$ from above via the last row of $a$, denoted
+$r_a$. Using the same polynomial operation, we recover $r_a$.
+Because $H$ generators represent the transposed displacement
+components, we apply the shift $Z_{n_1}$ to $r_a$ and append it to
+$H_{\text{TOP}}$:
+$$ G_{c} =
+\begin{pmatrix} G_{\text{BOTTOM}} & e_0^{(n_2)}
+\end{pmatrix}, \quad H_{c} =
+\begin{pmatrix} H_{\text{TOP}} & Z_{n_1} r_a
+\end{pmatrix} $$
 
 \vspace{0.5em}
 \noindent\textbf{Block $\boldsymbol{d}$:}
-Block $d$ is exposed to bleeding from all directions: the last column of $c$ ($v_c$) shifting right, the last row of $b$ ($r_b$) shifting down, 
+Block $d$ is exposed to bleeding from all directions: the last column
+of $c$ ($v_c$) shifting right, the last row of $b$ ($r_b$) shifting down,
 and the exact bottom-right scalar of $a$ ($s_a$) shifting diagonally down-right.
-We extract $v_c$ and $r_b$ using polynomial operation. 
-Because $s_a$ is a single cell, polynomial overhead is unnecessary; it is computed directly in $\O(n r)$ time. 
+We extract $v_c$ and $r_b$ using polynomial operation.
+Because $s_a$ is a single cell, polynomial overhead is unnecessary;
+it is computed directly in $\O(n r)$ time.
 Scaling the vector $e_0^{(n_2)}$ by $s_a$ and addint to the shifted vectors:
-$$ G_{d} = \begin{pmatrix} G_{\text{BOTTOM}} & s_a e_0^{(n_2)} + Z_{n_2} v_c & e_0^{(n_2)} \end{pmatrix}, \quad H_{d} = \begin{pmatrix} H_{\text{BOTTOM}} & e_0^{(n_2)} & Z_{n_2} r_b \end{pmatrix} $$
+$$ G_{d} =
+\begin{pmatrix} G_{\text{BOTTOM}} & s_a e_0^{(n_2)} + Z_{n_2} v_c & e_0^{(n_2)}
+\end{pmatrix}, \quad H_{d} =
+\begin{pmatrix} H_{\text{BOTTOM}} & e_0^{(n_2)} & Z_{n_2} r_b
+\end{pmatrix} $$
 
 \vspace{1em}
 \subsubsection{Packing}
 
-The pack operation reverts the changes of the splitting phase. 
-After computing the inverse sub-blocks (denoted as $x, y, z, t$), 
-our goal is to assemble the global generators $G_{INV}$ and $H_{INV}$ for the full inverse matrix $A^{-1}$.
-If we were to concatenate directly the local generators, 
-the result would assume that the boundaries between the sub-blocks are filled with zeros.
-Because the global operator $\Phi_+$ shifts elements, 
+The pack operation reverts the changes of the splitting phase.
+After computing the inverse sub-blocks (denoted as $x, y, z, t$),
+our goal is to assemble the global generators $G_{INV}$ and $H_{INV}$
+for the full inverse matrix $A^{-1}$.
+If we were to concatenate directly the local generators,
+the result would assume that the boundaries between the sub-blocks
+are filled with zeros.
+Because the global operator $\Phi_+$ shifts elements,
 we must correct the bleeding to restore data integrity.
-Just as we calculated boundaries during the split, we must extract the boundary vectors of the local inverse blocks. 
-Since we are now operating on isolated sub-block generators, the coordinates for each reconstruction are local and starts from zero.
+Just as we calculated boundaries during the split, we must extract
+the boundary vectors of the local inverse blocks.
+Since we are now operating on isolated sub-block generators, the
+coordinates for each reconstruction are local and starts from zero.
 
-To apply these corrections, we construct a large set of global generators. 
-We horizontally concatenate the local generators of $x, y, z, t$ into their respective quadrants and append four specific boundary correction columns ($c_1, c_2, c_3, c_4$). 
+To apply these corrections, we construct a large set of global generators.
+We horizontally concatenate the local generators of $x, y, z, t$ into
+their respective quadrants and append four specific boundary
+correction columns ($c_1, c_2, c_3, c_4$).
 We define these global assembled generators as block matrices:
-$$ G_{RES} = \begin{pmatrix} 
-G_x & G_y & 0 & 0 & -Z_{n_1} v_x & 0 & 0 & 0 \\ 
-0 & 0 & G_z & G_t & 0 & -e_0^{(n_2)} & -(s_x e_0^{(n_2)} + Z_{n_2} v_z) & -e_0^{(n_2)} 
+$$ G_{RES} =
+\begin{pmatrix}
+  G_x & G_y & 0 & 0 & -Z_{n_1} v_x & 0 & 0 & 0 \\
+  0 & 0 & G_z & G_t & 0 & -e_0^{(n_2)} & -(s_x e_0^{(n_2)} + Z_{n_2}
+  v_z) & -e_0^{(n_2)}
 \end{pmatrix} $$
-$$ H_{RES} = \begin{pmatrix} 
-H_x & 0 & H_z & 0 & 0 & Z_{n_1} r_x & 0 & 0 \\ 
-0 & H_y & 0 & H_t & e_0^{(n_2)} & 0 & e_0^{(n_2)} & Z_{n_2} r_y 
+$$ H_{RES} =
+\begin{pmatrix}
+  H_x & 0 & H_z & 0 & 0 & Z_{n_1} r_x & 0 & 0 \\
+  0 & H_y & 0 & H_t & e_0^{(n_2)} & 0 & e_0^{(n_2)} & Z_{n_2} r_y
 \end{pmatrix} $$
 
-Notice that the boundary correction columns in $G_{RES}$ carry negative signs. 
-The reconstruction is going to add the values diagonally, to correct bleeding, we must
+Notice that the boundary correction columns in $G_{RES}$ carry negative signs.
+The reconstruction is going to add the values diagonally, to correct
+bleeding, we must
 substract the the corrections.
-To prove the correctness of these columns, 
-we compute the global displacement reconstruction by multiplying $\Phi_+(A^{-1}) = G_{RES} H_{RES}^T$:
+To prove the correctness of these columns,
+we compute the global displacement reconstruction by multiplying
+$\Phi_+(A^{-1}) = G_{RES} H_{RES}^T$:
 
-$$ G_{RES} H_{RES}^T = \begin{pmatrix} 
-G_x H_x^T                               & G_y H_y^T - Z_{n_1} v_x (e_0^{(n_2)})^T \\ 
-G_z H_z^T - e_0^{(n_2)} (Z_{n_1} r_x)^T & G_t H_t^T - Z_{n_2} v_z (e_0^{(n_2)})^T - e_0^{(n_2)} (Z_{n_2} r_y)^T - s_x e_0^{(n_2)} (e_0^{(n_2)})^T
+$$ G_{RES} H_{RES}^T =
+\begin{pmatrix}
+  G_x H_x^T                               & G_y H_y^T - Z_{n_1} v_x
+  (e_0^{(n_2)})^T \\
+  G_z H_z^T - e_0^{(n_2)} (Z_{n_1} r_x)^T & G_t H_t^T - Z_{n_2} v_z
+  (e_0^{(n_2)})^T - e_0^{(n_2)} (Z_{n_2} r_y)^T - s_x e_0^{(n_2)}
+  (e_0^{(n_2)})^T
 \end{pmatrix} $$
 
-The isolated terms ($G_x H_x^T, G_y H_y^T$, etc.) represent the isolated local displacements of the sub-matrices. 
-The subtracted terms are the bleeds. 
-For example, the term $- Z_{n_1} v_x (e_0^{(n_2)})^T$ subtracts the shifted right column of block $x$ as it crosses into the first column of block $y$.
+The isolated terms ($G_x H_x^T, G_y H_y^T$, etc.) represent the
+isolated local displacements of the sub-matrices.
+The subtracted terms are the bleeds.
+For example, the term $- Z_{n_1} v_x (e_0^{(n_2)})^T$ subtracts the
+shifted right column of block $x$ as it crosses into the first column
+of block $y$.
 
-This structural reassembly exposes a vulnerability. Let $\alpha_x, \alpha_y, \alpha_z, \alpha_t$ be the displacement ranks of the sub-quadrants. 
+This structural reassembly exposes a vulnerability. Let $\alpha_x,
+\alpha_y, \alpha_z, \alpha_t$ be the displacement ranks of the sub-quadrants.
 The rank of our assembled global generators is:
 $$ \text{Rank}_{RES} = \alpha_x + \alpha_y + \alpha_z + \alpha_t + 4 $$
-Passing this uncompressed matrix up to the next recursion level would cause the displacement rank to explode,
-ruining the optimisations we aimed for at the first place. We call the compression seen in section \ref{ch:compression} to keep the algorithm efficient. 
+Passing this uncompressed matrix up to the next recursion level would
+cause the displacement rank to explode,
+ruining the optimisations we aimed for at the first place. We call
+the compression seen in section \ref{ch:compression} to keep the
+algorithm efficient.
 
 \subsection{Benchmarks}
 
 \begin{table}
-    \centering
-    \begin{tabular}{r r r}
-        \hline
-        $n$ & Generators (ms) & Flint Dense (ms) \\
-        \hline
-        512  & 30.14  & 79.19    \\
-        1024 & 70.42  & 545.50   \\
-        2048 & 164.10 & 3839.00  \\
-        4096 & 374.00 & 26610.00 \\
-        \hline
-    \end{tabular}
-    \caption{Median runtimes of inversion over 5 runs}
-    \label{tab:bench_inv_size}
+  \centering
+  \begin{tabular}{r r r}
+    \hline
+    $n$  & Generators (ms) & Flint Dense (ms) \\
+    \hline
+    512  & 30.14           & 79.19 \\
+    1024 & 70.42           & 545.50 \\
+    2048 & 164.10          & 3839.00 \\
+    4096 & 374.00          & 26610.00 \\
+    \hline
+  \end{tabular}
+  \caption{Median runtimes of inversion over 5 runs}
+  \label{tab:bench_inv_size}
 \end{table}
 
 \begin{table}
-    \centering
-    \begin{tabular}{r r r r}
-        \hline
-        $\alpha$ & $n=512$ (ms) & $n=1024$ (ms) & $n=2048$ (ms) \\
-        \hline
-        2  & 33.22  & 76.98  & 180.00  \\
-        3  & 46.15  & 109.50 & 253.10  \\
-        4  & 60.58  & 147.30 & 340.20  \\
-        5  & 77.06  & 188.30 & 440.00  \\
-        10 & 182.30 & 455.90 & 1098.00 \\
-        \hline
-    \end{tabular}
-    \caption{Median runtimes of generator inversion scaling by rank over 5 runs}
-    \label{tab:bench_inv_rank}
+  \centering
+  \begin{tabular}{r r r r}
+    \hline
+    $\alpha$ & $n=512$ (ms) & $n=1024$ (ms) & $n=2048$ (ms) \\
+    \hline
+    2        & 33.22        & 76.98         & 180.00 \\
+    3        & 46.15        & 109.50        & 253.10 \\
+    4        & 60.58        & 147.30        & 340.20 \\
+    5        & 77.06        & 188.30        & 440.00 \\
+    10       & 182.30       & 455.90        & 1098.00 \\
+    \hline
+  \end{tabular}
+  \caption{Median runtimes of generator inversion scaling by rank over 5 runs}
+  \label{tab:bench_inv_rank}
 \end{table}
 
-The benchmarks show great improvement on generator-based Strassen inversion. 
-Table \ref{tab:bench_inv_size} demonstrates the advantage over FLINT's dense inversion of $O(n^3)$ bound. 
-While split and pack phases operates in $O(\alpha \cdot \mathcal{M}(n))$, 
-the full recursive inversion involves multiplying structured sub-generators which makes this algorithm bounded by $O(\alpha^2 \mathcal{M}(n) \log n)$, 
+The benchmarks show great improvement on generator-based Strassen inversion.
+Table \ref{tab:bench_inv_size} demonstrates the advantage over
+FLINT's dense inversion of $O(n^3)$ bound.
+While split and pack phases operates in $O(\alpha \cdot \mathcal{M}(n))$,
+the full recursive inversion involves multiplying structured
+sub-generators which makes this algorithm bounded by $O(\alpha^2
+\mathcal{M}(n) \log n)$,
 
-While this implementation is great for large matrices with a bounded rank, 
-the overhead makes the algorithm computationally disadvantageous for smaller matrices compared to standard dense inversion.
+While this implementation is great for large matrices with a bounded rank,
+the overhead makes the algorithm computationally disadvantageous for
+smaller matrices compared to standard dense inversion.
 We have observed the threshold generally between matrices of sizes 256 and 512.
 
-As detailed by Victor Y. Pan in \textit{Structured Matrices and Polynomials} \cite[Chapter 5]{pan2001structured}, an alternative is the Morf-Bitmead-Anderson (MBA) algorithm. 
-Originally proposed by Morf (1980) and Bitmead and Anderson (1980), it achieves $O(n \log^2 n)$ complexity for Toeplitz-like matrices. 
-Because it is also a divide-and-conquer method, this approach still requires calculations of sub-quadrants and continuous generator compression.
-To bypass the need to split the matrix, one should prefer to implement the Newton iterative version.
-Pan dedicates analysis to this approach in \cite[Chapters 6 and 7]{pan2001structured}, which is based on the Schulz iteration: $X_{k+1} = X_k(2I - A X_k)$. 
+As detailed by Victor Y. Pan in \textit{Structured Matrices and
+Polynomials} \cite[Chapter 5]{pan2001structured}, an alternative is
+the Morf-Bitmead-Anderson (MBA) algorithm.
+Originally proposed by Morf (1980) and Bitmead and Anderson (1980),
+it achieves $O(n \log^2 n)$ complexity for Toeplitz-like matrices.
+Because it is also a divide-and-conquer method, this approach still
+requires calculations of sub-quadrants and continuous generator compression.
+To bypass the need to split the matrix, one should prefer to
+implement the Newton iterative version.
+Pan dedicates analysis to this approach in \cite[Chapters 6 and
+7]{pan2001structured}, which is based on the Schulz iteration:
+$X_{k+1} = X_k(2I - A X_k)$.
 
-If the objective is to solve a linear system $Ax = b$, computing the full inverse $A^{-1}$ introduces unnecessary computations.
-Instead, one can take direct advantage of the structured properties of $A$ to solve the system more efficiently.
-Methods such as the Levinson-Durbin algorithm \cite{durbin1960fitting}, avoid inversion and solve Toeplitz systems in $O(n^2)$ operations. 
-Iterative Krylov subspace methods, the Preconditioned Conjugate Gradient (PCG) method \cite{doi:10.1137/0909051} use FFT to compute matrix-vector products, achieving $O(n \log n)$ complexity per iteration.
-These iterative methods they rely on numerical approximation and convergence tolerances. 
-For an exact deterministic algebraic solution, there is an alternative by resolving via M-Padé approximations\cite{khichane2026matricesdisplacementstructuredeterministic}, 
+If the objective is to solve a linear system $Ax = b$, computing the
+full inverse $A^{-1}$ introduces unnecessary computations.
+Instead, one can take direct advantage of the structured properties
+of $A$ to solve the system more efficiently.
+Methods such as the Levinson-Durbin algorithm
+\cite{durbin1960fitting}, avoid inversion and solve Toeplitz systems
+in $O(n^2)$ operations.
+Iterative Krylov subspace methods, the Preconditioned Conjugate
+Gradient (PCG) method \cite{doi:10.1137/0909051} use FFT to compute
+matrix-vector products, achieving $O(n \log n)$ complexity per iteration.
+These iterative methods they rely on numerical approximation and
+convergence tolerances.
+For an exact deterministic algebraic solution, there is an
+alternative by resolving via M-Padé
+approximations\cite{khichane2026matricesdisplacementstructuredeterministic},
 which achieves a deterministic $\tilde{O}(\alpha^{\omega-1}n)$ complexity.
