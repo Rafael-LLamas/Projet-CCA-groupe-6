@@ -285,13 +285,15 @@ algorithm efficient.
     \hline
     $n$  & Generators (ms) & Flint Dense (ms) \\
     \hline
-    512  & 30.14           & 79.19 \\
-    1024 & 70.42           & 545.50 \\
-    2048 & 164.10          & 3839.00 \\
-    4096 & 374.00          & 26610.00 \\
+    128  & 15.59           & 5.765\\
+    256  & 24.98           & 22.38\\
+    512  & 41.57           & 105.8 \\
+    1024 & 98.39           & 675.3 \\
+    2048 & 238.8           & 4501 \\
+    4096 & 599.2          & 30490 \\
     \hline
   \end{tabular}
-  \caption{Median runtimes of inversion over 5 runs}
+  \caption{Average runtimes of inversion over 10 runs}
   \label{tab:bench_inv_size}
 \end{table}
 
@@ -301,14 +303,14 @@ algorithm efficient.
     \hline
     $\alpha$ & $n=512$ (ms) & $n=1024$ (ms) & $n=2048$ (ms) \\
     \hline
-    2        & 33.22        & 76.98         & 180.00 \\
-    3        & 46.15        & 109.50        & 253.10 \\
-    4        & 60.58        & 147.30        & 340.20 \\
-    5        & 77.06        & 188.30        & 440.00 \\
-    10       & 182.30       & 455.90        & 1098.00 \\
+    2        & 44.35        & 107.1         & 227.8 \\
+    3        & 62.74        & 145.8        & 320.1 \\
+    4        & 79.83        & 187.1        & 425 \\
+    5        & 100.4        & 238        & 565.9 \\
+    10       & 235.0       & 572.3        & 1335 \\
     \hline
   \end{tabular}
-  \caption{Median runtimes of generator inversion scaling by rank over 5 runs}
+  \caption{Average runtimes of generator inversion scaling by rank over 10 runs}
   \label{tab:bench_inv_rank}
 \end{table}
 
