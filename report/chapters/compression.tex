@@ -68,6 +68,6 @@ Since $H_D G_D^T = H_1 G_1^T$, transposing gives us $G_D H_D^T = G_1 H_1^T$.
 Computing the LU factorization of the transposed generator $G^T \in \mathbb{K}^{\alpha \times n}$ requires $\mathcal{O}(\alpha^2 n)$ operations. 
 Extracting $U$ and applying the permutation matrix $P^T$ to $H$ is in $O(\alpha n)$\footnote{In FLINT\cite{flint331}, the permutation matrix is represented as an array of indices. We do a swapping operation rather than a full matrix multiplication.}.
 Computing $H_{D} = H P^T \times L_{*,[0:r-1]}$ contains a multiplication of a $n \times \alpha$ matrix by a $\alpha \times r$ matrix. Using standard matrix multiplication, this takes $O(n \alpha r)$ operations. 
-Our implementation uses loops to extract the selected amount of rows and columns, but their complexities are strictly bounded by $\O(n \alpha r)$.
+Our implementation uses loops to extract the selected amount of rows and columns, but their complexities are strictly bounded by $O(n \alpha r)$.
 
 We can generalize this complexity: for any generator matrices in $\mathbb{K}^{n \times m}$ compressing to rank $r$, the overall time complexity for the generator compression is dominated by the matrix multiplication and is bounded by $O(r n m)$.

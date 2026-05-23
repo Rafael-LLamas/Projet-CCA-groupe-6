@@ -1,6 +1,6 @@
-# Project Title
+# Toeplitz-like matrices implementation
 
-Project Descrption here
+In this project, we show a way to implement operation for Toeplitz-like matrices in C with the lib FLINT.
 
 ## Build
 You can create a build folder and compile the project using CMake.

@@ -1,11 +1,12 @@
 \section{Basic operation}
 \subsection{Introduction}
-(here to define context + utility)
-We need $A\simeq(T,U)$ and $B\simeq(G,H)$ matrices in ???? with T,U (resp. G,H) the displacement generators of A (resp. B) following the properties describe before.
+Arithmetic operations on matrices are fundamental to algorithmic efficiency. In this section, we show how to fully exploit the properties of Toeplitz-like matrix and their complexity bounds.
+In first, we explain how to optimize the addition, followed by the low cost of multiply a vector with toeplitz matrix, and finish with how use the generators of toeplitz on multiplication.
+We will use in each points: $A\simeq(T,U) \in M^{n \times m}$ and $B\simeq(G,H) \in M^{m\times k}$ matrices with T,U (resp. G,H) the displacement generators of A (resp. B) following the properties describe before.
 \subsection{Addition}
 \subsubsection{Algorithm}
 With the displacement generators, we can simplify the addition of 2 matrices and thus reduce its cost by concatenating the generators of the 2 matrices.
-From the property 10.7 and 10.8, we can pass from $O(n^2)$ for the naive algorithm to $O( \alpha \times n)$ with this algorithm.
+From the property 10.7 and 10.8, we can pass from $O(n^2)$ for the naive algorithm to $O( \alpha \times n)$ with this algorithm:
 
  \begin{algorithm}[H]
 \caption{Generator Addition}
@@ -156,8 +157,6 @@ To do that, we takes the formula for the reconstruction and we transform our dis
 \end{algorithm}
 \subsubsection{Multiplication matrices}
 With displacement generators we also can simplify the multiplication of 2 matrices and thus reduce its cost by concatenating the generators of the 2 matrices.
-- The displacement generators A=(T,U) and B=(G,H) 
-
 - $W = Z \times A \times Z^t \times G$
 
 - $V = B^t \times U$
