@@ -7,27 +7,27 @@
 #include <stdlib.h>
 #include <time.h>
 
-int gr_mat_mul_vector(gr_mat_t Res, gr_mat_t G, gr_mat_t H, gr_mat_t X, gr_ctx_t ctx) {
+int gr_mat_mul_vector(gr_mat_t Res, gr_mat_t G, gr_mat_t H, gr_mat_t V, gr_ctx_t ctx) {
   int error = GR_SUCCESS;
   slong n = gr_mat_nrows(G, ctx), m = gr_mat_nrows(H, ctx);
-  slong alpha = gr_mat_ncols(G, ctx), m_cols = gr_mat_ncols(X, ctx);
+  slong alpha = gr_mat_ncols(G, ctx), m_cols = gr_mat_ncols(V, ctx);
 
-  gr_poly_t pg, ph, px, p_tmp, p_tmp_shift, p_tmp2;
+  gr_poly_t pg, ph, pv, p_tmp, p_tmp_shift, p_tmp2;
 
   error = gr_mat_zero(Res, ctx);
   if (error) { return error; }
 
   for (slong j = 0; j < m_cols; j++) {
-    gr_poly_init(px, ctx);
-    gr_poly_fit_length(px, m, ctx);
+    gr_poly_init(pv, ctx);
+    gr_poly_fit_length(pv, m, ctx);
     for (slong r = 0; r < m; r++) {
-      error = gr_set(gr_poly_coeff_ptr(px, r, ctx), gr_mat_entry_srcptr(X, r, j, ctx), ctx);
+      error = gr_set(gr_poly_coeff_ptr(pv, r, ctx), gr_mat_entry_srcptr(V, r, j, ctx), ctx);
       if (error) {
-        gr_poly_clear(px, ctx);
+        gr_poly_clear(pv, ctx);
         return error;
       }
     }
-    _gr_poly_set_length(px, m, ctx);
+    _gr_poly_set_length(pv, m, ctx);
 
     for (slong k = 0; k < alpha; k++) {
       gr_poly_init(pg, ctx);
@@ -41,7 +41,7 @@ int gr_mat_mul_vector(gr_mat_t Res, gr_mat_t G, gr_mat_t H, gr_mat_t X, gr_ctx_t
         if (error) {
           gr_poly_clear(pg, ctx);
           gr_poly_clear(ph, ctx);
-          gr_poly_clear(px, ctx);
+          gr_poly_clear(pv, ctx);
           gr_poly_clear(p_tmp, ctx);
           gr_poly_clear(p_tmp_shift, ctx);
           gr_poly_clear(p_tmp2, ctx);
@@ -56,7 +56,7 @@ int gr_mat_mul_vector(gr_mat_t Res, gr_mat_t G, gr_mat_t H, gr_mat_t X, gr_ctx_t
         if (error) {
           gr_poly_clear(pg, ctx);
           gr_poly_clear(ph, ctx);
-          gr_poly_clear(px, ctx);
+          gr_poly_clear(pv, ctx);
           gr_poly_clear(p_tmp, ctx);
           gr_poly_clear(p_tmp_shift, ctx);
           gr_poly_clear(p_tmp2, ctx);
@@ -69,17 +69,17 @@ int gr_mat_mul_vector(gr_mat_t Res, gr_mat_t G, gr_mat_t H, gr_mat_t X, gr_ctx_t
       if (error) {
         gr_poly_clear(pg, ctx);
         gr_poly_clear(ph, ctx);
-        gr_poly_clear(px, ctx);
+        gr_poly_clear(pv, ctx);
         gr_poly_clear(p_tmp, ctx);
         gr_poly_clear(p_tmp_shift, ctx);
         gr_poly_clear(p_tmp2, ctx);
         return error;
       }
-      error = gr_poly_mul(p_tmp, ph, px, ctx);
+      error = gr_poly_mul(p_tmp, ph, pv, ctx);
       if (error) {
         gr_poly_clear(pg, ctx);
         gr_poly_clear(ph, ctx);
-        gr_poly_clear(px, ctx);
+        gr_poly_clear(pv, ctx);
         gr_poly_clear(p_tmp, ctx);
         gr_poly_clear(p_tmp_shift, ctx);
         gr_poly_clear(p_tmp2, ctx);
@@ -90,7 +90,7 @@ int gr_mat_mul_vector(gr_mat_t Res, gr_mat_t G, gr_mat_t H, gr_mat_t X, gr_ctx_t
       if (error) {
         gr_poly_clear(pg, ctx);
         gr_poly_clear(ph, ctx);
-        gr_poly_clear(px, ctx);
+        gr_poly_clear(pv, ctx);
         gr_poly_clear(p_tmp, ctx);
         gr_poly_clear(p_tmp_shift, ctx);
         gr_poly_clear(p_tmp2, ctx);
@@ -102,7 +102,7 @@ int gr_mat_mul_vector(gr_mat_t Res, gr_mat_t G, gr_mat_t H, gr_mat_t X, gr_ctx_t
       if (error) {
         gr_poly_clear(pg, ctx);
         gr_poly_clear(ph, ctx);
-        gr_poly_clear(px, ctx);
+        gr_poly_clear(pv, ctx);
         gr_poly_clear(p_tmp, ctx);
         gr_poly_clear(p_tmp_shift, ctx);
         gr_poly_clear(p_tmp2, ctx);
@@ -117,7 +117,7 @@ int gr_mat_mul_vector(gr_mat_t Res, gr_mat_t G, gr_mat_t H, gr_mat_t X, gr_ctx_t
         if (error) {
           gr_poly_clear(pg, ctx);
           gr_poly_clear(ph, ctx);
-          gr_poly_clear(px, ctx);
+          gr_poly_clear(pv, ctx);
           gr_poly_clear(p_tmp, ctx);
           gr_poly_clear(p_tmp_shift, ctx);
           gr_poly_clear(p_tmp2, ctx);
@@ -130,29 +130,29 @@ int gr_mat_mul_vector(gr_mat_t Res, gr_mat_t G, gr_mat_t H, gr_mat_t X, gr_ctx_t
       gr_poly_clear(p_tmp, ctx);
       gr_poly_clear(p_tmp2, ctx);
     }
-    gr_poly_clear(px, ctx);
+    gr_poly_clear(pv, ctx);
   }
 
   return error;
 }
-int gr_mat_mul_generator(gr_mat_t G_c, gr_mat_t H_c, gr_mat_t G_a, gr_mat_t H_a, gr_mat_t G_b, gr_mat_t H_b,
+int gr_mat_mul_generator(gr_mat_t G_c, gr_mat_t H_c, gr_mat_t T, gr_mat_t U, gr_mat_t G, gr_mat_t H,
                          gr_ctx_t ctx) {
-  slong n = gr_mat_nrows(G_a, ctx); // Lignes de A
-  slong m = gr_mat_nrows(G_b, ctx); // Colonnes de A
-  slong k = gr_mat_nrows(H_b, ctx); // colonnes de B
+  slong n = gr_mat_nrows(T, ctx); // Lignes de A
+  slong m = gr_mat_nrows(G, ctx); // Colonnes de A
+  slong k = gr_mat_nrows(H, ctx); // colonnes de B
 
   gr_mat_t W, V, a, b, Tmp, LastCol_m, LastCol_k;
   int error;
 
   // Initialisation avec les dimensions respectives
-  gr_mat_init(W, n, gr_mat_ncols(G_b, ctx), ctx);
-  gr_mat_init(V, k, gr_mat_ncols(H_a, ctx), ctx);
+  gr_mat_init(W, n, gr_mat_ncols(G, ctx), ctx);
+  gr_mat_init(V, k, gr_mat_ncols(U, ctx), ctx);
   gr_mat_init(a, n, 1, ctx);
   gr_mat_init(b, k, 1, ctx);
-  gr_mat_init(Tmp, m, gr_mat_ncols(G_b, ctx), ctx);
+  gr_mat_init(Tmp, m, gr_mat_ncols(G, ctx), ctx);
 
-  // 1. W = Z * A * Z^T * G_b
-  error = gr_mat_apply_Zt(Tmp, G_b, ctx);
+  // 1. W = Z * A * Z^T * G
+  error = gr_mat_apply_Zt(Tmp, G, ctx);
 
   if (error != 0) {
     gr_mat_clear(W, ctx);
@@ -163,7 +163,7 @@ int gr_mat_mul_generator(gr_mat_t G_c, gr_mat_t H_c, gr_mat_t G_a, gr_mat_t H_a,
 
     return error;
   }
-  error = gr_mat_mul_vector(W, G_a, H_a, Tmp, ctx);
+  error = gr_mat_mul_vector(W, T, U, Tmp, ctx);
 
   if (error != 0) {
     gr_mat_clear(W, ctx);
@@ -186,8 +186,8 @@ int gr_mat_mul_generator(gr_mat_t G_c, gr_mat_t H_c, gr_mat_t G_a, gr_mat_t H_a,
     return error;
   }
 
-  // 2. V = B^T * H_a (Le générateur de B^T est {H_b, G_b})
-  error = gr_mat_mul_vector(V, H_b, G_b, H_a, ctx);
+  // 2. V = B^T * U (Le générateur de B^T est {H, G})
+  error = gr_mat_mul_vector(V, H, G, U, ctx);
 
   if (error != 0) {
     gr_mat_clear(W, ctx);
@@ -201,8 +201,8 @@ int gr_mat_mul_generator(gr_mat_t G_c, gr_mat_t H_c, gr_mat_t G_a, gr_mat_t H_a,
 
   // 3. Correction colonnes
   // Vecteur e_{m-1} pour la dimension de A
-  // LastCol_m doit être e_{nrows(H_a) - 1}
-  slong m_a = gr_mat_nrows(H_a, ctx);
+  // LastCol_m doit être e_{nrows(U) - 1}
+  slong m_a = gr_mat_nrows(U, ctx);
   gr_mat_init(LastCol_m, m_a, 1, ctx);
   error = gr_mat_zero(LastCol_m, ctx);
   if (error != 0) {
@@ -229,7 +229,7 @@ int gr_mat_mul_generator(gr_mat_t G_c, gr_mat_t H_c, gr_mat_t G_a, gr_mat_t H_a,
     return error;
   }
 
-  error = gr_mat_mul_vector(a, G_a, H_a, LastCol_m, ctx);
+  error = gr_mat_mul_vector(a, T, U, LastCol_m, ctx);
   if (error != 0) {
     gr_mat_clear(W, ctx);
     gr_mat_clear(V, ctx);
@@ -253,8 +253,8 @@ int gr_mat_mul_generator(gr_mat_t G_c, gr_mat_t H_c, gr_mat_t G_a, gr_mat_t H_a,
   }
 
   // Vecteur e_{m-1} pour la dimension de B^T
-  // B^T a pour générateurs {H_b, G_b}, donc m = nrows(G_b)
-  slong m_bt = gr_mat_nrows(G_b, ctx);
+  // B^T a pour générateurs {H, G}, donc m = nrows(G)
+  slong m_bt = gr_mat_nrows(G, ctx);
   gr_mat_init(LastCol_k, m_bt, 1, ctx);
 
   error = gr_mat_zero(LastCol_k, ctx);
@@ -281,7 +281,7 @@ int gr_mat_mul_generator(gr_mat_t G_c, gr_mat_t H_c, gr_mat_t G_a, gr_mat_t H_a,
     return error;
   }
 
-  error = gr_mat_mul_vector(b, H_b, G_b, LastCol_k, ctx);
+  error = gr_mat_mul_vector(b, H, G, LastCol_k, ctx);
 
   if (error != 0) {
     gr_mat_clear(W, ctx);
@@ -312,12 +312,12 @@ int gr_mat_mul_generator(gr_mat_t G_c, gr_mat_t H_c, gr_mat_t G_a, gr_mat_t H_a,
 
   // 4. Concaténation (G_c: n x (ra+rb+1), H_c: k x (ra+rb+1))
   gr_mat_t G_temp, H_temp;
-  gr_mat_init(G_c, n, gr_mat_ncols(G_a, ctx) + gr_mat_ncols(W, ctx) + 1, ctx);
-  gr_mat_init(G_temp, n, gr_mat_ncols(G_a, ctx) + gr_mat_ncols(W, ctx), ctx);
-  gr_mat_init(H_c, k, gr_mat_ncols(V, ctx) + gr_mat_ncols(H_b, ctx) + 1, ctx);
-  gr_mat_init(H_temp, k, gr_mat_ncols(V, ctx) + gr_mat_ncols(H_b, ctx), ctx);
+  gr_mat_init(G_c, n, gr_mat_ncols(T, ctx) + gr_mat_ncols(W, ctx) + 1, ctx);
+  gr_mat_init(G_temp, n, gr_mat_ncols(T, ctx) + gr_mat_ncols(W, ctx), ctx);
+  gr_mat_init(H_c, k, gr_mat_ncols(V, ctx) + gr_mat_ncols(H, ctx) + 1, ctx);
+  gr_mat_init(H_temp, k, gr_mat_ncols(V, ctx) + gr_mat_ncols(H, ctx), ctx);
 
-  error = gr_mat_concat_horizontal(G_temp, G_a, W, ctx);
+  error = gr_mat_concat_horizontal(G_temp, T, W, ctx);
 
   if (error != 0) {
     gr_mat_clear(W, ctx);
@@ -351,7 +351,7 @@ int gr_mat_mul_generator(gr_mat_t G_c, gr_mat_t H_c, gr_mat_t G_a, gr_mat_t H_a,
     gr_mat_clear(H_temp, ctx);
     return error;
   }
-  error = gr_mat_concat_horizontal(H_temp, V, H_b, ctx);
+  error = gr_mat_concat_horizontal(H_temp, V, H, ctx);
 
   if (error != 0) {
     gr_mat_clear(W, ctx);

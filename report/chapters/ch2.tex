@@ -12,8 +12,8 @@ From the property 10.7 and 10.8, we can pass from $O(n^2)$ for the naive algorit
 \begin{algorithmic}[1]
 \Function{gr\_mat\_mul\_generator}{$T,U,G,H$}
 
-    \State $G_C \gets \Call{gr\_mat\_Concat\_Horizontal}{T,G}$
-    \State $H_C \gets \Call{gr\_mat\_Concat\_Horizontal}{U,H}$
+    \State $G_C \gets [T | G]$
+    \State $H_C \gets [U | H]$
     \State \textbf{return} $G_C, H_C$
 \EndFunction
 \end{algorithmic}
@@ -145,7 +145,7 @@ To do that, we takes the formula for the reconstruction and we transform our dis
             \State $P_{tmp} \gets P_{h\_rev} P_x$ 
             \State $P_{tmp\_shift} \gets P_{tmp} \gg (m - 1)$ 
             \State $P_{res} \gets P_g P_{tmp\_shift}$ 
-            \For{$i \gets 0$ \textbf{to} $\text{Length}(P_{tmp2}) - 1$}
+            \For{$i \gets 0$ \textbf{to} $\text{Length}(P_{res}) - 1$}
                 \State $C[i, j] \gets C[i, j] + \text{Coefficient}(P_{res}, i)$
             \EndFor
         \EndFor
@@ -170,21 +170,16 @@ This allows us to pass from $O(n^3)$ for the naive algorithm to $O( \alpha^2 \ti
 \begin{algorithmic}[1]
 \Function{gr\_mat\_mul\_generator}{$T,U,G,H$}
 
-    \State $W_{Temp} \gets \Call{gr\_mat\_apply\_Zt}{G}$
-    \State $W \gets \Call{gr\_mat\_mul\_vector}{T,U,W_{Temp}}$
-    \State $W \gets \Call{gr\_mat\_apply\_Z}{W}$
+    \State $W_{Temp} \gets Z^t \times G$
+    \State $W \gets Z \times \Call{gr\_mat\_mul\_vector}{T,U,W_{Temp}}$
     \newline
     \State $V \gets \Call{gr\_mat\_mul\_vector}{H,G,U}$
     \newline
-    \State $a \gets \Call{gr\_mat\_mul\_vector}{T,U,LastCol}$
-    \State $a \gets \Call{gr\_mat\_apply\_Z}{a}$
+    \State $a \gets Z \times \Call{gr\_mat\_mul\_vector}{T,U,LastCol}$
+    \State $b \gets -Z \times \Call{gr\_mat\_mul\_vector}{H,G,LastCol}$
     \newline
-    \State $b \gets \Call{gr\_mat\_mul\_vector}{H,G,LastCol}$
-    \State $b \gets \Call{gr\_mat\_apply\_Z}{b}$
-    \State $b \gets \Call{gr\_mat\_neg}{b}$
-    \newline
-    \State $G_C \gets \Call{gr\_mat\_concat\_horizontal}{T,W,a}$
-    \State $H_C \gets \Call{gr\_mat\_concat\_horizontal}{V,H,b}$
+    \State $G_C \gets [T|W|a]$
+    \State $H_C \gets [V|H|b]$
     \State \textbf{return} $G_C, H_C$
 \EndFunction
 \end{algorithmic}
