@@ -8,7 +8,6 @@ Schur complements,
 
 \begin{algorithm}[H]
   \caption{Strassen-type Inversion for Displacement Generators}
-  \label{alg:strassen_generators}
   \begin{algorithmic}[1]
     \Procedure{StrassenInverseGenerators}{$G_A, H_A$}
 
@@ -92,8 +91,7 @@ Notice that we only operate on $\Phi_+$ displacement and bypassing
 $\Phi_-$ generators.
 
 \begin{proposition}
-  The Strassen-type inversion algorithm (Algorithm
-  \ref{alg:strassen_generators}) maintains $\Phi_+$
+  The Strassen-type inversion algorithm maintains $\Phi_+$
   displacement generators throughout its recursive execution, without
   necessitating conversion to $\Phi_-$ generators.
 \end{proposition}
