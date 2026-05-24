@@ -22,15 +22,18 @@
 
 % --- HYPERREF SETUP ---
 \hypersetup{
-    colorlinks=true,
-    linkcolor=primaryDark,
-    filecolor=primaryDark,      
-    urlcolor=linkGrey,
-    citecolor=primaryDark,
+  colorlinks=true,
+  linkcolor=primaryDark,
+  filecolor=primaryDark,
+  urlcolor=linkGrey,
+  citecolor=primaryDark,
 }
 
 % --- COMMANDS ---
 \newcommand{\todo}[1]{\textbf{\textcolor{blue}{[TODO: #1]}}}
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+\newtheorem{proposition}{Proposition}
 
 % --- STYLES ---
 \titleformat{\chapter}[hang]{\normalfont\huge\sffamily\bfseries\color{primaryDark}}{\thechapter\quad}{0pt}{\huge\sffamily\bfseries}
@@ -45,7 +48,8 @@
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{\small\color{secondaryGrey}\sffamily\textbf{PCCA6}}
-\fancyhead[R]{\small\color{secondaryGrey}\sffamily Ali Arda BARUT, Rafael LLAMAS}
+\fancyhead[R]{\small\color{secondaryGrey}\sffamily Ali Arda BARUT,
+Rafael LLAMAS}
 \fancyfoot[C]{\small\color{secondaryGrey}\thepage}
 \renewcommand{\headrulewidth}{0.4pt}
 
@@ -54,21 +58,22 @@
 
 % title page
 \begin{titlepage}
-    \centering
-    \vspace*{5cm}
-    {\Huge \textbf{Elementary Operations on Quasi-Toeplitz Matrices} \par}
-    \vspace*{0.5cm}
-    {\Large PCCA6 \par}
-    \vfill
-    {\Large Ali Arda BARUT \par}
-    {\Large Rafael LLAMAS \par}
-    \vspace*{1cm}
-    {\large \today \par}
+  \centering
+  \vspace*{5cm}
+  {\Huge \textbf{Elementary Operations on Quasi-Toeplitz Matrices} \par}
+  \vspace*{0.5cm}
+  {\Large PCCA6 \par}
+  \vfill
+  {\Large Ali Arda BARUT \par}
+  {\Large Rafael LLAMAS \par}
+  \vspace*{1cm}
+  {\large \today \par}
 \end{titlepage}
 \tableofcontents
 \vspace*{\fill}
 \noindent
-\text{Url of the project: \url{https://github.com/Rafael-LLamas/Projet-CCA-groupe-6}}
+\text{Url of the project:
+\url{https://github.com/Rafael-LLamas/Projet-CCA-groupe-6}}
 \newpage
 
 % introduction
@@ -78,7 +83,6 @@
 
 \input{chapters/compression.tex}
 \input{chapters/inversion.tex}
-
 
 % references
 \newpage

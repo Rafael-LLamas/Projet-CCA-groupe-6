@@ -34,26 +34,32 @@ It can be represented by a sequence of elements $\{a_k\}$ such that:
 
 \subsubsection{Displacement Operators}
 
-Despite the perfect Toeplitz matrix defined above, the pattern of
-real-world operations is often slightly corrupted. Matrices that
-deviate slightly from pure Toeplitz form are referred to as
+While a pure Toeplitz matrix is perfectly structured, real-world
+operations (such as matrix multiplication or inversion) often
+slightly corrupt this perfect diagonal pattern. Matrices that deviate
+slightly from a pure Toeplitz form are broadly referred to as
 quasi-Toeplitz or Toeplitz-like matrices.
-Operational evaluation of these matrices is achieved through
-displacement. For a matrix $A \in \mathbb{K}^{n \times m}$, we define
-the displacement matrix $\phi_+(A)$ using:
+
+Instead of defining these matrices through an additive correction
+term, we evaluate them operationally through their displacement. We
+define two complementary displacement operators:
 
 \begin{equation}
   \label{eq:displacement_formula}
-  \phi_+(A) = A - Z A Z^T
+  \begin{aligned}
+    \phi_+(A) &= A - Z A Z^T \\
+    \phi_-(A) &= A - Z^T A Z
+  \end{aligned}
 \end{equation}
-where $Z$ represents the lower shift matrix and $Z^T$ represents the
-upper shift matrix.
-Essentially, $Z$ is a matrix with ones on the first sub-diagonal and
-zeros everywhere else:
+
+where $Z$ represents the lower shift matrix (downshift) and $Z^T$
+represents the upper shift matrix (upshift). Essentially, $Z$ is a
+matrix with ones on the first sub-diagonal and zeros everywhere else:
+
 \begin{equation*}
   Z =
   \begin{pmatrix}
-    0       &           &   &  \\
+    0       &           &   &0  \\
     1       &           &   &  \\
     & \ddots    &   &  \\
     &           & 1 & 0
@@ -64,22 +70,16 @@ zeros everywhere else:
     0       & 1         &       &  \\
     &           &\ddots &  \\
     &           &       & 1\\
-    &           &       & 0
+    0&           &       & 0
   \end{pmatrix} \in \mathbb{K}^{m \times m}
 \end{equation*}
 
-% We can approach this multiplication in words:
-% Multiplying the matrix $A$ by $Z$ from the left ($ZA$) shifts the
-% rows down by one (zeros at the top).
-% Multiplying by $Z^T$ from the right ($AZ^T$) shifts the columns to
-% the right, (zeros at the first column).
-% Resulting in an operation $ZAZ^T$ that shifts the entire matrix $A$
-% one step to the bottom-right.
-
-For a generic Toeplitz matrix of size $n \times m$, this subtraction
-results in zeros everywhere except for the first row and the first column.
-This will allow us to represent the matrix using only
-$n+m$ elements.
+The two operators differ in their direction: $\phi_+$ operates via a
+downshift, while $\phi_-$ operates via an upshift. For a generic
+Toeplitz matrix of size $n \times m$, the $\phi_+(A)$ subtraction
+results in zeros everywhere except for the first row and the first
+column, while $\phi_-(A)$ results in zeros everywhere except the last
+row and column:
 
 \begin{equation*}
   \phi_+(A) =
@@ -92,11 +92,11 @@ $n+m$ elements.
   \end{pmatrix} \in \mathbb{K}^{n \times m}
 \end{equation*}
 
-While the definition in equation \eqref{eq:displacement_formula}
-suggests a matrix on matrix subtraction with overhead,
-the structured nature of $A$ allows for a more efficient computation.
-By leveraging the Toeplitz structure, displacement $\phi_+(A)$ can be
-computed via a loop:
+While the definitions in Equation \eqref{eq:displacement_formula}
+suggest a matrix-on-matrix subtraction with significant overhead, the
+structured nature of $A$ allows for a much more efficient
+computation. By leveraging the Toeplitz structure, both displacements
+can be computed via simple loops:
 
 \begin{equation} \label{imp:phi_plus}
   (\phi_+(A))_{i,j} =
@@ -106,18 +106,35 @@ computed via a loop:
   \end{cases}
 \end{equation}
 
-In practice, we enable optimization through pointer arithmetics.
-By iterating from the bottom-right index $(n, m)$ toward the origin
-$(0, 0)$, the displacement can be calculated in-place,
-resulting a complexity bound of $O(nm)$.
+\begin{equation} \label{imp:phi_minus}
+  (\phi_-(A))_{i,j} =
+  \begin{cases}
+    A_{i,j}                & \text{if } i=n-1 \text{ or } j=m-1 \\
+    A_{i,j} - A_{i+1, j+1} & \text{otherwise}
+  \end{cases}
+\end{equation}
+
+In practice, we enable optimization through pointer arithmetic. By
+iterating from the bottom-right index $(n, m)$ toward the origin $(0,
+0)$ for $\phi_+$, and in increasing order for $\phi_-$, the
+displacements can be calculated in-place, resulting in a strict
+complexity bound of $O(nm)$.
 
 \subsubsection{Generator Matrices and Reconstruction}
-The displacement matrix $\phi_+(A)$ physically occupies an $n
-\times m$ dense layout with the 0s,
-its low displacement rank ($\alpha \le$ 2 for Toeplitz) allows $A$ to be
-compressed and stored via a pair of smaller matrices known as generators,
-denoted as $G \in \mathbb{K}^{n \times \alpha}$ and $H \in
-\mathbb{K}^{m \times \alpha}$, which satisfy:
+
+While the displacement matrix $\phi_+(A)$ occupies $n
+\times m$ elements, it is filled with zeros. Our primary interest in
+this project lies in structured matrices $A$ where
+the rank of this displacement matrix is smaller than
+the matrix dimensions ($\alpha \ll n$ and $\alpha \ll m$).
+
+For a standard Toeplitz matrix, this rank is strictly bounded
+($\alpha \le 2$). This is what allows $A$ to be efficiently
+compressed. Instead of storing $\mathcal{O}(nm)$ elements, the matrix
+can be represented via a pair of highly compact matrices known as
+generators, denoted as $G \in \mathbb{K}^{n \times \alpha}$ and $H
+\in \mathbb{K}^{m \times \alpha}$, which satisfy:
+
 \begin{equation}
   \phi_+(A) = G H^T
 \end{equation}
@@ -164,32 +181,3 @@ triangular structures:
   G H^T = \phi_+(A) \quad \iff \quad A = \sum_{k=1}^{\alpha} L_n(g_k)
   \, U_{n,m}(h_k)
 \end{equation}
-
-\subsubsection{Displacement Operators}
-
-We define two displacements operators:
-
-\begin{equation*}
-  \begin{aligned}
-    \phi_+(A) & = A - Z A Z^T \\
-    \phi_-(A) & = A - Z^T A Z
-  \end{aligned}
-\end{equation*}
-
-where $Z$ is the downshift matrix defined in the previous section.
-The two operators differ in the direction of the operation: $\phi_+$
-operates by $Z$ (a downshift), while $\phi_-$ operates by $Z^T$ (an upshift).
-For a Toeplitz matrix $A$, both operators gives a low-rank result,
-with $\text{rank}(\phi_\pm(A)) \leq 2$.
-Computationally, it follows the same path as the calculation of
-$\phi_+(A)$. Main difference being we can run this time in increasing order:
-
-\begin{equation} \label{imp:phi_minus}
-  \phi_-(A)_{i,j} =
-  \begin{cases}
-    A_{i,j}                & \text{if } i=n-1 \text{ or } j=m-1 \\
-    A_{i,j} - A_{i+1, j+1} & \text{otherwise}
-  \end{cases}
-\end{equation}
-
-Where $n$ and $m$ are respectfully the number of rows and columns of matrix A.

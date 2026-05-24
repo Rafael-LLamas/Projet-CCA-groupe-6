@@ -1,73 +1,139 @@
 \section{Generator Compression}
 \label{ch:compression}
 
-Matrices $G \in \mathbb{R}^{n \times \alpha}$ and $H \in \mathbb{R}^{n \times \alpha}$ representing a displacement matrix $\nabla A = G H^T$, where the actual rank of $\nabla A$ is $r < \alpha$.
-\vspace{0.5em}
+As resulted at the end of section \ref{ch:operations},
+operations cause the displacement rank $\alpha$ to grow rapidly.
+To maintain efficiency, we must compress the generator
+matrices.
 
-\textbf{Goal:} Find generators $G' \in \mathbb{R}^{n \times r}$ and $H' \in \mathbb{R}^{n \times r}$ s.t. the product is the same:
+Let $G \in \mathbb{K}^{n \times \alpha}$ and $H \in \mathbb{K}^{n
+\times \alpha}$ be displacement generators representing a
+displacement matrix $\nabla A = G H^T$. The true mathematical rank of
+the displacement matrix is $r = \text{rank}(\nabla A) < \alpha$.
+
+\vspace{0.5em}
+\noindent\textbf{Goal:} Compute new, compressed generators $G' \in
+\mathbb{K}^{n \times r}$ and $H' \in \mathbb{K}^{n \times r}$, where
+$r$ is minimal and:
 \[
-    G'H'^T = G H^T
+  G'H'^T = G H^T
 \]
 
-We will achieve this by independently compression both matrices and applying the inverse of the operations done to the other.
+We achieve this reduction by sequentially compressing each matrix
+using an LU factorization and applying the inverse operations to the
+other matrix to preserve the product.
 
 \begin{algorithm}[H]
-\caption{Generator Compression}
-\begin{algorithmic}[1]
-\Function{gr\_mat\_generator\_compress}{$G_A, H_A$}
+  \caption{Generator Compression} \label{alg:generator_compression}
+
+  \textbf{Input:} \\
+  \hspace*{0.5cm} \textbullet \ $G_A, H_A$: Uncompressed generators
+  $\in \mathbb{K}^{n \times \alpha}$ \\
+  \textbf{Output:} $G_D, H_D$: Compressed generators $\in
+  \mathbb{K}^{n \times r}$ where $r \le \alpha$
+
+  \vspace{0.15cm}
+  \hrule
+  \vspace{0.15cm}
+
+  \begin{algorithmic}[1]
+    \Function{gr\_mat\_generator\_compress}{$G_A, H_A$}
     \State $G_1, H_1 \gets \Call{gr\_mat\_generator\_compress\_aux}{G_A, H_A}$
     \State $H_D, G_D \gets \Call{gr\_mat\_generator\_compress\_aux}{H_1, G_1}$
     \State \textbf{return} $G_D, H_D$
-\EndFunction
-\end{algorithmic}
+    \EndFunction
+  \end{algorithmic}
 \end{algorithm}
 
 \begin{algorithm}[H]
-\caption{Generator Compression Auxiliary}
-\begin{algorithmic}[1]
-\Function{gr\_mat\_generator\_compress\_aux}{$G, H$}
-    \State $P, L, U \gets \text{LU\_Decomposition}(G^T)$ \Comment{$P G^T = L U$}
-    \State $r \gets \text{Number of non-zero rows in } U$ \Comment{rank}
+  \caption{Generator Compression Auxiliary}
+
+  \textbf{Input:} \\
+  \hspace*{0.5cm} \textbullet \ $G, H$: Generators to be partially compressed \\
+  \textbf{Output:} $G_D, H_D$: Partially compressed generators
+
+  \vspace{0.15cm}
+  \hrule
+  \vspace{0.15cm}
+
+  \begin{algorithmic}[1]
+    \Function{gr\_mat\_generator\_compress\_aux}{$G, H$}
+    \State $P, L, U \gets \text{LU\_Decomposition}(G^T)$
+    \Comment{$P G^T = L U$}
+    \State $r \gets \text{Number of non-zero rows in } U$
+    \Comment{Extracts the true rank $r$}
     \If{$r < 1$}
-        \State \textbf{return} Generators of a $0$ matrix
+    \State \textbf{return} Generators of a $0$ matrix
     \EndIf
     \State $G_{D} \gets (U_{[0:r-1],*})^T$
-    \State $H_{D} \gets H P^T \times L_{*,[0:r-1]}$
+    \State $H_{D} \gets H P^T L_{*,[0:r-1]}$
     \State \textbf{return} $G_D, H_D$
-\EndFunction
-\end{algorithmic}
+    \EndFunction
+  \end{algorithmic}
 \end{algorithm}
 
-Note that calling \textsc{gr\_mat\_generator\_compress\_aux} twice with swapped arguments (and variables) is valid because each call preserves the product $GH^T$, 
-as can be verified from the LU factorization.
+Note that calling the auxiliary function twice with swapped arguments
+is valid because each individual call inherently preserves the matrix
+product.
+
+\begin{proposition}
+  Algorithm \ref{alg:generator_compression} is correct. Specifically,
+  the auxiliary function preserves the generator product,
+  guaranteeing that $H_D G_D^T = H_1 G_1^T$, which consequently
+  ensures $G_D H_D^T = G_A H_A^T$.
+\end{proposition}
 
 \begin{proof}
-We show that the second call to the auxiliary function preserves the generator product, meaning $H_D G_D^T = H_1 G_1^T$. 
+  We show that the second call to the auxiliary function preserves
+  the generator product. In this step, the first argument is $H_1$,
+  meaning the LU decomposition is performed on $H_1^T$, resulting $P
+  H_1^T = L U$.
 
-First argument is $H_1$, the LU decomposition is performed on $H_1^T$ giving $P H_1^T = L U$. 
-Since $U$ has rank $r$, the product only depends on the first $r$ columns and rows: $LU = L_{*,[0:r-1]}\, U_{[0:r-1],*}$.
-Starting from $P H_1^T = LU$ and multiplying both sides on the left by $P^T$:
-\begin{align*}
+  Since $U$ has a rank of $r$, the matrix product depends exclusively
+  on the first $r$ columns and rows:
+  \[ LU = L_{*,[0:r-1]}\, U_{[0:r-1],*} \]
+
+  Starting from $P H_1^T = LU$ and multiplying both sides on the left
+  by $P^T$, we obtain:
+  \begin{align*}
     H_1^T &= P^T L_{*,[0:r-1]}\, U_{[0:r-1],*} \\
     H_1 &= \bigl(U_{[0:r-1],*}\bigr)^T L_{*,[0:r-1]}^T\, P
-\end{align*}
-Based on the swapped inputs to the auxiliary function, returned generators are given as $H_D = \bigl(U_{[0:r-1],*}\bigr)^T$ and $G_D = G_1 P^T L_{*,[0:r-1]}$. 
-Taking the transpose of $G_D$:
-\[
+  \end{align*}
+
+  Based on the logic of the auxiliary function, the returned
+  generators are $H_D = \bigl(U_{[0:r-1],*}\bigr)^T$ and $G_D = G_1
+  P^T L_{*,[0:r-1]}$. Taking the transpose of $G_D$ gives:
+  \[
     G_D^T = \bigl(G_1 P^T L_{*,[0:r-1]}\bigr)^T = L_{*,[0:r-1]}^T\, P\, G_1^T
-\]
-For $H_D G_D^T$, we see $H_1$ form:
-\begin{align*}
-    H_D G_D^T &= \bigl(U_{[0:r-1],*}\bigr)^T \Bigl( L_{*,[0:r-1]}^T\, P\, G_1^T \Bigr) \\
-              &= \Bigl( \bigl(U_{[0:r-1],*}\bigr)^T L_{*,[0:r-1]}^T\, P \Bigr) G_1^T \\
-              &= H_1 G_1^T.
-\end{align*}
-Since $H_D G_D^T = H_1 G_1^T$, transposing gives us $G_D H_D^T = G_1 H_1^T$.
+  \]
+
+  Substituting these into the product $H_D G_D^T$, we reconstruct the
+  original form of $H_1$:
+  \begin{align*}
+    H_D G_D^T &= \bigl(U_{[0:r-1],*}\bigr)^T \Bigl( L_{*,[0:r-1]}^T\,
+    P\, G_1^T \Bigr) \\
+    &= \Bigl( \bigl(U_{[0:r-1],*}\bigr)^T L_{*,[0:r-1]}^T\, P \Bigr) G_1^T \\
+    &= H_1 G_1^T
+  \end{align*}
+
+  Since $H_D G_D^T = H_1 G_1^T$, taking the transpose of both sides
+  gives us $G_D H_D^T = G_1 H_1^T$.
 \end{proof}
 
-Computing the LU factorization of the transposed generator $G^T \in \mathbb{K}^{\alpha \times n}$ requires $\mathcal{O}(\alpha^2 n)$ operations. 
-Extracting $U$ and applying the permutation matrix $P^T$ to $H$ is in $O(\alpha n)$\footnote{In FLINT\cite{flint331}, the permutation matrix is represented as an array of indices. We do a swapping operation rather than a full matrix multiplication.}.
-Computing $H_{D} = H P^T \times L_{*,[0:r-1]}$ contains a multiplication of a $n \times \alpha$ matrix by a $\alpha \times r$ matrix. Using standard matrix multiplication, this takes $O(n \alpha r)$ operations. 
-Our implementation uses loops to extract the selected amount of rows and columns, but their complexities are strictly bounded by $O(n \alpha r)$.
+Computing the LU factorization of the transposed generator $G^T \in
+\mathbb{K}^{\alpha \times n}$ requires $O(\alpha^2 n)$ operations.
+Extracting $U$ and applying the permutation matrix $P^T$ to $H$ is in
+$O(\alpha n)$\footnote{In FLINT\cite{flint331}, the permutation
+  matrix is represented as an array of indices. We do a swapping
+operation rather than a full matrix multiplication.}.
+Computing $H_{D} = H P^T \times L_{*,[0:r-1]}$ contains a
+multiplication of a $n \times \alpha$ matrix by a $\alpha \times r$
+matrix. Using standard matrix multiplication, this takes $O(n \alpha
+r)$ operations.
+Our implementation uses loops to extract the selected amount of rows
+and columns, but their complexities are strictly bounded by $O(n \alpha r)$.
 
-We can generalize this complexity: for any generator matrices in $\mathbb{K}^{n \times m}$ compressing to rank $r$, the overall time complexity for the generator compression is dominated by the matrix multiplication and is bounded by $O(r n m)$.
+We can generalize this complexity: for any generator matrices in
+$\mathbb{K}^{n \times m}$ compressing to rank $r$, the overall time
+complexity for the generator compression is dominated by the matrix
+multiplication and is bounded by $O(r n m)$.

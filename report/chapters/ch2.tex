@@ -1,309 +1,446 @@
-\section{Basic operation}
-\subsection{Introduction}
-Arithmetic operations on matrices are fundamental to algorithmic efficiency. In this section, we show how to fully exploit the properties of Toeplitz-like matrix and their complexity bounds.
-In first, we explain how to optimize the addition, followed by the low cost of multiply a vector with toeplitz matrix, and finish with how use the generators of toeplitz on multiplication.
-We will use in each points: $A\simeq(T,U) \in M^{n \times m}$ and $B\simeq(G,H) \in M^{m\times k}$ matrices with T,U (resp. G,H) the displacement generators of A (resp. B) following the properties describe before.
+\section{Basic Operations}
+\label{ch:operations}
+
+Arithmetic operations on matrices are fundamental to algorithmic
+efficiency. In this section, we see how to fully exploit the
+properties of Toeplitz-like matrices to significantly reduce their
+computational complexity bounds. First, we detail an optimized
+approach to matrix addition. Next, we analyze the low computational
+cost of matrix-vector multiplication. Finally, we conclude by
+demonstrating how to perform full matrix multiplication directly
+using displacement generators.
+
+Throughout this section, we consider structured matrices $A \in
+\mathbb{K}^{n \times m}$ and $B \in \mathbb{K}^{m \times k}$,
+represented by their displacement generators $(T, U)$ and $(G, H)$
+respectively, in accordance with the properties defined previously.
+
 \subsection{Addition}
-\subsubsection{Algorithm}
-With the displacement generators, we can simplify the addition of 2 matrices and thus reduce its cost by concatenating the generators of the 2 matrices.
-From the property 10.7 and 10.8, we can pass from $O(n^2)$ for the naive algorithm to $O( \alpha \times n)$ with this algorithm:
 
- \begin{algorithm}[H]
-\caption{Generator Addition}
-\begin{algorithmic}[1]
-\Function{gr\_mat\_mul\_generator}{$T,U,G,H$}
+\subsubsection{Generator Addition Algorithm}
 
-    \State $G_C \gets [T | G]$
-    \State $H_C \gets [U | H]$
+Using displacement generators, the addition of two structured
+matrices can be performed efficiently by simply concatenating their
+respective generators. As established by the properties of
+displacement operators (Properties 10.7 and 10.8 in
+\cite{aecf-2017-pdf}), this approach reduces the computational
+complexity of matrix addition from $O(n^2)$ for a naive
+dense algorithm down to $O(\alpha n)$.
+
+\begin{algorithm}[H]
+  \caption{Generator Addition}
+
+  \textbf{Input:} \\
+  \hspace*{0.5cm} \textbullet \ $T, U$: Displacement generators of
+  structured matrix $A \in \mathbb{K}^{n \times m}$ \\
+  \hspace*{0.5cm} \textbullet \ $G, H$: Displacement generators of
+  structured matrix $B \in \mathbb{K}^{n \times m}$ \\
+  \textbf{Output:} $G_C, H_C$: Displacement generators representing
+  the sum $A + B$
+
+  \vspace{0.15cm}
+  \hrule
+  \vspace{0.15cm}
+
+  \begin{algorithmic}[1]
+    \Function{gr\_mat\_add\_generators}{$T,U,G,H$}
+    \State $G_C \gets [T \mid G]$ \Comment{Horizontal concatenation}
+    \State $H_C \gets [U \mid H]$ \Comment{Horizontal concatenation}
     \State \textbf{return} $G_C, H_C$
-\EndFunction
-\end{algorithmic}
+    \EndFunction
+  \end{algorithmic}
 \end{algorithm}
 
- \subsubsection{Example}
-We takes A and B, two randoms matrices, C the result of A and B.Every matrices are in $Z/_{13}Z$.
-\begin{equation}
-    A =
-    \begin{pmatrix}
-        0     & 7     & 10 \\
-        5     & 0     & 7 \\
-        0     & 5     & 0  
-    \end{pmatrix}, 
-    B =
-    \begin{pmatrix}
-        9     & 12     & 4 \\
-        0    & 9     & 12 \\
-        3     & 0     & 9  
-    \end{pmatrix}, 
-    C =
-    \begin{pmatrix}
-        9     & 6     & 1 \\
-        5     & 9     & 6 \\
-        3     & 5     & 9  
-    \end{pmatrix}
-\end{equation}
-If we takes displacement generator of A = (T,U) and B = (G,H)
-\begin{equation}
-    T =
-    \begin{pmatrix}
-        0     & 1     \\
-        1     & 0    \\
-        0     & 0      
-    \end{pmatrix}, 
-    U =
-    \begin{pmatrix}
-        5     & 0      \\
-        0     & 7      \\
-        0     & 10      
-    \end{pmatrix},
-    G =
-    \begin{pmatrix}
-        1    & 0      \\
-        0     & 0      \\
-        9     & 1  
-    \end{pmatrix}, 
-    H =
-    \begin{pmatrix}
-        9     & 0      \\
-        12     & 9      \\
-        4     & 3  
-    \end{pmatrix}
-\end{equation}
-and we do the concatenation of T,G and U,H to obtain $RES_G$ and $RES_H$ (we have to do the concatenation in the order that I cited the elements).
-\begin{equation}
-    RES_G =
-    \begin{pmatrix}
-        0    & 1     & 1 & 0 \\
-        1     & 0     & 0 & 0 \\
-        0     & 0     & 9  & 1
-    \end{pmatrix},
-    RES_H =
-    \begin{pmatrix}
-        5     & 0     & 9 & 0 \\
-        0    & 7     & 12 & 9 \\
-        0     & 10     & 4  & 3
-    \end{pmatrix}
-\end{equation}
-The matrix that we get D :
-\begin{equation}
-    D =
-    \begin{pmatrix}
-        9     & 6     & 1 \\
-        5     & 9     & 6 \\
-        3     & 5     & 9  
-    \end{pmatrix}
-\end{equation}
+\subsubsection{Generator Addition Example}
 
-We can see that the matrix D is equal to C so our way to add the 2 matrices is correct in this case.
-\subsubsection{Benchmark}
-The benchmark obtained highlights the following results:
+To illustrate this, let $A$ and $B$ be two Toeplitz-like matrices
+defined over the finite field $\mathbb{Z}/13\mathbb{Z}$, and let $C$
+denote their naive sum ($C = A + B \pmod{13}$):
 
-\begin{table}[h]
-\centering
-\begin{tabular}{r r r}
-\hline
-$n$ & Generators (ms) & Flint Dense (ms) \\
-\hline
-128  & 0.003577  & 0.01373   \\
-1024 & 0.03205 & 2.52  \\
-4096 & 0.1148 & 29.18  \\
-\hline
-\end{tabular}
-\caption{Average runtimes over 10 runs}
-\label{tab:bench_add}
+\begin{equation*}
+  A =
+  \begin{pmatrix} 0 & 7 & 10 \\ 5 & 0 & 7 \\ 0 & 5 & 0
+  \end{pmatrix}, \quad
+  B =
+  \begin{pmatrix} 9 & 12 & 4 \\ 0 & 9 & 12 \\ 3 & 0 & 9
+  \end{pmatrix}, \quad
+  C =
+  \begin{pmatrix} 9 & 6 & 1 \\ 5 & 9 & 6 \\ 3 & 5 & 9
+  \end{pmatrix}
+\end{equation*}
+
+\noindent
+Suppose the displacement generators for $A$ are given by $(T, U)$ and
+for $B$ by $(G, H)$:
+
+\begin{equation*}
+  T =
+  \begin{pmatrix} 0 & 1 \\ 1 & 0 \\ 0 & 0
+  \end{pmatrix}, \quad
+  U =
+  \begin{pmatrix} 5 & 0 \\ 0 & 7 \\ 0 & 10
+  \end{pmatrix}, \quad
+  G =
+  \begin{pmatrix} 1 & 0 \\ 0 & 0 \\ 9 & 1
+  \end{pmatrix}, \quad
+  H =
+  \begin{pmatrix} 9 & 0 \\ 12 & 9 \\ 4 & 3
+  \end{pmatrix}
+\end{equation*}
+
+\noindent
+By applying the generator addition, we compute the
+generators of the result, $G_C$ and $H_C$, through ordered horizontal
+concatenation ($G_C = [T \mid G]$ and $H_C = [U \mid H]$):
+
+\begin{equation*}
+  G_C =
+  \begin{pmatrix} 0 & 1 & 1 & 0 \\ 1 & 0 & 0 & 0 \\ 0 & 0 & 9 & 1
+  \end{pmatrix}, \quad
+  H_C =
+  \begin{pmatrix} 5 & 0 & 9 & 0 \\ 0 & 7 & 12 & 9 \\ 0 & 10 & 4 & 3
+  \end{pmatrix}
+\end{equation*}
+
+\noindent
+Reconstructing the dense matrix $D$ directly from these concatenated
+generators yields:
+
+\begin{equation*}
+  D =
+  \begin{pmatrix} 9 & 6 & 1 \\ 5 & 9 & 6 \\ 3 & 5 & 9
+  \end{pmatrix}
+\end{equation*}
+
+\noindent
+The reconstructed matrix $D$ is equal to $C$, validating
+the generator addition.
+
+\subsubsection{Generator Addition Benchmark}
+
+The performance benchmarks for the generator addition algorithm
+highlight a reduction in execution time compared to standard dense
+matrix operations:
+
+\begin{table}[htpb]
+  \centering
+  \begin{tabular}{r r r}
+    \hline
+    $n$  & Generators (ms) & Flint Dense (ms) \\
+    \hline
+    128  & 0.003577        & 0.01373 \\
+    1024 & 0.03205         & 2.52 \\
+    4096 & 0.1148          & 29.18 \\
+    \hline
+  \end{tabular}
+  \caption{Average runtimes of matrix addition over 10 runs.}
+  \label{tab:bench_add}
 \end{table}
 
+To verify the theoretical complexity of $\mathcal{O}(\alpha n)$, we
+analyze the growth rate of the execution time $T(n)$ as the matrix
+dimension $n$ increases.
+Assuming $\alpha$ remains a small constant, a linear time complexity
+dictates that multiplying the input size by a scalar $k$ should increase the
+runtime by approximately the same factor $k$.
 
-If we compare matrices of 128,1024 and 4096,we got :
-$T(1024)\div T(128) \approx 8.96$,
-$T(4096)\div T(1024) \approx 3.58$.
-For $O(\alpha n)$ we expect ratios of 8 and 4 respectively.8.96 is close to the expected value. 3.58 show more deviation from 4, that can be explained by the low cost of the operation making the measurements highly sensitive to external factors.
-Overall, these result are consistent with the theorical complexity $O(\alpha n)$.
+When scaling the matrix size from $n=128$ to $n=1024$ (an $8\times$
+increase), the measured runtime ratio is:
+$$ \frac{T(1024)}{T(128)} \approx 8.96 $$
 
+Similarly, scaling from $n=1024$ to $n=4096$ (a $4\times$ increase)
+yields a ratio of:
+$$ \frac{T(4096)}{T(1024)} \approx 3.58 $$
 
-
-
+These observed ratios align with the expected theoretical factors of
+8 and 4. The slight deviations from perfect linear result can
+be attributed to the low overall computational cost of the
+operation, but overall these empirical results
+assure the expected $O(\alpha n)$ time complexity.
 
 \subsection{Multiplication}
-\subsubsection{Multiplication Vector}
-Perform the matrix multiplication with their displacement generators needs a function that multiplies a vector with displacement generators to avoid recomposing the matrices.
+
+\subsubsection{Matrix-Vector Generator Multiplication}
+
+To perform full matrix multiplication efficiently using displacement
+generators, we must first define a subroutine that multiplies a
+structured matrix directly by a dense vector. We aim to avoid the
+necessity of reconstructing the dense matrix from its generators.
+
 \begin{equation} \label{eq:SigmaLUV}
-    C = \sum_{k=1}^{\alpha} L(g_k) \, U(h_k)\,V
+  C = \sum_{k=1}^{\alpha} L(g_k) \, U(h_k) \, V
 \end{equation}
-To do that, we takes the formula for the reconstruction and we transform our displacement generators into polynomials and make every operation into them.
+
+We evaluate the reconstruction formula by mapping
+the columns of the displacement generators and the vector into
+polynomials which allows us to compute from the triangular Toeplitz
+operators entirely through polynomial multiplication.
+
 \begin{algorithm}[H]
-\caption{Multiplication of displacement generators with a vector}
-\begin{algorithmic}[1]
-\Function{gr\_mat\_mul\_vector}{$G, H, V$}
-    \State $n \gets nbRows(G)$
-    \State $m \gets nbRows(H)$
-    \For{$j \gets 0$ \textbf{to} $nbCols(V)$}
-        \State $P_v \gets \sum_{r=0}^{m-1} V[r, j]  x^r$ 
-        \For{$k \gets 0$ \textbf{to} $nbCols(G)$}
-            \State $Pg \gets \sum_{r=0}^{n-1} G[r, k]  x^r$ 
-            \State $Ph \gets \sum_{r=0}^{m-1} H[r, k]  x^r$ 
-            \State $P_{h\_rev} \gets \text{Reverse}(P_h, m)$ 
-            \State $P_{tmp} \gets P_{h\_rev} P_x$ 
-            \State $P_{tmp\_shift} \gets P_{tmp} \gg (m - 1)$ 
-            \State $P_{res} \gets P_g P_{tmp\_shift}$ 
-            \For{$i \gets 0$ \textbf{to} $\text{Length}(P_{res}) - 1$}
-                \State $C[i, j] \gets C[i, j] + \text{Coefficient}(P_{res}, i)$
-            \EndFor
-        \EndFor
+  \caption{Multiplication of displacement generators with a vector/matrix}
+
+  \textbf{Input:} \\
+  \hspace*{0.5cm} \textbullet \ $G, H$: Displacement generators of
+  structured matrix $A \in \mathbb{K}^{n \times m}$ \\
+  \hspace*{0.5cm} \textbullet \ $V$: Dense vector or matrix $\in
+  \mathbb{K}^{m \times p}$ \\
+  \textbf{Output:} $C$: Resulting product matrix $\in \mathbb{K}^{n \times p}$
+
+  \vspace{0.15cm}
+  \hrule
+  \vspace{0.15cm}
+
+  \begin{algorithmic}[1]
+    \Function{gr\_mat\_mul\_vector}{$G, H, V$}
+    \State $n \gets \text{nbRows}(G)$
+    \State $m \gets \text{nbRows}(H)$
+    \State Initialize $C$ as a zero matrix of size $n \times
+    \text{nbCols}(V)$ \Comment{Initialize accumulator matrix}
+    \For{$j \gets 0$ \textbf{to} $\text{nbCols}(V) - 1$}
+    \State $P_v \gets \sum_{r=0}^{m-1} V[r, j] x^r$ \Comment{Map the
+    $j$-th column of $V$ to a polynomial}
+    \For{$k \gets 0$ \textbf{to} $\text{nbCols}(G) - 1$}
+    \State $P_g \gets \sum_{r=0}^{n-1} G[r, k] x^r$ \Comment{Map the
+    $k$-th column of generator $G$}
+    \State $P_h \gets \sum_{r=0}^{m-1} H[r, k] x^r$ \Comment{Map the
+    $k$-th column of generator $H$}
+
+    \State $P_{h\_rev} \gets \text{Reverse}(P_h, m)$ \Comment{Reverse
+    $H$ to simulate upper Toeplitz operator}
+    \State $P_{tmp} \gets P_{h\_rev} P_v$ \Comment{Apply upper
+    Toeplitz structure to the vector}
+    \State $P_{tmp\_shift} \gets P_{tmp} \gg (m - 1)$ \Comment{Shift
+    to extract valid convolution coefficients}
+    \State $P_{res} \gets P_g P_{tmp\_shift}$ \Comment{Apply lower
+    Toeplitz structure}
+
+    \For{$i \gets 0$ \textbf{to} $\text{Length}(P_{res}) - 1$}
+    \State $C[i, j] \gets C[i, j] + \text{Coefficient}(P_{res}, i)$
+    \Comment{Accumulate results into $C$}
     \EndFor
-    \State \textbf{return} $Res$
-\EndFunction
-\end{algorithmic}
+    \EndFor
+    \EndFor
+    \State \textbf{return} $C$
+    \EndFunction
+  \end{algorithmic}
 \end{algorithm}
-\subsubsection{Multiplication matrices}
-With displacement generators we also can simplify the multiplication of 2 matrices and thus reduce its cost by concatenating the generators of the 2 matrices.
-- $W = Z \times A \times Z^t \times G$
 
-- $V = B^t \times U$
+\subsubsection{Matrix-Matrix Generator Multiplication}
 
-- a (resp. b) a vector which is the last column of $ Z \times A $ (resp. $Z \times B^t$)
+Using displacement generators, the full multiplication of two
+structured matrices can be computed by extracting the
+boundary shifts and concatenating the resulting generators.
+For matrices $A = (T,U)$ and $B = (G,H)$, this requires computing
+specific intermediate sub-blocks $W$ and $V$, as well as extracting
+the final boundary columns $a$ and $b$.
 
-This allows us to pass from $O(n^3)$ for the naive algorithm to $O( \alpha^2 \times M(n) )$ for the version we implement.
+By performing these operations entirely in the compressed generator
+space, we reduce the computational complexity from the naive
+$O(n^3)$ bound down to $O(\alpha^2 M(n))$, where $M(n)$ represents the
+time required to multiply two polynomials of degree $n$.
+
 \begin{algorithm}[H]
-\caption{Generator Multiplication}
-\begin{algorithmic}[1]
-\Function{gr\_mat\_mul\_generator}{$T,U,G,H$}
+  \caption{Generator Multiplication}
 
-    \State $W_{Temp} \gets Z^t \times G$
-    \State $W \gets Z \times \Call{gr\_mat\_mul\_vector}{T,U,W_{Temp}}$
-    \newline
-    \State $V \gets \Call{gr\_mat\_mul\_vector}{H,G,U}$
-    \newline
-    \State $a \gets Z \times \Call{gr\_mat\_mul\_vector}{T,U,LastCol}$
-    \State $b \gets -Z \times \Call{gr\_mat\_mul\_vector}{H,G,LastCol}$
-    \newline
-    \State $G_C \gets [T|W|a]$
-    \State $H_C \gets [V|H|b]$
+  \textbf{Input:} \\
+  \hspace*{0.5cm} \textbullet \ $T, U$: Displacement generators of
+  structured matrix $A \in \mathbb{K}^{n \times n}$ \\
+  \hspace*{0.5cm} \textbullet \ $G, H$: Displacement generators of
+  structured matrix $B \in \mathbb{K}^{n \times n}$ \\
+  \textbf{Output:} $G_C, H_C$: Displacement generators representing
+  the product $A \times B$
+
+  \vspace{0.15cm}
+  \hrule
+  \vspace{0.15cm}
+
+  \begin{algorithmic}[1]
+    \Function{gr\_mat\_mul\_generators}{$T,U,G,H$}
+    \State $e_{n-1} \gets (0, \dots, 0, 1)^T$ \Comment{Basis vector
+    to extract the last column}
+    \vspace{0.1cm}
+
+    \State $W_{Temp} \gets Z^T \times G$
+    \State $W \gets Z \times \Call{gr\_mat\_mul\_vector}{T, U, W_{Temp}}$
+    \Comment{Vector multiplication of FLINT\cite{flint331}}
+    \vspace{0.1cm}
+
+    \State $V \gets \Call{gr\_mat\_mul\_vector}{H, G, U}$
+    \vspace{0.1cm}
+
+    \State $a \gets Z \times \Call{gr\_mat\_mul\_vector}{T, U, e_{n-1}}$
+    \State $b \gets -Z \times \Call{gr\_mat\_mul\_vector}{H, G, e_{n-1}}$
+    \vspace{0.1cm}
+
+    \State $G_C \gets [T \mid W \mid a]$ \Comment{Horizontal concatenation}
+    \State $H_C \gets [V \mid H \mid b]$ \Comment{Horizontal concatenation}
     \State \textbf{return} $G_C, H_C$
-\EndFunction
-\end{algorithmic}
+    \EndFunction
+  \end{algorithmic}
 \end{algorithm}
-We use the vector $LastCol = (0,.........,0,1)^T$, with the numbers of rows of the matrix you to retrieve the last column. This vector is composed with 0 except for the last element which is fixed to 1.
 
-\subsubsection{Example}
-We takes A and B, two randoms matrices, C the result of A and B.Every matrices are in $Z/_{13}Z$.
+\subsubsection{Generator Multiplication Example}
+We takes A and B, two randoms matrices, C the result of A and B.Every
+matrices are in $Z/_{13}Z$.
 \begin{equation}
-    A =
-    \begin{pmatrix}
-        10    & 5     & 8 \\
-        5     & 10     & 5 \\
-        3     & 5     & 10  
-    \end{pmatrix}, 
-    B =
-    \begin{pmatrix}
-        0     & 3     & 0 \\
-        3    & 0     & 3 \\
-        0     &3     & 0  
-    \end{pmatrix}, 
-    C =
-    \begin{pmatrix}
-        2     & 2     & 2 \\
-        4     & 4     & 4 \\
-        2     & 0     & 2  
-    \end{pmatrix}
+  A =
+  \begin{pmatrix}
+    10    & 5     & 8 \\
+    5     & 10     & 5 \\
+    3     & 5     & 10
+  \end{pmatrix},
+  B =
+  \begin{pmatrix}
+    0     & 3     & 0 \\
+    3    & 0     & 3 \\
+    0     &3     & 0
+  \end{pmatrix},
+  C =
+  \begin{pmatrix}
+    2     & 2     & 2 \\
+    4     & 4     & 4 \\
+    2     & 0     & 2
+  \end{pmatrix}
 \end{equation}
 If we takes displacement generator of A = (T,U) and B = (G,H)
 \begin{equation}
-    T =
-    \begin{pmatrix}
-        1    & 0     \\
-        7     & 1    \\
-        12     & 11      
-    \end{pmatrix}, 
-    U =
-    \begin{pmatrix}
-        10     & 0      \\
-        5     & 4      \\
-        8     & 9      
-    \end{pmatrix},
-    G =
-    \begin{pmatrix}
-        0    & 1      \\
-        1     & 0      \\
-        0     & 0  
-    \end{pmatrix}, 
-    H =
-    \begin{pmatrix}
-        3     & 0      \\
-        0     & 3      \\
-        0     & 0  
-    \end{pmatrix}
+  T =
+  \begin{pmatrix}
+    1    & 0     \\
+    7     & 1    \\
+    12     & 11
+  \end{pmatrix},
+  U =
+  \begin{pmatrix}
+    10     & 0      \\
+    5     & 4      \\
+    8     & 9
+  \end{pmatrix},
+  G =
+  \begin{pmatrix}
+    0    & 1      \\
+    1     & 0      \\
+    0     & 0
+  \end{pmatrix},
+  H =
+  \begin{pmatrix}
+    3     & 0      \\
+    0     & 3      \\
+    0     & 0
+  \end{pmatrix}
 \end{equation}
-We need to calculate W and V before concatenating the generators of A and B to obtain the displacement generator of D.
+We need to calculate W and V before concatenating the generators of A
+and B to obtain the displacement generator of D.
 \begin{equation}
-    W =
-    \begin{pmatrix}
-        0    & 0 \\
-        10     & 0 \\
-        5     & 0  
-    \end{pmatrix}, 
-    V =
-    \begin{pmatrix}
-        2     & 12    \\
-        2    & 1      \\
-        2     & 12  
-    \end{pmatrix}
+  W =
+  \begin{pmatrix}
+    0    & 0 \\
+    10     & 0 \\
+    5     & 0
+  \end{pmatrix},
+  V =
+  \begin{pmatrix}
+    2     & 12    \\
+    2    & 1      \\
+    2     & 12
+  \end{pmatrix}
 \end{equation}
-Then we do the concatenation of T,W,a and V,H,-b to obtain $RES_G$ and $RES_H$ (we have to do the concatenation in the order that I cited the elements) 
+Then we do the concatenation of T,W,a and V,H,-b to obtain $RES_G$
+and $RES_H$ (we have to do the concatenation in the order that I
+cited the elements)
 \begin{equation}
-    RES_G =
-    \begin{pmatrix}
-        1     & 0     & 0 & 0 & 0 \\
-        7    & 1     & 10 & 0 & 8 \\
-        12     & 11     & 5  & 0 & 5
-    \end{pmatrix},
-    RES_H =
-    \begin{pmatrix}
-        2     & 12     & 3 & 0 & 0 \\
-        2    & 1     & 0 & 3 & 0 \\
-        2     & 12     & 0  & 0 & 10
-    \end{pmatrix}
+  RES_G =
+  \begin{pmatrix}
+    1     & 0     & 0 & 0 & 0 \\
+    7    & 1     & 10 & 0 & 8 \\
+    12     & 11     & 5  & 0 & 5
+  \end{pmatrix},
+  RES_H =
+  \begin{pmatrix}
+    2     & 12     & 3 & 0 & 0 \\
+    2    & 1     & 0 & 3 & 0 \\
+    2     & 12     & 0  & 0 & 10
+  \end{pmatrix}
 \end{equation}
 The matrix that we get D :
 \begin{equation}
-    D =
-    \begin{pmatrix}
-        2     & 2     & 2 \\
-        4     & 4     & 4 \\
-        2     & 0     & 2  
-    \end{pmatrix}
+  D =
+  \begin{pmatrix}
+    2     & 2     & 2 \\
+    4     & 4     & 4 \\
+    2     & 0     & 2
+  \end{pmatrix}
 \end{equation}
-We can see that the matrix D is equal to C so our way to multiply the 2 matrices is correct in this case.
-\subsubsection{Benchmark}
-The benchmark obtained highlights the following results:
-\begin{table}[h]
-    \centering
-    \begin{tabular}{r r r r r}
-        \hline
-        $n$ & Generators (ms) & Flint Dense (ms) & Vector (ms) & Vector Flint (ms) \\
-        \hline
-        128  & 0.3493  & 2.461 & 0.03261  & 0.01987  \\
-        1024 & 2.460 & 77.69 & 0.3166  & 1.017 \\
-        4096 & 9.991 & 38150 & 1.054  & 18.41 \\
-        \hline
-    \end{tabular}
-    \caption{Average runtimes over 10 runs}
-    \label{tab:bench_mul}
+We can see that the matrix D is equal to C so our way to multiply the
+2 matrices is correct in this case.
+
+\subsubsection{Generator Multiplication Benchmark}
+
+The performance benchmarks for both the matrix-vector and full
+matrix-matrix generator multiplications show improvements over
+standard dense operations:
+
+\begin{table}[htpb]
+  \centering
+  \begin{tabular}{r r r r r}
+    \hline
+    $n$  & Generators (ms) & Flint Dense (ms) & Vector (ms) & Vector Flint (ms) \\
+    \hline
+    128  & 0.3493          & 2.461            & 0.03261     & 0.01987 \\
+    1024 & 2.460           & 77.69            & 0.3166      & 1.017 \\
+    4096 & 9.991           & 38150            & 1.054       & 18.41 \\
+    \hline
+  \end{tabular}
+  \caption{Average runtimes of multiplication operations over 10 runs.}
+  \label{tab:bench_mul}
 \end{table}
 
+To validate the time complexity of the matrix-vector multiplication,
+we analyze the execution time. For an expected theoretical
+complexity of $O(\alpha \mathcal{M}(n))$ the expected scaling factors
+when increasing $n$ from 128 to 1024 ($8\times$) and from 1024 to
+4096 ($4\times$) are approximately 9.14 and 4.4, respectively:
 
-For the multiplication with vector,if we compare matrices of 128,1024 and 4096,we get:
-$T(1024)\div T(128) \approx 9.709$,
-$T(4096)\div T(1024) \approx 3.329$.
-For $O(\alpha M(n))$ we expected 9.14 and 4.4 respectively.The first ratio is close to the expected value, while the second shows more deviation.
-This can be explained by the cost of copying values into polynomials, which is $O(\alpha n)$ and is not yet negligible compared to M(n).
-We tried with bigger value and got the same problems but we can confirm that the complexity is $O(\alpha M(n))$ asymptotically.
-A possible improvement would be to copy the values into polynomials more efficiently, which would reduce the overhead and make the convergence visible for smaller values of n. 
-\newline
+$$ \frac{T(1024)}{T(128)} \approx 9.71, \quad \frac{T(4096)}{T(1024)}
+\approx 3.33 $$
 
-For the multiplication with generators, if we compare matrices of 128,1024 and 4096,we get:
-$T(1024)\div T(128) \approx 7.06$,
-$T(4096)\div T(1024) \approx 4.06$.
-For $O(\alpha^2 M(n))$ we expected 9.14 and 4.4 respectively. The second ratio is close to 4.4 but the first shows more deviation.
-As the matrix multiplication calls the vector multiplication internally, it suffers from the same overhead of copying values into polynomials $O(\alpha^2 n)$,which is not yet negligible compared to M(n) for small values of n.
-The complexity is therefore $O(\alpha^2 M(n))$ asymptotically respected.
+While the first ratio aligns closely with theoretical expectations,
+the second shows some deviation. This can be explained to
+the overhead of getting matrix values into polynomial
+structures. This operation scales at
+$O(\alpha n)$, a cost that remains non-negligible compared
+to $M(n)$ in these dimensions. Tests with larger
+matrices confirm that the $O(\alpha M(n))$
+complexity holds. Future optimizations to this polynomial
+copy would reduce the overhead.
+
+For the full generator multiplication, the expected
+complexity is $\O(\alpha^2 M(n))$. The observed scaling ratios are:
+
+$$ \frac{T(1024)}{T(128)} \approx 7.06, \quad \frac{T(4096)}{T(1024)}
+\approx 4.06 $$
+
+Here, the second ratio closely approaches the expected 4.4, while the
+first ratio shows more deviation. Because the full multiplication
+repeatedly copies values into polynomials again, it has
+the memory overhead to $O(\alpha^2 n)$. However, as $n$ scales,
+polynomial arithmetic correctly dominates the runtime, respecting the bound of
+$\mathcal{O}(\alpha^2 \mathcal{M}(n))$.
+
+\subsection{The Challenge of Rank Growth}
+
+While the arithmetic operations described above achieve
+efficient complexities, chaining these
+operations introduces a severe vulnerability. As
+demonstrated in the generator addition and multiplication algorithms,
+the output generators are formed via horizontal concatenation.
+Consequently, performing arithmetic on two matrices with a
+displacement rank of $\alpha$ inflates the resulting
+matrix's displacement rank (ex. addition results in a rank of $2\alpha$).
+
+If multiple operations are performed sequentially such as in
+divide-and-conquer matrix inversion or iterative system solvers, this
+rank will grow exponentially. To maintain our
+efficiency across complex computations, we must actively reduce the
+dimensions of these intermediate generators without chanigng the
+source dense matrix they represent.

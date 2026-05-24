@@ -91,6 +91,13 @@ This algorithm is based on Algorithm 10.1 from \cite[Algorithme
 Notice that we only operate on $\Phi_+$ displacement and bypassing
 $\Phi_-$ generators.
 
+\begin{proposition}
+  The Strassen-type inversion algorithm (Algorithm
+  \ref{alg:strassen_generators}) maintains $\Phi_+$
+  displacement generators throughout its recursive execution, without
+  necessitating conversion to $\Phi_-$ generators.
+\end{proposition}
+
 \begin{proof}
   We proceed by induction on the size of the matrix $n = 2k$. Let
   $\Phi_+(X) = X - ZXZ^T$ be the displacement operator.
@@ -269,7 +276,7 @@ of block $y$.
 
 This structural reassembly exposes a vulnerability. Let $\alpha_x,
 \alpha_y, \alpha_z, \alpha_t$ be the displacement ranks of the sub-quadrants.
-The rank of our assembled global generators is:
+The rank of our assembled global generator is:
 $$ \text{Rank}_{RES} = \alpha_x + \alpha_y + \alpha_z + \alpha_t + 4 $$
 Passing this uncompressed matrix up to the next recursion level would
 cause the displacement rank to explode,
@@ -290,7 +297,7 @@ algorithm efficient.
     512  & 41.57           & 105.8 \\
     1024 & 98.39           & 675.3 \\
     2048 & 238.8           & 4501 \\
-    4096 & 599.2          & 30490 \\
+    4096 & 599.2           & 30490 \\
     \hline
   \end{tabular}
   \caption{Average runtimes of inversion over 10 runs}
@@ -304,10 +311,10 @@ algorithm efficient.
     $\alpha$ & $n=512$ (ms) & $n=1024$ (ms) & $n=2048$ (ms) \\
     \hline
     2        & 44.35        & 107.1         & 227.8 \\
-    3        & 62.74        & 145.8        & 320.1 \\
-    4        & 79.83        & 187.1        & 425 \\
-    5        & 100.4        & 238        & 565.9 \\
-    10       & 235.0       & 572.3        & 1335 \\
+    3        & 62.74        & 145.8         & 320.1 \\
+    4        & 79.83        & 187.1         & 425 \\
+    5        & 100.4        & 238           & 565.9 \\
+    10       & 235.0        & 572.3         & 1335 \\
     \hline
   \end{tabular}
   \caption{Average runtimes of generator inversion scaling by rank over 10 runs}
@@ -322,25 +329,62 @@ the full recursive inversion involves multiplying structured
 sub-generators which makes this algorithm bounded by $O(\alpha^2
 \mathcal{M}(n) \log n)$,
 
-While this implementation is great for large matrices with a bounded rank,
-the overhead makes the algorithm computationally disadvantageous for
-smaller matrices compared to standard dense inversion.
-We have observed the threshold generally between matrices of sizes 256 and 512.
+% While this implementation is great for large matrices with a bounded rank,
+% the overhead makes the algorithm computationally disadvantageous for
+% smaller matrices compared to standard dense inversion.
+% We have observed the threshold generally between matrices of sizes
+% 256 and 512.
 
-As detailed by Victor Y. Pan in \textit{Structured Matrices and
-Polynomials} \cite[Chapter 5]{pan2001structured}, an alternative is
-the Morf-Bitmead-Anderson (MBA) algorithm.
-Originally proposed by Morf (1980) and Bitmead and Anderson (1980),
-it achieves $O(n \log^2 n)$ complexity for Toeplitz-like matrices.
-Because it is also a divide-and-conquer method, this approach still
-requires calculations of sub-quadrants and continuous generator compression.
-To bypass the need to split the matrix, one should prefer to
-implement the Newton iterative version.
-Pan dedicates analysis to this approach in \cite[Chapters 6 and
-7]{pan2001structured}, which is based on the Schulz iteration:
-$X_{k+1} = X_k(2I - A X_k)$.
+% As detailed by Victor Y. Pan in \textit{Structured Matrices and
+% Polynomials} \cite[Chapter 5]{pan2001structured}, an alternative is
+% the Morf-Bitmead-Anderson (MBA) algorithm.
+% Originally proposed by Morf (1980) and Bitmead and Anderson (1980),
+% it achieves $O(n \log^2 n)$ complexity for Toeplitz-like matrices.
+% Because it is also a divide-and-conquer method, this approach still
+% requires calculations of sub-quadrants and continuous generator compression.
+% To bypass the need to split the matrix, one should prefer to
+% implement the Newton iterative version.
+% Pan dedicates analysis to this approach in \cite[Chapters 6 and
+% 7]{pan2001structured}, which is based on the Schulz iteration:
+% $X_{k+1} = X_k(2I - A X_k)$.
 
-If the objective is to solve a linear system $Ax = b$, computing the
+% If the objective is to solve a linear system $Ax = b$, computing the
+% full inverse $A^{-1}$ introduces unnecessary computations.
+% Instead, one can take direct advantage of the structured properties
+% of $A$ to solve the system more efficiently.
+% Methods such as the Levinson-Durbin algorithm
+% \cite{durbin1960fitting}, avoid inversion and solve Toeplitz systems
+% in $O(n^2)$ operations.
+% Iterative Krylov subspace methods, the Preconditioned Conjugate
+% Gradient (PCG) method \cite{doi:10.1137/0909051} use FFT to compute
+% matrix-vector products, achieving $O(n \log n)$ complexity per iteration.
+% These iterative methods they rely on numerical approximation and
+% convergence tolerances.
+% For an exact deterministic algebraic solution, there is an
+% alternative by resolving via M-Padé
+% approximations\cite{khichane2026matricesdisplacementstructuredeterministic},
+% which achieves a deterministic $\tilde{O}(\alpha^{\omega-1}n)$ complexity.
+
+\section{Conclusion and Perspectives}
+
+In this project, we successfully implemented
+arithmetic algorithms for quasi-Toeplitz matrices using displacement
+generators. However, while Strassen-type inversion is highly
+effective for large matrices with small ranks, the rank explosion
+problem and computational overhead limit its viability for smaller
+systems or highly iterative applications.
+
+For future optimizations, alternative algorithmic structures could be
+preferred. As detailed by Victor Y. Pan \cite[Chapter
+5]{pan2001structured}, the Morf-Bitmead-Anderson (MBA) algorithm
+achieves an even faster $O(n \log^2 n)$ complexity for
+Toeplitz-like matrices. However, as it is also a divide-and-conquer
+method, it suffers from similar calculations and
+generator compression. To bypass matrix splitting
+entirely, the Newton iterative version based on the Schulz iteration
+$X_{k+1} = X_k(2I - A X_k)$—is highly preferable \cite[Chapters 6 and
+7]{pan2001structured}. If the objective is to solve a linear system
+$Ax = b$, computing the
 full inverse $A^{-1}$ introduces unnecessary computations.
 Instead, one can take direct advantage of the structured properties
 of $A$ to solve the system more efficiently.
