@@ -442,8 +442,33 @@ first ratio shows more deviation. Because the full multiplication
 repeatedly copies values into polynomials again in function call, it has
 the memory overhead to $O(4 \times \alpha \times n)$ for counting 4
 calls of the function. This introduced a overhead over
-with smaller $\alpha$. A future optimisation can reduce this overhead
-to make this function more beneficial for smaller matrices.
+with smaller $\alpha$. 
+
+\begin{table}[htpb]
+  \centering
+  \begin{tabular}{r r r}
+    \hline
+    $\alpha$ & $n=256$ (ms) & $n=512$ (ms) \\
+    \hline
+    2        & 0.7917        & 1.694         \\
+    4        & 2.677        & 5.468          \\
+    8        & 8.913        & 19.74          \\
+    16        & 32.55        & 75.56         \\
+    32       & 124        & 285.2            \\
+    \hline
+  \end{tabular}
+  \caption{Average runtimes of generator multiplicaiton scaling by rank over 10 runs}
+  \label{tab:bench_mul_rank}
+\end{table}
+
+
+If we compare the result between rank 4 , 8 and 16 with the same techniques we use before but this time the expected ratio is 2.25 if $M(n) =nlogn$:
+$$ \frac{T_4(512)}{T_4(256)} \approx 2.04, \quad \frac{T_8(512)}{T_8(256)}
+\approx 2.21,\frac{T_{16}(512)}{T_{16}(256)} \approx 2.32 $$ 
+
+We see the ratio for $\alpha = 4$ is below what expected but for alpha = 8 and alpha = 16, the ratio are really close to 2.25, that means the complexity is correct for $\alpha \geq 8$. 
+A future optimisation can reduce this overhead
+to make this function more beneficial for smaller ranks matrices.
 However, as $n$ scales,
 polynomial arithmetic correctly dominates the runtime, respecting the bound of
 $O(\alpha^2 \mathcal{M}(n))$.
