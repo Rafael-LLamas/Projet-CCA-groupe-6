@@ -1,4 +1,5 @@
-\section{Inversion}
+\section{Generator Inversion}
+\label{section:inversion}
 
 \subsection{Algorithm}
 We present an implementation of Strassen's inversion method
@@ -109,7 +110,7 @@ $\Phi_-$ generators.
   Inversion relies on splitting the sub-blocks $a, b, c, d$ which are
   represented by $\Phi_+$ displacements,
   recursive calls to invert top-left block $a$ ($e = a^{-1}$) and
-  antoher for the Schur complement $t = S^{-1}$ and each outputs a
+  another for the Schur complement $t = S^{-1}$ and each outputs a
   $\Phi_+$ generator.
   Multiplication and addition algorithms are taking and returning a
   generator of $\Phi_+$ displacement.
@@ -175,7 +176,7 @@ However, this evaluation is equivalent to computing the coefficients
 of a polynomial multiplication.
 By packing the columns of $G$ and the reversed columns of $H$ into
 polynomials, we extract $v_a$ with polynomial multiplication in $O(r
-\cdot \mathcal{M}(n))$ time.
+\cdot M(n))$ time.
 Once extracted, we shift $v_a$ down using the operator $Z_{n_1}$ and
 append it to $G_{\text{TOP}}$.
 To apply this correction only to the first column of $b$, we append
@@ -282,86 +283,103 @@ ruining the optimisations we aimed for at the first place. We call
 the compression seen in section \ref{ch:compression} to keep the
 algorithm efficient.
 
-\subsection{Benchmarks}
+\subsection{Inversion Benchmarks}
 
-\begin{table}
+The performance benchmarks for the generator-based Strassen inversion
+show improvements over standard dense operations at larger scales:
+
+\begin{table}[H]
   \centering
   \begin{tabular}{r r r}
     \hline
     $n$  & Generators (ms) & Flint Dense (ms) \\
     \hline
-    128  & 15.59           & 5.765\\
-    256  & 24.98           & 22.38\\
-    512  & 41.57           & 105.8 \\
-    1024 & 98.39           & 675.3 \\
-    2048 & 238.8           & 4501 \\
-    4096 & 599.2           & 30490 \\
+    128  & 5.328           & 1.967 \\
+    256  & 12.79           & 12.03 \\
+    512  & 30.74           & 80.16 \\
+    1024 & 74.50           & 554.8 \\
+    2048 & 180.4           & 3975 \\
+    4096 & 452.9           & 28300 \\
     \hline
   \end{tabular}
-  \caption{Average runtimes of inversion over 10 runs}
+  \caption{Average runtimes of inversion operations ($\alpha =
+    2$). Averages are computed over 100 iterations for $n \le 512$, 20
+  iterations for $n \in \{1024, 2048\}$, and 10 iterations for $n = 4096$.}
   \label{tab:bench_inv_size}
 \end{table}
 
-\begin{table}
+\begin{table}[H]
   \centering
-  \begin{tabular}{r r r r}
+  \begin{tabular}{l r r r}
     \hline
-    $\alpha$ & $n=512$ (ms) & $n=1024$ (ms) & $n=2048$ (ms) \\
+    Method | $\alpha$        & $n=512$ (ms) & $n=1024$ (ms) & $n=2048$ (ms) \\
     \hline
-    2        & 44.35        & 107.1         & 227.8 \\
-    3        & 62.74        & 145.8         & 320.1 \\
-    4        & 79.83        & 187.1         & 425 \\
-    5        & 100.4        & 238           & 565.9 \\
-    10       & 235.0        & 572.3         & 1335 \\
+    Generators ($\alpha=2$)  & 34.65        & 77.96         & 180.4 \\
+    Generators ($\alpha=4$)  & 61.12        & 144.8         & 340.2 \\
+    Generators ($\alpha=8$)  & 135.5        & 333.5         & 800.1 \\
+    Generators ($\alpha=16$) & 363.8        & 931.5         & 2259.0 \\
+    Generators ($\alpha=32$) & 1064.0       & 2829.0        & 7313.0 \\
+    \hline
+    Flint Dense (Baseline)   & 80.16        & 554.8         & 3975.0 \\
     \hline
   \end{tabular}
-  \caption{Average runtimes of generator inversion scaling by rank over 10 runs}
+  \caption{Average runtimes of generator inversion scaling by rank
+  over 10 runs, compared to constant dense inversion baseline.}
   \label{tab:bench_inv_rank}
 \end{table}
 
-The benchmarks show great improvement on generator-based Strassen inversion.
-Table \ref{tab:bench_inv_size} demonstrates the advantage over
-FLINT's dense inversion of $O(n^3)$ bound.
-While split and pack phases operates in $O(\alpha \cdot \mathcal{M}(n))$,
-the full recursive inversion involves multiplying structured
-sub-generators which makes this algorithm bounded by $O(\alpha^2
-\mathcal{M}(n) \log n)$,
+We analyze the execution time as $n$ grows.
+While the split and pack
+operate in $O(\alpha M(n))$. The recursive
+algorithm involves multiplying matrices with generators seen in
+section \ref{section:matrixmatrixmul} and thus
+overall algorithm is bounded by $O(\alpha^2 M(n) \log n)$.
 
-% While this implementation is great for large matrices with a bounded rank,
-% the overhead makes the algorithm computationally disadvantageous for
-% smaller matrices compared to standard dense inversion.
-% We have observed the threshold generally between matrices of sizes
-% 256 and 512.
+Taking $M(n) = O(n \log n)$, the theoretical
+complexity is $O(\alpha^2 n \log^2 n)$. For a
+constant rank, the expected scaling factors when increasing $n$ from
+128 to 1024 ($8\times$) and from 1024 to 4096 ($4\times$) are
+approximately 16.32 and 5.76 respectively. The
+observed scaling ratios are:
 
-% As detailed by Victor Y. Pan in \textit{Structured Matrices and
-% Polynomials} \cite[Chapter 5]{pan2001structured}, an alternative is
-% the Morf-Bitmead-Anderson (MBA) algorithm.
-% Originally proposed by Morf (1980) and Bitmead and Anderson (1980),
-% it achieves $O(n \log^2 n)$ complexity for Toeplitz-like matrices.
-% Because it is also a divide-and-conquer method, this approach still
-% requires calculations of sub-quadrants and continuous generator compression.
-% To bypass the need to split the matrix, one should prefer to
-% implement the Newton iterative version.
-% Pan dedicates analysis to this approach in \cite[Chapters 6 and
-% 7]{pan2001structured}, which is based on the Schulz iteration:
-% $X_{k+1} = X_k(2I - A X_k)$.
+$$ \frac{T(1024)}{T(128)} \approx 14.43, \quad
+\frac{T(4096)}{T(1024)} \approx 6.02 $$
 
-% If the objective is to solve a linear system $Ax = b$, computing the
-% full inverse $A^{-1}$ introduces unnecessary computations.
-% Instead, one can take direct advantage of the structured properties
-% of $A$ to solve the system more efficiently.
-% Methods such as the Levinson-Durbin algorithm
-% \cite{durbin1960fitting}, avoid inversion and solve Toeplitz systems
-% in $O(n^2)$ operations.
-% Iterative Krylov subspace methods, the Preconditioned Conjugate
-% Gradient (PCG) method \cite{doi:10.1137/0909051} use FFT to compute
-% matrix-vector products, achieving $O(n \log n)$ complexity per iteration.
-% These iterative methods they rely on numerical approximation and
-% convergence tolerances.
-% For an exact deterministic algebraic solution, there is an
-% alternative by resolving via M-Padé
-% approximations\cite{khichane2026matricesdisplacementstructuredeterministic},
-% which achieves a deterministic $\tilde{O}(\alpha^{\omega-1}n)$ complexity.
+These observed ratios seem to align with the
+expectations.
+The slight deviation at smaller sizes (14.43 and 16.32)
+can be explained by the recursive overhead and the constant factors
+of copying matrix elements into polynomials. Also the difference at larger
+sizes (6.02 and 5.76) can be explained as the data structure
+scales up, they begin to exceed the CPU's fast cache limits.
+Eventhough, as $n$ progresses, complexity respects the
+$O(\alpha^2 M(n) \log n)$ bound.
+When comparing against the dense approach, FLINT follows an
+$O(n^3)$ curve to over 28 seconds at $n=4096$.
+Inversion with generators completes the same operation in just over
+450 milliseconds, giving us a $\sim \! 62\times$ speedup for a
+Toeplitz matrix.
+But this speedup will decrease as rank increases on a quasi-Toeplitz
+case, as the efficiency of storing a dense matrix decreases too.
+However, the results reveal an intersection point. For
+small matrices ($n \le 256$), the recursive overhead and cost of
+splitting and packing the sub matrices make the algorithm
+slower than dense inversion. As seen in table
+\ref{tab:bench_inv_size}, the crossover occurs between $n=256$ and $n=512$.
+
+Table \ref{tab:bench_inv_rank} highlights the algorithm's dependency
+to the displacement rank $\alpha$. Since the overall complexity
+contains linear operations (splitting and
+packing in $O(\alpha)$) and quadratic operations (generator
+multiplication in $O(\alpha^2)$), we expect the $\alpha^2$ term as
+$\alpha$ grows.
+Doubling the rank from $2$ to $4$ increased the runtime by roughly
+$1.85\times$, but doubling it from $16$ to $32$ increased the runtime
+by a factor of over $3.2\times$. Because the algorithm scales quadratically
+any doubling of the rank forces the algorithm to do 4 times as much work
+This confirms that to maintain high
+performance in iterative applications, periodic generator compression
+(as detailed in Section \ref{ch:compression}) is absolutely critical.
 
 \section{Conclusion and Perspectives}
 
