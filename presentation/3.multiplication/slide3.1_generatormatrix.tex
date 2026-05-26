@@ -3,18 +3,20 @@
     \begin{column}{0.5\textwidth}
   \begin{block}{Generator Multiplication}
         \begin{align*}
-          A &= (T,U),\qquad B &= (G,H) \\
-          W &= Z A Z^t G \\
-          V &= B^t U \\
-          \alpha &= Z A \\
-          \beta &= Z B^t \\
-          C &=(T |W| \alpha, V|H | \beta)
+          A \approx (T,U),\qquad B \approx(G,H) \\
+          W = Z A Z^t G ,\qquad
+          V = B^t U \\
+          LastCol = (0 \cdots 0,1),\qquad
+          a = Z A LastCol,\qquad
+          b = Z B^t LastCol\\
+          C \approx(T |W| a, V|H | b)
         \end{align*}
       \end{block}
     \end{column}
   \end{columns}
   \vspace{1em}
-  \begin{alertblock}{Notice}
-    from $O(n^3)$ to $O(\alpha^2 M(n))$.
-  \end{alertblock}
+  \begin{block}{Complexities}
+    Naive: $O(n^3)$           \\
+    Concatenate : $O(\alpha^2 M(n))$
+  \end{block}
 \end{frame}
