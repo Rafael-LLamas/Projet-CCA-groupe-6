@@ -1,3 +1,24 @@
-\begin{frame}{Inversion}
+\begin{frame}{Inversion: Split \& Pack}
+
+  \begin{block}{Quadrants of $\nabla A = A - Z A Z^T$}
+    Let $A$ be partitioned into four $n \times n$ quadrants, and
+    $Z_{2n}$ be the shift matrix:
+    $$A =
+    \begin{pmatrix} a & b \\ c & d
+    \end{pmatrix}, \qquad Z_{2n} =
+    \begin{pmatrix} Z_n & 0 \\ e_1 e_n^T & Z_n
+    \end{pmatrix}$$
+    \vspace{-0.5em}
+  \end{block}
+
+  Let E = $e_1 e_n^T$
+  $$
+  \nabla A =
+  \begin{pmatrix}
+    \nabla a & \nabla b - Z_n a E^T \\[1em]
+    \nabla c - E a Z_n^T & \nabla d - E a E^T - Z_n c E^T
+    - E b Z_n^T
+  \end{pmatrix}
+  $$
 
 \end{frame}

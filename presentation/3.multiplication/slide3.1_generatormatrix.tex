@@ -1,22 +1,18 @@
 \begin{frame}{Multiplication of Toeplitz-like Matrices}
-  \begin{columns}
-    \begin{column}{0.5\textwidth}
   \begin{block}{Generator Multiplication}
-        \begin{align*}
-          A \approx (T,U),\qquad B \approx(G,H) \\
-          W = Z A Z^t G ,\qquad
-          V = B^t U \\
-          LastCol = (0 \cdots 0,1),\qquad
-          a = Z A LastCol,\qquad
-          b = Z B^t LastCol\\
-          C \approx(T |W| a, V|H | b)
-        \end{align*}
-      \end{block}
-    \end{column}
-  \end{columns}
+    \begin{align*}
+      A &\simeq (T, U), & B &\simeq (G, H) \\
+      W &= Z A Z^\top G, & V &= B^\top U \\
+      \text{LastCol} &= (0, \dots, 0, 1)^\top, & a &= Z A \, \text{LastCol} \\
+      b &= Z B^\top \text{LastCol}, & C &\simeq (T \mid W \mid a, \,
+      V \mid H \mid b)
+    \end{align*}
+  \end{block}
+
   \vspace{1em}
+
   \begin{block}{Complexities}
-    Naive: $O(n^3)$           \\
-    Concatenate : $O(\alpha^2 M(n))$
+    Naive: $\mathcal{O}(n^3)$ \\
+    Concatenate: $\mathcal{O}(\alpha^2 M(n))$
   \end{block}
 \end{frame}

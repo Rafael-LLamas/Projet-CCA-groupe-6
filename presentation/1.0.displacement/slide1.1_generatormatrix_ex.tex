@@ -1,38 +1,37 @@
-\begin{frame}{Displacement}
+\begin{frame}{Displacement and Generators}
 
-  \begin{columns}
-  
-    \begin{column}{0.5\textwidth}
-    
-      \begin{block}{Displacement Operator}
-        \[
-          \nabla A = A - Z A Z^T = G H^T
-        \]
-        For Toeplitz: $\mathrm{rank}(\nabla A) \leq 2$
-      \end{block}
-      
-    \end{column}
-    
-  \end{columns}
-  
-  \vspace{1em}
-
-  \begin{block}{Displacement $\nabla A = A - ZAZ^T$}
-    \centering
-    $A_{1} = \begin{pmatrix}
-        4 & 3 & 2 & 1 \\
-        5 & 4 & 3 & 2 \\
-        6 & 5 & 4 & 3 \\
-        7 & 6 & 5 & 4
-    \end{pmatrix}$
-    \quad
-    $\nabla A_{1} = \begin{pmatrix}
-        4 & 3 & 2 & 1 \\
-        5 & 0 & 0 & 0 \\
-        6 & 0 & 0 & 0 \\
-        7 & 0 & 0 & 0
-    \end{pmatrix}$
+  \begin{block}{Displacement Operator \& Rank}
+    \begin{itemize}
+      \item \textbf{Operator:} $\nabla A = A - Z A Z^T$ \quad
+        (Displacement Rank: $\alpha = \operatorname{rank}(\nabla A)$).
+      \item \textbf{Generators:} We can represent $A$ by factoring
+        $\nabla A = G H^\top$, where $G$ and $H$ are $n \times \alpha$ matrices.
+      \item \textbf{Toeplitz property:} For any Toeplitz matrix,
+        $\alpha \leq 2$.
+    \end{itemize}
   \end{block}
-Only first row and column stays. $\mathrm{rank} = 2$.
-  
+
+  \begin{block}{Example: Displacement of a Toeplitz Matrix}
+    \centering \small
+    $A_{1} =
+    \begin{pmatrix}
+      4 & 3 & 2 & 1 \\
+      5 & 4 & 3 & 2 \\
+      6 & 5 & 4 & 3 \\
+      7 & 6 & 5 & 4
+    \end{pmatrix}
+    \quad \longrightarrow \quad
+    \nabla A_{1} =
+    \begin{pmatrix}
+      4 & 3 & 2 & 1 \\
+      5 & 0 & 0 & 0 \\
+      6 & 0 & 0 & 0 \\
+      7 & 0 & 0 & 0
+    \end{pmatrix}$
+
+    \vspace{0.5em}
+    Only the first row and column remain non-zero $\implies
+    \operatorname{rank}(\nabla A_1) = 2$.
+  \end{block}
+
 \end{frame}
