@@ -1,34 +1,79 @@
 \begin{frame}{Example - Displacement}
+  \begin{columns}[t]
 
-    \begin{block}{Displacement Matrix $A$}
-        \[
+    % --- LEFT COLUMN: SQUARE MATRIX A1 ---
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Displacement Matrix $A_1$}
+        {\footnotesize
+          \[
             \nabla A_{1} =
             \begin{pmatrix}
-                4 & 3 & 2 & 1 \\
-                5 & 0 & 0 & 0 \\
-                6 & 0 & 0 & 0 \\
-                7 & 0 & 0 & 0
+              4 & 3 & 2 & 1 \\
+              5 & 0 & 0 & 0 \\
+              6 & 0 & 0 & 0 \\
+              7 & 0 & 0 & 0
             \end{pmatrix}
-        \]
-    \end{block}
+          \]
+        }
+      \end{block}
 
-    \begin{block}{Generators $G$ and $H$}
-        \[
-            G =
+      \begin{block}{Generators $G_1$ and $H_1$}
+        {\footnotesize
+          \[
+            G_1 =
             \begin{pmatrix}
-                4 & 0 \\
-                5 & 1 \\
-                6 & 0 \\
-                7 & 0
+              4 & 0 \\
+              5 & 1 \\
+              6 & 0 \\
+              7 & 0
             \end{pmatrix}
-            \qquad
-            H^{T} =
+          \]
+          \[
+            H_1^{T} =
             \begin{pmatrix}
-                1 & 0 & 0 & 0 \\
-                0 & 3 & 2 & 1
+              1 & 0 & 0 & 0 \\
+              0 & 3 & 2 & 1
             \end{pmatrix}
-        \]
-    \end{block}
+          \]
+        }
+      \end{block}
+    \end{column}
 
-    
+    % --- RIGHT COLUMN: RECTANGULAR MATRIX A2 ---
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Displacement Matrix $A_2$}
+        {\footnotesize
+          \[
+            \nabla A_{2} =
+            \begin{pmatrix}
+              120 & 432 & 584 & 394 & 159 \\
+              312 & 0   & 0   & 0   & 0   \\
+              985 & 0   & 0   & 0   & 0
+            \end{pmatrix}
+          \]
+        }
+      \end{block}
+
+      \begin{block}{Generators $G_2$ and $H_2$}
+        {\footnotesize
+          \[
+            G_2 =
+            \begin{pmatrix}
+              120 & 0 \\
+              312 & 1 \\
+              985 & 0
+            \end{pmatrix}
+          \]
+          \[
+            H_2^{T} =
+            \begin{pmatrix}
+              1   & 0   & 0   & 0   & 0   \\
+              0   & 432 & 584 & 394 & 159
+            \end{pmatrix}
+          \]
+        }
+      \end{block}
+    \end{column}
+
+  \end{columns}
 \end{frame}

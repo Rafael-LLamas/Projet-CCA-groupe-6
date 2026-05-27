@@ -1,16 +1,16 @@
 \begin{frame}{Displacement}
 
   \begin{columns}
-  
+
     \begin{column}{0.5\textwidth}
-    
+
       \begin{block}{Displacement Operator}
         \[
           \nabla A = A - Z A Z^T = G H^T
         \]
         For Toeplitz: $\mathrm{rank}(\nabla A) \leq 2$
       \end{block}
-      
+
     \end{column}
     % \begin{column}{0.5\textwidth}
     %   \begin{block}{Reconstruction}
@@ -20,9 +20,9 @@
     %   \end{block}
     % \end{column}
   \end{columns}
-  
+
   \vspace{1em}
-  
+
   % \begin{alertblock}{Notice}
   %   Storing $(G, H)$ instead of $A$ reduces memory from
   %   $O(n^2)$ to $O(\alpha n)$.
@@ -30,19 +30,21 @@
 
   \begin{block}{Shift Matrix}
     \centering
-    $Z = \begin{pmatrix}
-        0       &           &   &  \\
-        1       &           &   &  \\
-                & \ddots    &   &  \\
-                &           & 1 & 0
+    $Z =
+    \begin{pmatrix}
+      0       &           &   &  \\
+      1       &           &   &  \\
+      & \ddots    &   &  \\
+      &           & 1 & 0
     \end{pmatrix}$
     \quad
-    $Z^{T} = \begin{pmatrix}
-        0       & 1         &       &  \\
-                &           &\ddots &  \\
-                &           &       & 1\\
-                &           &       & 0
+    $Z^{T} =
+    \begin{pmatrix}
+      0       & 1         &       &  \\
+      &           &\ddots &  \\
+      &           &       & 1\\
+      &           &       & 0
     \end{pmatrix}$
   \end{block}
-  
+
 \end{frame}
