@@ -3,20 +3,8 @@
 
 #include "flint/gr.h"
 
-// Displacement type, type
+typedef enum { TOEPLITZ, HANKEL } structure_type_t;
 typedef enum { DISP_PLUS, DISP_MINUS } disp_type_t;
-
-/**
- *
- * @brief This is the safe-book version relying purely on the optimisation of FLINT calculations
- * @deprecated This naive mathematical implementation is deprecated due to its
- * higher complexity. Please use `gr_mat_displacement()` instead, which
- * utilizes a more optimized O(nm) pointer-arithmetic approach. (Currently O(n^3) naive)
- * @param[out] D Resulting L shaped matrix of xnx
- * @param[in] A Input square nxn toeplitz matrix
- * @param[in] ctx The FLINT context object
- */
-int gr_mat_displacement_square_safe(gr_mat_t D, gr_mat_t A, gr_ctx_t ctx);
 
 /**
  * @brief Returns the displacement matrix nxm matrices.

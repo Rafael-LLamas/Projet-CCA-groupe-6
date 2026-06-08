@@ -3,6 +3,11 @@
 
 #include "flint/gr.h"
 
+// With arithmetic operations with generators the rank of the generators
+// inflate artifitally.
+// Compression of these generators allow to efficiently store the same
+// matrix in algorithms.
+
 /**
  * @brief the function will compress generators of A to D
  * @param[out] G_d Input/Output the generator G of the matrix D
