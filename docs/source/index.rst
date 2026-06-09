@@ -6,9 +6,6 @@
 Elementary Operations on Structured Matrices documentation
 ==========================================================
 
-
-
-
 .. note::
    This project is under active development.
 

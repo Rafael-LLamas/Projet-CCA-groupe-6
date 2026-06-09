@@ -65,8 +65,8 @@ target_include_directories(project_lib PUBLIC
     src/operations
     src/compression
 )
-add_executable(main src/main.c)
-target_link_libraries(main PRIVATE project_lib)
+add_executable(benchmark src/benchmark.c)
+target_link_libraries(benchmark PRIVATE project_lib)
 
 ####
 # Tests

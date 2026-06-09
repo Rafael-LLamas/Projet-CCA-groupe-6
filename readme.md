@@ -1,9 +1,10 @@
 # Elementary Operations on Structured Matrices
 
+This is a uni project, we continued tho.
+
 ## Documentation
 
-The documentation for this project is built using Sphinx.
-You can generate the HTML documentation locally by navigating to the `docs` directory and running the make command `make html`.
+You can generate the HTML documentation locally in `docs` directory and running `make html`.
 
 Open `_build/html/index.html` to view the documentation.
 
