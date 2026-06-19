@@ -20,6 +20,7 @@
 *.lib
 *.la
 *.lo
+*.a
 
 # Shared objects (inc. Windows DLLs)
 *.dll
@@ -52,71 +53,46 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-# debug information filesuilt
-.vscode/
-/.cache
-
-# Cmake
 CMakeLists.txt.user
 CMakeCache.txt
-CMakeFiles
-CMakeScripts
-Testing
+CMakeFiles/
+CMakeScripts/
+Testing/
 Makefile
 cmake_install.cmake
 install_manifest.txt
 compile_commands.json
 CTestTestfile.cmake
-_deps
+_deps/
 CMakeUserPresets.json
 build/
+DartConfiguration.tcl
 
-# Report
-report/main.aux
-report/main.fdb_latexmk
-report/main.fls
-report/main.synctex.gz
-report/main.log
-report/main.toc
-report/indent.log
-report/main.blg
-report/main.bbl
-report/q.log
-report/texput.log
-report/libproject_lib.a
-report/DartConfiguration.tcl
-.DS_Store
+# Latex
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.nav
+*.out
+*.snm
+*.synctex.gz
+*.toc
 
-# Presentation
-presentation/diapo.toc
-presentation/diapo.synctex.gz
-presentation/diapo.out
-presentation/diapo.nav
-presentation/diapo.log
-presentation/diapo.fls
-presentation/diapo.fdb_latexmk
-presentation/diapo.aux
-presentation/diapo.snm
-
-#Flint 
-flint-3.4.0/
+# TeX/Log outputs
 texput.log
+q.log
+indent.log
+
+# Python env
 venv/
+
+# IDE
+.DS_Store
+.vscode/
+.cache/
+
+flint-3.4.0/
 docs/make.bat
-archive/report/main.toc
-archive/report/main.tex
-archive/report/main.synctex.gz
-archive/presentation/diapo.aux
-archive/presentation/diapo.fdb_latexmk
-archive/presentation/diapo.fls
-archive/presentation/diapo.log
-archive/presentation/diapo.nav
-archive/presentation/diapo.snm
-archive/presentation/diapo.synctex.gz
-archive/presentation/diapo.toc
-archive/report/main.aux
-archive/report/main.bbl
-archive/report/main.blg
-archive/report/main.fdb_latexmk
-archive/report/main.fls
-archive/report/main.log
