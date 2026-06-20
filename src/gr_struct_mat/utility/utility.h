@@ -2,8 +2,6 @@
 #define UTILITY_H
 
 #include "gr_struct_mat.h"
-#include "flint/gr.h"
-#include "flint/gr_mat.h"
 
 int _gr_mat_lu_detach(gr_mat_t L, gr_mat_t U, gr_mat_t LU, gr_ctx_t ctx);
 
