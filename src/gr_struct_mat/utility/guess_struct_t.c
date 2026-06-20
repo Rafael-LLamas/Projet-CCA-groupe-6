@@ -1,23 +1,12 @@
-#include "../../gr_struct_mat.h"
-#include "flint/flint.h"
-#include "flint/gr.h"
-#include "flint/gr_mat.h"
-#include "flint/gr_types.h"
-
+#include <math.h>
 #include <stdlib.h>
 #include <time.h>
-
-#include <math.h>
 
 #include "../../gr_struct_mat.h"
 #include "flint/flint.h"
 #include "flint/gr.h"
 #include "flint/gr_mat.h"
 #include "flint/gr_types.h"
-
-#include <math.h>
-#include <stdlib.h>
-#include <time.h>
 
 int _gr_struct_mat_guess_struct_t(structure_type_t *type, gr_mat_t mat, float acc_rate, gr_ctx_t ctx)
 {
@@ -43,9 +32,9 @@ int _gr_struct_mat_guess_struct_t(structure_type_t *type, gr_mat_t mat, float ac
   }
 
   // A better approach possible on checking only req_check elements rather than O(n^2)
-  // Careful on selecting "uniformly" random elemnets without a quantum machine
+  // Careful on selecting "uniformly" random elemnets
   // https://arxiv.org/pdf/math-ph/0609050
-  // Maybe use Haar measure?
+  // Haar measure?
 
   slong nb_check = (rows - 1) * (cols - 1);
   slong req_check = (slong)round((double)nb_check * acc_rate);

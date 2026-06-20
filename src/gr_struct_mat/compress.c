@@ -46,7 +46,7 @@ int _gr_struct_mat_generator_compress(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, 
     return status;
   }
 
-  status |= gr_mat_lu_detach(L, U, LU, ctx);
+  status |= _gr_mat_lu_detach(L, U, LU, ctx);
 
   gr_mat_init(G_D, n_G, rank, ctx);
 
@@ -58,24 +58,15 @@ int _gr_struct_mat_generator_compress(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, 
   {
     // G_D = U^T for [0:r-1],*
     for (slong i = 0; i < rank; i++)
-    {
-      for (slong j = 0; j < n_G; j++) { status |= gr_set(gr_mat_entry_ptr(G_D, j, i, ctx), gr_mat_entry_srcptr(U, i, j, ctx), ctx); }
-    }
+      for (slong j = 0; j < n_G; j++) status |= gr_set(gr_mat_entry_ptr(G_D, j, i, ctx), gr_mat_entry_srcptr(U, i, j, ctx), ctx);
 
     // permutation to H into H_perm
     for (slong i = 0; i < k; i++)
-    {
-      for (slong r = 0; r < n_H; r++)
-      {
-        status |= gr_set(gr_mat_entry_ptr(H_perm, r, i, ctx), gr_mat_entry_srcptr(H_A, r, P[i], ctx), ctx);
-      }
-    }
+      for (slong r = 0; r < n_H; r++) status |= gr_set(gr_mat_entry_ptr(H_perm, r, i, ctx), gr_mat_entry_srcptr(H_A, r, P[i], ctx), ctx);
 
     // truncate L to L_part ∗,[0:r−1]
     for (slong i = 0; i < k; i++)
-    {
-      for (slong j = 0; j < rank; j++) { status |= gr_set(gr_mat_entry_ptr(L_part, i, j, ctx), gr_mat_entry_srcptr(L, i, j, ctx), ctx); }
-    }
+      for (slong j = 0; j < rank; j++) status |= gr_set(gr_mat_entry_ptr(L_part, i, j, ctx), gr_mat_entry_srcptr(L, i, j, ctx), ctx);
 
     // calculate H_D = H_perm * L_part
     gr_mat_init(H_D, n_H, rank, ctx);
@@ -96,8 +87,6 @@ int _gr_struct_mat_generator_compress(gr_mat_t G_D, gr_mat_t H_D, gr_mat_t G_A, 
 int gr_struct_mat_compress(gr_struct_mat_t mat, gr_ctx_t ctx)
 {
   int status = GR_SUCCESS;
-
-  // Might upgrade the whole helper to use the structure instead
 
   gr_mat_t G1, H1;
   status |= _gr_struct_mat_generator_compress(G1, H1, mat->G, mat->H, ctx);

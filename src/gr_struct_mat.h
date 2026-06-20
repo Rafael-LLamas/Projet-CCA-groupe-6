@@ -33,17 +33,17 @@ typedef const gr_struct_mat_struct *gr_struct_mat_srcptr;
 
 
 // Basics
-void gr_struct_mat_init(gr_struct_mat_t mat, slong n, slong rank, structure_type_t type, disp_type_t disp, gr_ctx_t ctx);
+void gr_struct_mat_init(gr_struct_mat_t struct_mat, slong rows, slong cols, structure_type_t mat_struct, disp_type_t disp_t, gr_ctx_t ctx);
+int gr_struct_mat_init_set(gr_struct_mat_t struct_mat, gr_mat_t mat, structure_type_t mat_struct, disp_type_t disp_t, gr_ctx_t ctx);
 void gr_struct_mat_clear(gr_struct_mat_t mat, gr_ctx_t ctx);
 
-slong gr_struct_mat_nrows(gr_struct_mat_srcptr mat, gr_ctx_t ctx);
-slong gr_struct_mat_rank(gr_struct_mat_srcptr mat, gr_ctx_t ctx);
+slong gr_struct_mat_nrows(gr_struct_mat_t mat, gr_ctx_t ctx);
+slong gr_struct_mat_ncols(gr_struct_mat_t mat, gr_ctx_t ctx);
+slong gr_struct_mat_rank(gr_struct_mat_t mat, gr_ctx_t ctx);
 
-void gr_struct_mat_print(gr_struct_mat_srcptr mat, gr_ctx_t ctx);
+void gr_struct_mat_print(gr_struct_mat_t mat, gr_ctx_t ctx);
 
 // Generator Compression
 int gr_struct_mat_compress(gr_struct_mat_t mat, gr_ctx_t ctx);
-
-
 
 #endif

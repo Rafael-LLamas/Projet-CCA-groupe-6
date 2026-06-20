@@ -4,18 +4,24 @@
 
 #include "utility/utility.h"
 
-// Initialize the structured matrix and allocate memory for G and H
-int gr_struct_mat_init_set(gr_struct_mat_t struct_mat, gr_mat_t mat, structure_type_t mat_struct, disp_type_t disp, gr_ctx_t ctx)
+// Initialize the structured matrix shell
+void gr_struct_mat_init(gr_struct_mat_t struct_mat, slong rows, slong cols, structure_type_t mat_struct, disp_type_t disp_t, gr_ctx_t ctx)
+{
+  struct_mat->struct_t = mat_struct;
+  struct_mat->disp_t = disp_t;
+  gr_mat_init(struct_mat->G, rows, 0, ctx);
+  gr_mat_init(struct_mat->H, cols, 0, ctx);
+}
+
+// Initialize the structured matrix from an existing dense matrix
+int gr_struct_mat_init_set(gr_struct_mat_t struct_mat, gr_mat_t mat, structure_type_t mat_struct, disp_type_t disp_t, gr_ctx_t ctx)
 {
   int res = GR_SUCCESS;
-
-  
-
-  
-  res |= _gr_mat_G_H(gr_mat_struct * G, gr_mat_struct * H, gr_mat_struct * A, disp_type_t type, gr_ctx_struct * ctx) struct_mat->struct_t = mat;
-  mat->disp_t = disp;
-  gr_mat_init(mat->G, n, m, ctx);
-  gr_mat_init(mat->H, n, m, ctx);
+  if (mat_struct == T_UNSURE) { res |= _gr_struct_mat_guess_struct_t(&mat_struct, mat, 1, ctx); }
+  struct_mat->disp_t = disp_t;
+  struct_mat->struct_t = mat_struct;
+  res |= _gr_mat_G_H(struct_mat->G, struct_mat->H, mat, disp_t, ctx);
+  return res;
 }
 
 // Free the memory of G and H
@@ -26,15 +32,21 @@ void gr_struct_mat_clear(gr_struct_mat_t mat, gr_ctx_t ctx)
 }
 
 // Return the number of rows
-slong gr_struct_mat_nrows(gr_struct_mat_srcptr mat, gr_ctx_t ctx) { return gr_mat_nrows(mat->G, ctx); }
+slong gr_struct_mat_nrows(gr_struct_mat_t mat, gr_ctx_t ctx) { return gr_mat_nrows(mat->G, ctx); }
+
+// Return the number of cols
+slong gr_struct_mat_ncols(gr_struct_mat_t mat, gr_ctx_t ctx) { return gr_mat_nrows(mat->H, ctx); }
 
 // Return the rank of the matrix (from generators)
-slong gr_struct_mat_rank(gr_struct_mat_srcptr mat, gr_ctx_t ctx) { return gr_mat_ncols(mat->G, ctx); }
+slong gr_struct_mat_rank(gr_struct_mat_t mat, gr_ctx_t ctx)
+{
+  return (gr_mat_ncols(mat->G, ctx) < gr_mat_ncols(mat->H, ctx)) ? gr_mat_ncols(mat->G, ctx) : gr_mat_ncols(mat->H, ctx);
+}
 
 // Print the structured matrix with additional information
-void gr_struct_mat_print(gr_struct_mat_srcptr mat, gr_ctx_t ctx)
+void gr_struct_mat_print(gr_struct_mat_t mat, gr_ctx_t ctx)
 {
-  flint_printf("Structured Matrix: %s, Displacement: %s\n", mat->struct_t == TOEPLITZ ? "Toeplitz" : "Hankel",
+  flint_printf("Structured Matrix: %s, Displacement: %s\n", mat->struct_t == T_TOEPLITZ ? "Toeplitz" : "Hankel",
                mat->disp_t == DISP_PLUS ? "Phi_Plus" : "Phi_Minus");
   flint_printf("--- Generator G ---\n");
   gr_mat_print(mat->G, ctx);
@@ -42,5 +54,3 @@ void gr_struct_mat_print(gr_struct_mat_srcptr mat, gr_ctx_t ctx)
   gr_mat_print(mat->H, ctx);
   flint_printf("\n");
 }
-
-int gr_struct_mat_
