@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "../../gr_struct_mat.h"
+#include "gr_struct_mat.h"
 #include "flint/flint.h"
 #include "flint/gr.h"
 #include "flint/gr_mat.h"
@@ -40,26 +40,19 @@ int _gr_struct_mat_guess_struct_t(structure_type_t *type, gr_mat_t mat, float ac
   slong req_check = (slong)round((double)nb_check * acc_rate);
 
   slong c_toeplitz = 0;
-  slong c_hankel = 0;
 
   for (slong i = 0; i < rows - 1; i++)
-  {
     for (slong j = 0; j < cols - 1; j++)
     {
       gr_ptr toep_curr = gr_mat_entry_ptr(mat, i, j, ctx);
       gr_ptr toep_next = gr_mat_entry_ptr(mat, i + 1, j + 1, ctx);
       if (gr_equal(toep_curr, toep_next, ctx) == T_TRUE) { c_toeplitz++; }
-
-      gr_ptr hank_curr = gr_mat_entry_ptr(mat, i + 1, j, ctx);
-      gr_ptr hank_next = gr_mat_entry_ptr(mat, i, j + 1, ctx);
-      if (gr_equal(hank_curr, hank_next, ctx) == T_TRUE) { c_hankel++; }
     }
-  }
 
-  if (c_toeplitz >= req_check) { *type = T_TOEPLITZ; }
-  else if (c_hankel >= req_check) { *type = T_HANKEL; }
+  if (c_toeplitz >= req_check)
+    *type = T_TOEPLITZ;
   else
-    *type = T_UNSURE;
+    *type = T_HANKEL;
 
   return res;
 }

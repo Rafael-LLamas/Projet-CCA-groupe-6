@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../../gr_struct_mat.h"
+#include "gr_struct_mat.h"
 #include "flint/flint.h"
 #include "flint/gr.h"
 #include "flint/gr_mat.h"
