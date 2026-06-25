@@ -2,22 +2,21 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "gr_struct_mat.h"
 #include "flint/flint.h"
 #include "flint/gr.h"
 #include "flint/gr_mat.h"
 #include "flint/gr_types.h"
+#include "gr_struct_mat.h"
 
 int _gr_struct_mat_guess_struct_t(structure_type_t *type, gr_mat_t mat, float acc_rate, gr_ctx_t ctx)
 {
   int res = GR_SUCCESS;
 
   if (type == NULL) return GR_DOMAIN;
-
   if (acc_rate > 1) acc_rate = 1.0f;
-  if (acc_rate < 0)
+  if (acc_rate <= 0)
   {
-    *type = T_TOEPLITZ;
+    *type = T_UNSURE;
     return res;
   }
 
@@ -40,19 +39,26 @@ int _gr_struct_mat_guess_struct_t(structure_type_t *type, gr_mat_t mat, float ac
   slong req_check = (slong)round((double)nb_check * acc_rate);
 
   slong c_toeplitz = 0;
+  slong c_hankel = 0;
 
   for (slong i = 0; i < rows - 1; i++)
     for (slong j = 0; j < cols - 1; j++)
     {
-      gr_ptr toep_curr = gr_mat_entry_ptr(mat, i, j, ctx);
-      gr_ptr toep_next = gr_mat_entry_ptr(mat, i + 1, j + 1, ctx);
-      if (gr_equal(toep_curr, toep_next, ctx) == T_TRUE) { c_toeplitz++; }
+      gr_ptr t_curr = gr_mat_entry_ptr(mat, i, j, ctx);
+      gr_ptr t_next = gr_mat_entry_ptr(mat, i + 1, j + 1, ctx);
+      if (gr_equal(t_curr, t_next, ctx) == T_TRUE) { c_toeplitz++; }
+
+      gr_ptr h_curr = gr_mat_entry_ptr(mat, i, j + 1, ctx);
+      gr_ptr h_next = gr_mat_entry_ptr(mat, i + 1, j, ctx);
+      if (gr_equal(h_curr, h_next, ctx) == T_TRUE) { c_hankel++; }
     }
 
   if (c_toeplitz >= req_check)
     *type = T_TOEPLITZ;
-  else
+  else if (c_hankel >= req_check)
     *type = T_HANKEL;
+  else
+    *type = T_UNSURE;
 
   return res;
 }

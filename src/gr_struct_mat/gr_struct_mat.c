@@ -14,7 +14,7 @@ void gr_struct_mat_init(gr_struct_mat_t struct_mat, slong rows, slong cols, stru
   gr_mat_init(struct_mat->H, cols, 0, ctx);
 }
 
-// Initialize the structured matrix from an existing dense matrix
+// Initializes a structured matrix from a dense matrix.
 int gr_struct_mat_init_set(gr_struct_mat_t struct_mat, gr_mat_t mat, structure_type_t mat_struct, disp_type_t disp_t, gr_ctx_t ctx)
 {
   int status = GR_SUCCESS;
@@ -25,7 +25,7 @@ int gr_struct_mat_init_set(gr_struct_mat_t struct_mat, gr_mat_t mat, structure_t
   return status;
 }
 
-// Free the memory of G and H
+// Clears the structured matrix and releases allocated memory.
 void gr_struct_mat_clear(gr_struct_mat_t mat, gr_ctx_t ctx)
 {
   gr_mat_clear(mat->G, ctx);
@@ -56,6 +56,7 @@ void gr_struct_mat_print(gr_struct_mat_t mat, gr_ctx_t ctx)
   flint_printf("\n");
 }
 
+// Reconstructs the full dense matrix from structured matrix type
 int gr_struct_mat_reconstruct(gr_mat_t dense_mat, gr_struct_mat_t mat, gr_ctx_t ctx)
 {
   int status = GR_SUCCESS;
