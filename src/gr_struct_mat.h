@@ -25,6 +25,7 @@ typedef struct
   disp_type_t disp_t;
   gr_mat_t G;
   gr_mat_t H;
+  slong lastRank; // Last recorded rank
 } gr_struct_mat_struct;
 
 typedef gr_struct_mat_struct gr_struct_mat_t[1];
@@ -42,6 +43,8 @@ slong gr_struct_mat_ncols(gr_struct_mat_t mat, gr_ctx_t ctx);
 slong gr_struct_mat_rank(gr_struct_mat_t mat, gr_ctx_t ctx);
 
 void gr_struct_mat_print(gr_struct_mat_t mat, gr_ctx_t ctx);
+
+int gr_struct_mat_reconstruct(gr_mat_t dense_mat, gr_struct_mat_t mat, gr_ctx_t ctx);
 
 // Generator Compression
 int gr_struct_mat_compress(gr_struct_mat_t mat, gr_ctx_t ctx);

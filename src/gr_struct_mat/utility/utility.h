@@ -14,4 +14,6 @@ int _gr_mat_G_H(gr_mat_t G, gr_mat_t H, gr_mat_t A, disp_type_t type, gr_ctx_t c
 
 int _gr_struct_mat_guess_struct_t(structure_type_t *type, gr_mat_t mat, float acc_rate, gr_ctx_t ctx);
 
+int _gr_mat_reconstruct(gr_mat_t A, gr_mat_t G, gr_mat_t H, disp_type_t type, gr_ctx_t ctx);
+
 #endif

@@ -1,5 +1,6 @@
 #include "gr_struct_mat.h"
 #include "flint/flint.h"
+#include "flint/gr_mat.h"
 #include "flint/gr_types.h"
 
 #include "utility/utility.h"
@@ -16,12 +17,12 @@ void gr_struct_mat_init(gr_struct_mat_t struct_mat, slong rows, slong cols, stru
 // Initialize the structured matrix from an existing dense matrix
 int gr_struct_mat_init_set(gr_struct_mat_t struct_mat, gr_mat_t mat, structure_type_t mat_struct, disp_type_t disp_t, gr_ctx_t ctx)
 {
-  int res = GR_SUCCESS;
-  if (mat_struct == T_UNSURE) { res |= _gr_struct_mat_guess_struct_t(&mat_struct, mat, 1, ctx); }
+  int status = GR_SUCCESS;
+  if (mat_struct == T_UNSURE) { status |= _gr_struct_mat_guess_struct_t(&mat_struct, mat, 1, ctx); }
   struct_mat->disp_t = disp_t;
   struct_mat->struct_t = mat_struct;
-  res |= _gr_mat_G_H(struct_mat->G, struct_mat->H, mat, disp_t, ctx);
-  return res;
+  status |= _gr_mat_G_H(struct_mat->G, struct_mat->H, mat, disp_t, ctx);
+  return status;
 }
 
 // Free the memory of G and H
@@ -53,4 +54,19 @@ void gr_struct_mat_print(gr_struct_mat_t mat, gr_ctx_t ctx)
   flint_printf("\n--- Generator H ---\n");
   gr_mat_print(mat->H, ctx);
   flint_printf("\n");
+}
+
+int gr_struct_mat_reconstruct(gr_mat_t dense_mat, gr_struct_mat_t mat, gr_ctx_t ctx)
+{
+  int status = GR_SUCCESS;
+
+  if (gr_mat_nrows(dense_mat, ctx) != gr_struct_mat_nrows(mat, ctx) || gr_mat_ncols(dense_mat, ctx) != gr_struct_mat_ncols(mat, ctx))
+  {
+    gr_mat_clear(dense_mat, ctx);
+    gr_mat_init(dense_mat, gr_struct_mat_nrows(mat, ctx), gr_struct_mat_ncols(mat, ctx), ctx);
+  }
+
+  status |= _gr_mat_reconstruct(dense_mat, mat->G, mat->H, mat->disp_t, ctx);
+
+  return status;
 }
