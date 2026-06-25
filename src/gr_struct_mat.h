@@ -49,4 +49,7 @@ int gr_struct_mat_reconstruct(gr_mat_t dense_mat, gr_struct_mat_t mat, gr_ctx_t 
 // Generator Compression
 int gr_struct_mat_compress(gr_struct_mat_t mat, gr_ctx_t ctx);
 
+// Addition
+int gr_struct_mat_add(gr_struct_mat_t dest, gr_struct_mat_t mat, gr_ctx_t ctx);
+
 #endif
