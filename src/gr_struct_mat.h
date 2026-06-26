@@ -25,7 +25,6 @@ typedef struct
   disp_type_t disp_t;
   gr_mat_t G;
   gr_mat_t H;
-  slong lastRank; // Last recorded rank
 } gr_struct_mat_struct;
 
 typedef gr_struct_mat_struct gr_struct_mat_t[1];
