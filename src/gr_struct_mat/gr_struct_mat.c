@@ -15,13 +15,13 @@ void gr_struct_mat_init(gr_struct_mat_t struct_mat, slong rows, slong cols, stru
 }
 
 // Initializes a structured matrix from a dense matrix.
-int gr_struct_mat_init_set(gr_struct_mat_t struct_mat, gr_mat_t mat, structure_type_t mat_struct, disp_type_t disp_t, gr_ctx_t ctx)
+int gr_struct_mat_init_set(gr_struct_mat_t struct_mat, gr_mat_t mat, structure_type_t struct_t, disp_type_t disp_t, gr_ctx_t ctx)
 {
   int status = GR_SUCCESS;
-  if (mat_struct == T_UNSURE) { status |= _gr_struct_mat_guess_struct_t(&mat_struct, mat, 1, ctx); }
+  if (struct_t == T_UNSURE) { status |= _gr_struct_mat_guess_struct_t(&struct_t, mat, 1, ctx); }
   struct_mat->disp_t = disp_t;
-  struct_mat->struct_t = mat_struct;
-  status |= _gr_mat_G_H(struct_mat->G, struct_mat->H, mat, disp_t, ctx);
+  struct_mat->struct_t = struct_t;
+  status |= _gr_mat_G_H(struct_mat->G, struct_mat->H, mat, struct_t, disp_t, ctx);
   return status;
 }
 
@@ -59,15 +59,17 @@ void gr_struct_mat_print(gr_struct_mat_t mat, gr_ctx_t ctx)
 // Reconstructs the full dense matrix from structured matrix type
 int gr_struct_mat_reconstruct(gr_mat_t dense_mat, gr_struct_mat_t mat, gr_ctx_t ctx)
 {
-  int status = GR_SUCCESS;
+  slong req_rows = gr_struct_mat_nrows(mat, ctx);
+  slong req_cols = gr_struct_mat_ncols(mat, ctx);
 
-  if (gr_mat_nrows(dense_mat, ctx) != gr_struct_mat_nrows(mat, ctx) || gr_mat_ncols(dense_mat, ctx) != gr_struct_mat_ncols(mat, ctx))
+  if (gr_mat_nrows(dense_mat, ctx) != req_rows || gr_mat_ncols(dense_mat, ctx) != req_cols)
   {
     gr_mat_clear(dense_mat, ctx);
-    gr_mat_init(dense_mat, gr_struct_mat_nrows(mat, ctx), gr_struct_mat_ncols(mat, ctx), ctx);
+    gr_mat_init(dense_mat, req_rows, req_cols, ctx);
   }
 
-  status |= _gr_mat_reconstruct(dense_mat, mat->G, mat->H, mat->disp_t, ctx);
+  if (mat->struct_t == T_TOEPLITZ) { return _gr_mat_reconstruct_toeplitz(dense_mat, mat->G, mat->H, mat->disp_t, ctx); }
+  else if (mat->struct_t == T_HANKEL) { return _gr_mat_reconstruct_hankel(dense_mat, mat->G, mat->H, mat->disp_t, ctx); }
 
-  return status;
+  return GR_DOMAIN;
 }
