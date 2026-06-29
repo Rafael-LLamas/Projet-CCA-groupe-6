@@ -12,6 +12,7 @@ typedef enum
 {
   T_TOEPLITZ,
   T_HANKEL,
+  T_TOEPLITZ_PLUS_HANKEL, // TODO
   T_UNSURE
 } structure_type_t;
 

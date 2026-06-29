@@ -14,6 +14,7 @@ Contents
 --------   
     .. toctree::
         usage
+        structure
 
 
 Authors
