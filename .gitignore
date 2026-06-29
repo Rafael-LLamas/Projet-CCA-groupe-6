@@ -94,5 +94,9 @@ venv/
 .vscode/
 .cache/
 
+# flint library
 flint-3.4.0/
+flint-main/
+
+# docs
 docs/make.bat
