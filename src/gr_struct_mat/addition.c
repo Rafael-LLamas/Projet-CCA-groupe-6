@@ -35,12 +35,12 @@ int gr_struct_mat_add(gr_struct_mat_t dest, gr_struct_mat_t mat, gr_ctx_t ctx)
 }
 
 // Matrix addition of a dense matrix to a structured matrix
-int gr_struct_mat_add_dense(gr_struct_mat_t dest, gr_mat_t mat, gr_ctx_t ctx)
+int gr_struct_mat_add_dense(gr_struct_mat_t dest, gr_mat_t mat, structure_type_t struct_t, gr_ctx_t ctx)
 {
   int status = GR_SUCCESS;
   gr_struct_mat_t s_mat;
 
-  status |= gr_struct_mat_init_set(s_mat, mat, T_UNSURE, dest->disp_t, ctx);
+  status |= gr_struct_mat_init_set(s_mat, mat, struct_t, dest->disp_t, ctx);
   status |= gr_struct_mat_add(dest, s_mat, ctx);
   gr_struct_mat_clear(s_mat, ctx);
 
