@@ -32,18 +32,6 @@ void gr_struct_mat_clear(gr_struct_mat_t mat, gr_ctx_t ctx)
   gr_mat_clear(mat->H, ctx);
 }
 
-// Return the number of rows
-slong gr_struct_mat_nrows(gr_struct_mat_t mat, gr_ctx_t ctx) { return gr_mat_nrows(mat->G, ctx); }
-
-// Return the number of cols
-slong gr_struct_mat_ncols(gr_struct_mat_t mat, gr_ctx_t ctx) { return gr_mat_nrows(mat->H, ctx); }
-
-// Return the rank of the matrix (from generators)
-slong gr_struct_mat_rank(gr_struct_mat_t mat, gr_ctx_t ctx)
-{
-  return (gr_mat_ncols(mat->G, ctx) < gr_mat_ncols(mat->H, ctx)) ? gr_mat_ncols(mat->G, ctx) : gr_mat_ncols(mat->H, ctx);
-}
-
 // Print the structured matrix with additional information
 void gr_struct_mat_print(gr_struct_mat_t mat, gr_ctx_t ctx)
 {

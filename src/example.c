@@ -19,9 +19,7 @@ int example_toeplitz(gr_ctx_t ctx)
 {
   int status = GR_SUCCESS;
 
-  printf("========================================\n");
   printf("TOEPLITZ EXAMPLE (DISP_PLUS)\n");
-  printf("========================================\n\n");
 
   // build the dense Toeplitz matrix
   gr_mat_t src;
@@ -51,13 +49,12 @@ int example_toeplitz(gr_ctx_t ctx)
   return status;
 }
 
+
 int example_hankel(gr_ctx_t ctx)
 {
   int status = GR_SUCCESS;
 
-  printf("========================================\n");
   printf("HANKEL EXAMPLE (DISP_MINUS)\n");
-  printf("========================================\n\n");
 
   // build the dense Hankel matrix
   gr_mat_t src;
@@ -81,9 +78,10 @@ int example_hankel(gr_ctx_t ctx)
   gr_mat_clear(rec, ctx);
   gr_mat_clear(src, ctx);
 
-  printf("Hankel status: %s\n\n", status == GR_SUCCESS ? "OK" : "FAIL");
+  printf("Hankel status: %s\n\n", status == GR_SUCCESS ? "GR_SUCCESS" : "FAIL");
   return status;
 }
+
 
 int main(void)
 {
