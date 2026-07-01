@@ -100,3 +100,9 @@ flint-main/
 
 # docs
 docs/make.bat
+
+# Rocq / Coq build artifacts
+*.vo
+*.vos
+*.vok
+*.glob
