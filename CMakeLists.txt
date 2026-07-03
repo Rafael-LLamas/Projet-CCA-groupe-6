@@ -38,12 +38,16 @@ list(FILTER PROJECT_SOURCES EXCLUDE REGEX "src/gr_struct_mat/test/.*")
 list(FILTER PROJECT_SOURCES EXCLUDE REGEX "src/archive/.*")
 
 add_library(project_lib STATIC ${PROJECT_SOURCES})
+
 target_include_directories(project_lib PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${FLINT_INCLUDE}
-    ${GMP_INCLUDE}
-    ${MPFR_INCLUDE}
 )
+target_compile_options(project_lib PUBLIC
+    "-I${FLINT_INCLUDE}"
+    "-I${GMP_INCLUDE}"
+    "-I${MPFR_INCLUDE}"
+)
+
 target_link_libraries(project_lib PUBLIC
     ${FLINT_LIB}
     ${GMP_LIB}

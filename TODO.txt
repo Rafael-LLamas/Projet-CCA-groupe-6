@@ -1,0 +1,23 @@
+Here is one big TODO list:
+
+----- Implementations -----
+
+[] - Integrate Multiplication
+
+[] - Integrate Inversion
+
+[] - Hankel+Toeplitz matrix type implementation + research
+
+
+----- Demonstrations -----
+
+[] - Compression coq
+
+
+----- Documentation -----
+
+[] - Document the main motivation + overall structure of the project & types
+
+[] - Document Displacement
+
+[] - Document more (soon)
