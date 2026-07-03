@@ -49,5 +49,6 @@ int gr_struct_mat_compress(gr_struct_mat_t mat, gr_ctx_t ctx);
 
 // Addition
 int gr_struct_mat_add(gr_struct_mat_t dest, gr_struct_mat_t mat, gr_ctx_t ctx);
+int gr_struct_mat_add_dense(gr_struct_mat_t dest, gr_mat_t mat, structure_type_t struct_t, gr_ctx_t ctx);
 
 #endif
