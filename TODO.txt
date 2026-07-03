@@ -8,6 +8,8 @@ Here is one big TODO list:
 
 [] - Hankel+Toeplitz matrix type implementation + research
 
+[] - Hankel Multiplication
+
 
 ----- Demonstrations -----
 
