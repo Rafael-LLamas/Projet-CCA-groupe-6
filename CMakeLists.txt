@@ -66,6 +66,11 @@ function(add_project_test TEST_TARGET FILE_NAME)
   target_link_libraries(${TEST_TARGET} PRIVATE project_lib)
 endfunction()
 
+# reconstruction
+add_project_test(test_reconstruction reconstruction.test.c)
+add_test(NAME Reconstruction.toeplitz_reconstruction       COMMAND test_reconstruction toeplitz_reconstruction)
+add_test(NAME Reconstruction.quasi_toeplitz_reconstruction COMMAND test_reconstruction quasi_toeplitz_reconstruction)
+
 # Compression
 add_project_test(test_compression compress.test.c)
 add_test(NAME Compression.compress_addition_toeplitz       COMMAND test_compression compress_addition_toeplitz)
