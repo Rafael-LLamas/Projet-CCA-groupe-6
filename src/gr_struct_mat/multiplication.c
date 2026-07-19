@@ -154,8 +154,11 @@ int _gr_mat_mul_generator_toeplitz(gr_mat_t G_c, gr_mat_t H_c, gr_mat_t T, gr_ma
 // Does mat1 * mat2 = dest, dest should be initialized.
 int gr_struct_mat_mul(gr_struct_mat_t dest, gr_struct_mat_t mat1, gr_struct_mat_t mat2, gr_ctx_t ctx)
 {
-  if (gr_struct_mat_ncols(mat1, ctx) != gr_struct_mat_ncols(dest, ctx) || gr_struct_mat_nrows(mat2, ctx) != gr_struct_mat_nrows(dest, ctx))
+  if (gr_struct_mat_ncols(mat1, ctx) != gr_struct_mat_nrows(mat2, ctx) ||
+      gr_struct_mat_nrows(dest, ctx) != gr_struct_mat_nrows(mat1, ctx) || gr_struct_mat_ncols(dest, ctx) != gr_struct_mat_ncols(mat2, ctx))
+  {
     return GR_DOMAIN;
+  }
 
   int status = GR_SUCCESS;
   structure_type_t struct_t_var = mat1->struct_t;
