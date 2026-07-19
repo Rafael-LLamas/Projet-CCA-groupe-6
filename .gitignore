@@ -92,6 +92,7 @@ venv/
 # IDE
 .DS_Store
 .vscode/
+.zed/
 .cache/
 
 # flint library

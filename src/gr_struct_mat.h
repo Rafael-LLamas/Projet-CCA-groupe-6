@@ -55,4 +55,7 @@ int gr_struct_mat_add_dense(gr_struct_mat_t dest, gr_mat_t mat, structure_type_t
 int gr_struct_mat_mul(gr_struct_mat_t dest, gr_struct_mat_t mat1, gr_struct_mat_t mat2, gr_ctx_t ctx);
 int gr_struct_mat_mul_f(gr_struct_mat_t dest, gr_struct_mat_t mat, gr_ctx_t ctx);
 
+// Random
+int gr_struct_mat_random(gr_struct_mat_t S, flint_rand_t state, gr_ctx_t ctx);
+
 #endif
