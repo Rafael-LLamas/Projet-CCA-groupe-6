@@ -75,3 +75,7 @@ add_test(NAME Reconstruction.quasi_toeplitz_reconstruction COMMAND test_reconstr
 add_project_test(test_compression compress.test.c)
 add_test(NAME Compression.compress_addition_toeplitz       COMMAND test_compression compress_addition_toeplitz)
 add_test(NAME Compression.compress_multiplication_toeplitz COMMAND test_compression compress_multiplication_toeplitz)
+
+# Addition
+add_project_test(test_addition addition.test.c)
+add_test(NAME Addition.addition_generators_toeplitz       COMMAND test_addition addition_generators_toeplitz)
